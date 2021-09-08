@@ -13,6 +13,12 @@ contract ERC1155Wrapper is IERC1155Wrapper, ItemProjection, IERC1155Receiver {
     mapping(bytes32 => uint256) private _itemIdOf;
     mapping(uint256 => uint256) private _tokenDecimals;
 
+    constructor(bytes memory lazyInitData) ItemProjection(lazyInitData) {
+    }
+
+    function _projectionLazyInit(bytes memory collateralInitData) internal override returns (bytes memory) {
+    }
+
     function itemIdOf(address tokenAddress, uint256 tokenId) override public view returns(uint256) {
         return _itemIdOf[_toItemKey(tokenAddress, tokenId)];
     }
@@ -39,12 +45,17 @@ contract ERC1155Wrapper is IERC1155Wrapper, ItemProjection, IERC1155Receiver {
         receiver = receiver != address(0) ? receiver : from;
         uint256 itemId = itemIdOf(msg.sender, tokenId);
         (CreateItem[] memory createItems, uint256 tokenDecimals) = _buildCreateItems(msg.sender, tokenId, amount, receiver, itemId);
+        _onERC1155Support(createItems, itemId, tokenId, tokenDecimals);
+        
+        return this.onERC1155Received.selector;
+    }
+
+    function _onERC1155Support(CreateItem[] memory createItems, uint256 itemId, uint256 tokenId, uint256 tokenDecimals) internal{
         uint256 createdItemId = IItemMainInterface(mainInterface).mintItems(createItems)[0];
         if(itemId == 0) {
             _tokenDecimals[itemId = _itemIdOf[_toItemKey(msg.sender, tokenId)] = createdItemId] = tokenDecimals;
             emit Token(msg.sender, tokenId, itemId);
         }
-        return this.onERC1155Received.selector;
     }
 
     function onERC1155BatchReceived(
@@ -54,22 +65,26 @@ contract ERC1155Wrapper is IERC1155Wrapper, ItemProjection, IERC1155Receiver {
         uint256[] calldata amounts,
         bytes calldata data
     ) override external returns (bytes4) {
-        address[] memory receivers = data.length > 0 ? abi.decode(data, (address[])) : new address[](0);
         address defaultReceiver = from;
+        address[] memory receivers = data.length > 0 ? abi.decode(data, (address[])) : new address[](0);
         if(receivers.length == 1) {
             defaultReceiver = receivers[0];
         }
-        defaultReceiver = defaultReceiver != address(0) ? defaultReceiver : msg.sender;
         for(uint256  i = 0 ; i < tokenIds.length; i++) {
             uint256 itemId = itemIdOf(msg.sender, tokenIds[i]);
             (CreateItem[] memory createItems, uint256 tokenDecimals) = _buildCreateItems(msg.sender, tokenIds[i], amounts[i], receivers.length <= 1 ? defaultReceiver : receivers[i], itemId);
             uint256 createdItemId = IItemMainInterface(mainInterface).mintItems(createItems)[0];
-            if(itemId == 0) {
-                _tokenDecimals[itemId = _itemIdOf[_toItemKey(msg.sender, tokenIds[i])] = createdItemId] = tokenDecimals;
-                emit Token(msg.sender, tokenIds[i], itemId);
-            }
+            _onERC1155BatchSupport(itemId, tokenIds, createdItemId, tokenDecimals, i);
         }
+        defaultReceiver = defaultReceiver != address(0) ? defaultReceiver : msg.sender;
         return this.onERC1155BatchReceived.selector;
+    }
+
+    function _onERC1155BatchSupport(uint256 itemId, uint256[] calldata tokenIds, uint256 createdItemId, uint256 tokenDecimals, uint256 index) internal{
+        if(itemId == 0) {
+            _tokenDecimals[itemId = _itemIdOf[_toItemKey(msg.sender, tokenIds[index])] = createdItemId] = tokenDecimals;
+            emit Token(msg.sender, tokenIds[index], itemId);
+        }
     }
 
     function burn(address account, uint256 itemId, uint256 amount, bytes memory data) override(Item, ItemProjection) public {
@@ -109,7 +124,7 @@ contract ERC1155Wrapper is IERC1155Wrapper, ItemProjection, IERC1155Receiver {
         address[] memory accounts = new address[](1);
         accounts[0] = from;
         createItems = new CreateItem[](1);
-        createItems[0] = CreateItem(Header(address(0), name, symbol, uri), itemId, accounts, amounts);
+        createItems[0] = CreateItem(Header(address(0), name, symbol, uri), collectionId, itemId, accounts, amounts);
     }
 
     function _tryRecoveryMetadata(address source, uint256 tokenId) private view returns(string memory name, string memory symbol, string memory uri) {
@@ -139,7 +154,7 @@ contract ERC1155Wrapper is IERC1155Wrapper, ItemProjection, IERC1155Receiver {
             }
         }
         if(keccak256(bytes(uri)) == keccak256("")) {
-            try nft.uri() returns(string memory s) {
+            try nft.uri(tokenId) returns(string memory s) {
                 uri = s;
             } catch {
             }

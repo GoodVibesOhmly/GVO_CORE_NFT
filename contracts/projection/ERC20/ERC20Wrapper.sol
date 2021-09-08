@@ -12,6 +12,12 @@ contract ERC20Wrapper is IERC20Wrapper, ItemProjection {
     mapping(address => uint256) public override itemIdOf;
     mapping(address => uint256) private _tokenDecimals;
 
+    constructor(bytes memory lazyInitData) ItemProjection(lazyInitData) {
+    }
+
+    function _projectionLazyInit(bytes memory collateralInitData) internal override returns (bytes memory) {
+    }
+
     function mintItems(CreateItem[] calldata) virtual override(Item, ItemProjection) external returns(uint256[] memory) {
         revert("You need to call proper mint function");
     }
@@ -25,7 +31,7 @@ contract ERC20Wrapper is IERC20Wrapper, ItemProjection {
         itemIds = new uint256[](amounts.length);
         uint256[] memory realAmounts = new uint256[](amounts.length);
         uint256 ethAmount = 0;
-        string memory uri = plainURI();
+        string memory uri = plainUri();
         for(uint256  i = 0 ; i < itemIds.length; i++) {
             if(tokenAddresses[i] == address(0)) {
                 ethAmount += realAmounts[i] = amounts[i];
@@ -84,7 +90,7 @@ contract ERC20Wrapper is IERC20Wrapper, ItemProjection {
         address[] memory accounts = new address[](1);
         accounts[0] = from;
         createItems = new CreateItem[](1);
-        createItems[0] = CreateItem(Header(address(0), name, symbol, uri), itemId, accounts, amounts);
+        createItems[0] = CreateItem(Header(address(0), name, symbol, uri), collectionId, itemId, accounts, amounts);
     }
 
     function _stringValue(address erc20TokenAddress, string memory firstTry, string memory secondTry) private view returns(string memory) {

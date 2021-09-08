@@ -12,6 +12,12 @@ contract ERC721Wrapper is IERC721Wrapper, ItemProjection, IERC721Receiver {
 
     mapping(bytes32 => uint256) private _itemIdOf;
 
+    constructor(bytes memory lazyInitData) ItemProjection(lazyInitData) {
+    }
+
+    function _projectionLazyInit(bytes memory collateralInitData) internal override returns (bytes memory) {
+    }
+
     function itemIdOf(address tokenAddress, uint256 tokenId) override public view returns(uint256) {
         return _itemIdOf[_toItemKey(tokenAddress, tokenId)];
     }
@@ -102,7 +108,7 @@ contract ERC721Wrapper is IERC721Wrapper, ItemProjection, IERC721Receiver {
         address[] memory accounts = new address[](1);
         accounts[0] = from;
         createItems = new CreateItem[](1);
-        createItems[0] = CreateItem(Header(address(0), name, symbol, uri), itemId, accounts, amounts);
+        createItems[0] = CreateItem(Header(address(0), name, symbol, uri), collectionId, itemId, accounts, amounts);
     }
 
     function _tryRecoveryMetadata(address source, uint256 tokenId) private view returns(string memory name, string memory symbol, string memory uri) {

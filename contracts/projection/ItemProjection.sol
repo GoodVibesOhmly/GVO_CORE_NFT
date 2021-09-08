@@ -161,11 +161,11 @@ abstract contract ItemProjection is IItemProjection, LazyInitCapableElement {
     }
 
     function isApprovedForAll(address account, address operator) override external view returns (bool) {
-        return IItemMainInterface(mainInterface).isApprovedForCollection(account, operator, collectionId);
+        return IItemMainInterface(mainInterface).isApprovedForAll(account, operator);
     }
 
     function setApprovalForAll(address operator, bool approved) override external {
-        return IItemMainInterface(mainInterface).setApprovalForCollection(collectionId, msg.sender, operator, approved);
+        revert("call directly the setApprovalForAll of the main Interface");
     }
 
     function safeTransferFrom(address from, address to, uint256 itemId, uint256 amount, bytes calldata data) virtual override external {

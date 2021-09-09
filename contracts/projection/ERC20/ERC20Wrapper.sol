@@ -6,8 +6,12 @@ pragma abicoder v2;
 import "./IERC20Wrapper.sol";
 import "../ItemProjection.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import { Uint256Utilities, TransferUtilities } from "@ethereansos/swissknife/contracts/lib/GeneralUtilities.sol";
 
 contract ERC20Wrapper is IERC20Wrapper, ItemProjection {
+    using AddressUtilities for address;
+    using Uint256Utilities for uint256;
+    using TransferUtilities for address;
 
     mapping(address => uint256) public override itemIdOf;
     mapping(address => uint256) private _tokenDecimals;
@@ -36,26 +40,27 @@ contract ERC20Wrapper is IERC20Wrapper, ItemProjection {
             if(tokenAddresses[i] == address(0)) {
                 ethAmount += realAmounts[i] = amounts[i];
             } else {
-                uint256 actualBalance = IERC20(tokenAddresses[i]).balanceOf(address(this));
-                _safeTransferFrom(tokenAddresses[i], msg.sender, address(this), amounts[i]);
-                realAmounts[i] = IERC20(tokenAddresses[i]).balanceOf(address(this)) - actualBalance;
+                uint256 previousBalance = IERC20(tokenAddresses[i]).balanceOf(address(this));
+                tokenAddresses[i].safeTransferFrom(msg.sender, address(this), amounts[i]);
+                realAmounts[i] = IERC20(tokenAddresses[i]).balanceOf(address(this)) - previousBalance;
             }
+            address itemReceiver = receivers.length <= 1 ? defaultReceiver : receivers[i];
             itemIds[i] = itemIdOf[tokenAddresses[i]];
-            uint256 createdItemId = IItemMainInterface(mainInterface).mintItems(_buildCreateItems(tokenAddresses[i], realAmounts[i], receivers.length <= 1 ? defaultReceiver : receivers[i], itemIds[i], uri))[0];
+            uint256 createdItemId = IItemMainInterface(mainInterface).mintItems(_buildCreateItems(tokenAddresses[i], realAmounts[i], itemReceiver != address(0) ? itemReceiver : defaultReceiver, itemIds[i], uri))[0];
             if(itemIds[i] == 0) {
                 emit Token(tokenAddresses[i], itemIds[i] = itemIdOf[tokenAddresses[i]] = createdItemId);
             }
         }
         require(msg.value >= ethAmount, "Invalid ETH Value");
         if(msg.value > ethAmount) {
-            _safeTransfer(address(0), msg.sender, msg.value - ethAmount);
+            address(0).safeTransfer(msg.sender, msg.value - ethAmount);
         }
     }
 
     function burn(address account, uint256 itemId, uint256 amount, bytes memory data) override(Item, ItemProjection) public {
         IItemMainInterface(mainInterface).mintTransferOrBurn(false, abi.encode(msg.sender, account, address(0), itemId, toInteroperableInterfaceAmount(amount, itemId, account)));
         emit TransferSingle(msg.sender, account, address(0), itemId, amount);
-        _burn(account, itemId, amount, data);
+        _unwrap(account, itemId, amount, data);
     }
 
     function burnBatch(address account, uint256[] calldata itemIds, uint256[] calldata amounts, bytes memory data) override(Item, ItemProjection) public {
@@ -63,15 +68,15 @@ contract ERC20Wrapper is IERC20Wrapper, ItemProjection {
         for(uint256 i = 0 ; i < interoperableInterfaceAmounts.length; i++) {
             interoperableInterfaceAmounts[i] = toInteroperableInterfaceAmount(amounts[i], itemIds[i], account);
         }
-        IItemMainInterface(mainInterface).mintTransferOrBurn(true, abi.encode(msg.sender, account, address(0), itemIds, interoperableInterfaceAmounts));
+        IItemMainInterface(mainInterface).mintTransferOrBurn(true, abi.encode(true, abi.encode(msg.sender, account, address(0), itemIds, interoperableInterfaceAmounts)));
         emit TransferBatch(msg.sender, account, address(0), itemIds, amounts);
         bytes[] memory datas = abi.decode(data, (bytes[]));
         for(uint256 i = 0; i < itemIds.length; i++) {
-            _burn(account, itemIds[i], amounts[i], datas[i]);
+            _unwrap(account, itemIds[i], amounts[i], datas[i]);
         }
     }
 
-    function _burn(address from, uint256 itemId, uint256 amount, bytes memory data) private {
+    function _unwrap(address from, uint256 itemId, uint256 amount, bytes memory data) private {
         (address tokenAddress, address receiver) = abi.decode(data, (address, address));
         receiver = receiver != address(0) ? receiver : from;
         require(itemIdOf[tokenAddress] == itemId, "Wrong ERC20");
@@ -79,18 +84,14 @@ contract ERC20Wrapper is IERC20Wrapper, ItemProjection {
         uint256 tokenAmount = amount / converter;
         uint256 rebuiltAmount = tokenAmount * converter;
         require(amount == rebuiltAmount, "Insufficient amount");
-        _safeTransfer(tokenAddress, receiver, tokenAmount);
+        tokenAddress.safeTransfer(receiver, tokenAmount);
     }
 
-    function _buildCreateItems(address tokenAddress, uint256 amount, address from, uint256 itemId, string memory uri) private returns(CreateItem[] memory createItems) {
+    function _buildCreateItems(address tokenAddress, uint256 amount, address receiver, uint256 itemId, string memory uri) private returns(CreateItem[] memory createItems) {
         string memory name = itemId != 0 ? "" : string(abi.encodePacked(_stringValue(tokenAddress, "name()", "NAME()"), " item"));
         string memory symbol = itemId != 0 ? "" : string(abi.encodePacked("i", _stringValue(tokenAddress, "symbol()", "SYMBOL()")));
-        uint256[] memory amounts = new uint256[](1);
-        amounts[0] = amount * (10**(18 - (_tokenDecimals[tokenAddress] = itemId != 0 ? _tokenDecimals[tokenAddress] : tokenAddress == address(0) ? 18 : IERC20Metadata(tokenAddress).decimals())));
-        address[] memory accounts = new address[](1);
-        accounts[0] = from;
         createItems = new CreateItem[](1);
-        createItems[0] = CreateItem(Header(address(0), name, symbol, uri), collectionId, itemId, accounts, amounts);
+        createItems[0] = CreateItem(Header(address(0), name, symbol, uri), collectionId, itemId, receiver.asSingletonArray(), (amount * (10**(18 - (_tokenDecimals[tokenAddress] = itemId != 0 ? _tokenDecimals[tokenAddress] : tokenAddress == address(0) ? 18 : IERC20Metadata(tokenAddress).decimals())))).asSingletonArray());
     }
 
     function _stringValue(address erc20TokenAddress, string memory firstTry, string memory secondTry) private view returns(string memory) {
@@ -121,51 +122,6 @@ contract ERC20Wrapper is IERC20Wrapper, ItemProjection {
             }
         }
 
-        return _toString(erc20TokenAddress);
-    }
-
-    function _toString(address addr) private pure returns(string memory) {
-        bytes memory data = abi.encodePacked(addr);
-        bytes memory alphabet = "0123456789ABCDEF";
-
-        bytes memory str = new bytes(2 + data.length * 2);
-        str[0] = "0";
-        str[1] = "x";
-        for (uint i = 0; i < data.length; i++) {
-            str[2+i*2] = alphabet[uint(uint8(data[i] >> 4))];
-            str[3+i*2] = alphabet[uint(uint8(data[i] & 0x0f))];
-        }
-        return string(str);
-    }
-
-    function _safeTransfer(address erc20TokenAddress, address to, uint256 value) private {
-        if(value == 0) {
-            return;
-        }
-        if(erc20TokenAddress == address(0)) {
-            (bool result,) = to.call{value : value}("");
-            require(result, "TRANSFER_FAILED");
-            return;
-        }
-        bytes memory returnData = _call(erc20TokenAddress, abi.encodeWithSelector(IERC20(erc20TokenAddress).transfer.selector, to, value));
-        require(returnData.length == 0 || abi.decode(returnData, (bool)), 'TRANSFER_FAILED');
-    }
-
-    function _safeTransferFrom(address erc20TokenAddress, address from, address to, uint256 value) private {
-        bytes memory returnData = _call(erc20TokenAddress, abi.encodeWithSelector(IERC20(erc20TokenAddress).transferFrom.selector, from, to, value));
-        require(returnData.length == 0 || abi.decode(returnData, (bool)), 'TRANSFERFROM_FAILED');
-    }
-
-    function _call(address location, bytes memory payload) private returns(bytes memory returnData) {
-        assembly {
-            let result := call(gas(), location, 0, add(payload, 0x20), mload(payload), 0, 0)
-            let size := returndatasize()
-            returnData := mload(0x40)
-            mstore(returnData, size)
-            let returnDataPayloadStart := add(returnData, 0x20)
-            returndatacopy(returnDataPayloadStart, 0, size)
-            mstore(0x40, add(returnDataPayloadStart, size))
-            switch result case 0 {revert(returnDataPayloadStart, size)}
-        }
+        return erc20TokenAddress.toString();
     }
 }

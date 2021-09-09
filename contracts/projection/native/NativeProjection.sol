@@ -8,13 +8,13 @@ import "../ItemProjection.sol";
 contract NativeProjection is ItemProjection {
 
     bool private _decimalsZero;
-    mapping(uint256 => bool) _finalized;
+    mapping(uint256 => bool) public isFinalized;
 
     constructor(bytes memory lazyInitData) ItemProjection(lazyInitData) {
     }
 
     function _projectionLazyInit(bytes memory collateralInitData) internal override returns (bytes memory) {
-        (_decimalsZero) = abi.decode(collateralInitData, (bool));
+        _decimalsZero = abi.decode(collateralInitData, (bool));
         return "";
     }
 
@@ -26,9 +26,9 @@ contract NativeProjection is ItemProjection {
         itemIds = IItemMainInterface(mainInterface).mintItems(items);
         for(uint256 i = 0; i < items.length; i++) {
             uint256 itemId = items[i].id;
-            require(itemId == 0 || !_finalized[itemId], "Finalized");
+            require(itemId == 0 || !isFinalized[itemId], "Finalized");
             if(itemId == 0) {
-                _finalized[itemIds[i]] = finalized[i];
+                isFinalized[itemIds[i]] = finalized[i];
             }
         }
     }

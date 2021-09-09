@@ -9,8 +9,10 @@ import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@ethereansos/swissknife/contracts/generic/impl/LazyInitCapableElement.sol";
 import "../util/ERC1155CommonLibrary.sol";
+import { AddressUtilities } from "@ethereansos/swissknife/contracts/lib/GeneralUtilities.sol";
 
 abstract contract ItemProjection is IItemProjection, LazyInitCapableElement {
+    using AddressUtilities for address;
 
     address public override mainInterface;
     bytes32 public override collectionId;
@@ -19,10 +21,12 @@ abstract contract ItemProjection is IItemProjection, LazyInitCapableElement {
     }
 
     function _lazyInit(bytes calldata initParams) override internal returns(bytes memory) {
-        (address _mainInterface, bytes32 _collectionId, Header memory header, CreateItem[] memory items, bytes memory collateralInitData) = abi.decode(initParams, (address, bytes32, Header, CreateItem[], bytes));
-        mainInterface = _mainInterface;
-        collectionId = _collectionId;
-        if(collectionId == 0) {
+        Header memory header;
+        CreateItem[] memory items;
+        bytes memory collateralInitData;
+        (mainInterface, collectionId, header, items, collateralInitData) = abi.decode(initParams, (address, bytes32, Header, CreateItem[], bytes));
+        if(collectionId == bytes32(0)) {
+            header.host = address(this);
             IItemMainInterface(mainInterface).createCollection(header, items);
         } else {
             IItemMainInterface(mainInterface).mintItems(items);
@@ -73,7 +77,7 @@ abstract contract ItemProjection is IItemProjection, LazyInitCapableElement {
         (,,,value) = IItemMainInterface(mainInterface).collection(collectionId);
     }
 
-    function uri() override external view returns(string memory) {
+    function uri() override public view returns(string memory) {
         return IItemMainInterface(mainInterface).collectionUri(collectionId);
     }
 
@@ -95,52 +99,52 @@ abstract contract ItemProjection is IItemProjection, LazyInitCapableElement {
         return 18;
     }
 
-    function toMainInterfaceAmount(uint256 amount, uint256 itemId) override public view returns(uint256) {
-        if(amount == 0) {
+    function toMainInterfaceAmount(uint256 interoperableInterfaceAmount, uint256 itemId) override public view returns(uint256) {
+        if(interoperableInterfaceAmount == 0) {
             return 0;
         }
         if(decimals(itemId) == 18) {
-            return amount;
+            return interoperableInterfaceAmount;
         }
         uint256 interoperableTotalSupply = IERC20(interoperableOf(itemId)).totalSupply();
         uint256 interoperableUnity = 1e18;
         uint256 interoperableHalfUnity = (interoperableUnity / 51) * 100;
         uint256 mainInterfaceUnity = 10 ** decimals(itemId);
-        if(interoperableTotalSupply <= interoperableUnity && amount <= interoperableUnity) {
-            return amount < interoperableHalfUnity ? 0 : mainInterfaceUnity;
+        if(interoperableTotalSupply <= interoperableUnity && interoperableInterfaceAmount <= interoperableUnity) {
+            return interoperableInterfaceAmount < interoperableHalfUnity ? 0 : mainInterfaceUnity;
         }
-        return (amount * mainInterfaceUnity) / interoperableUnity;
+        return (interoperableInterfaceAmount * mainInterfaceUnity) / interoperableUnity;
     }
 
-    function toInteroperableInterfaceAmount(uint256 amount, uint256 itemId, address account) override public view returns(uint256) {
-        if(amount == 0) {
+    function toInteroperableInterfaceAmount(uint256 mainInterfaceAmount, uint256 itemId, address account) override public view returns(uint256) {
+        if(mainInterfaceAmount == 0) {
             return 0;
         }
         if(decimals(itemId) == 18) {
-            return amount;
+            return mainInterfaceAmount;
         }
-        uint256 fullPrecisionAmount = amount * 10 ** (18 - decimals(itemId));
+        uint256 interoperableInterfaceAmount = mainInterfaceAmount * 10 ** (18 - decimals(itemId));
         if(account == address(0)) {
-            return fullPrecisionAmount;
+            return interoperableInterfaceAmount;
         }
         uint256 interoperableBalance = IItemMainInterface(mainInterface).balanceOf(account, itemId);
         if(interoperableBalance == 0) {
-            return fullPrecisionAmount;
+            return interoperableInterfaceAmount;
         }
         uint256 interoperableTotalSupply = IERC20(interoperableOf(itemId)).totalSupply();
         uint256 interoperableUnity = 1e18;
         uint256 interoperableHalfUnity = (interoperableUnity / 51) * 100;
-        if(interoperableTotalSupply <= interoperableUnity && fullPrecisionAmount == interoperableUnity && interoperableBalance >= interoperableHalfUnity) {
-            return interoperableBalance <= fullPrecisionAmount ? interoperableBalance : fullPrecisionAmount;
+        if(interoperableTotalSupply <= interoperableUnity && interoperableInterfaceAmount == interoperableUnity && interoperableBalance >= interoperableHalfUnity) {
+            return interoperableBalance < interoperableInterfaceAmount ? interoperableBalance : interoperableInterfaceAmount;
         }
-        return fullPrecisionAmount;
+        return interoperableInterfaceAmount;
     }
 
     function uri(uint256 itemId) override external view returns(string memory) {
         return IItemMainInterface(mainInterface).uri(itemId);
     }
 
-    function itemPlainURI(uint256 itemId) override external view returns(string memory) {
+    function itemPlainUri(uint256 itemId) override external view returns(string memory) {
         (, Header memory header,,) = IItemMainInterface(mainInterface).item(itemId);
         return header.uri;
     }
@@ -164,8 +168,8 @@ abstract contract ItemProjection is IItemProjection, LazyInitCapableElement {
         return IItemMainInterface(mainInterface).isApprovedForAll(account, operator);
     }
 
-    function setApprovalForAll(address operator, bool approved) override external {
-        revert("call directly the setApprovalForAll of the main Interface");
+    function setApprovalForAll(address, bool) override external {
+        revert(string(abi.encodePacked("call directly the setApprovalForAll on the main Interface ", mainInterface.toString())));
     }
 
     function safeTransferFrom(address from, address to, uint256 itemId, uint256 amount, bytes calldata data) virtual override external {
@@ -179,7 +183,7 @@ abstract contract ItemProjection is IItemProjection, LazyInitCapableElement {
         for(uint256 i = 0 ; i < interoperableInterfaceAmounts.length; i++) {
             interoperableInterfaceAmounts[i] = toInteroperableInterfaceAmount(amounts[i], itemIds[i], from);
         }
-        IItemMainInterface(mainInterface).mintTransferOrBurn(true, abi.encode(msg.sender, from, to, itemIds, interoperableInterfaceAmounts));
+        IItemMainInterface(mainInterface).mintTransferOrBurn(true, abi.encode(true, abi.encode(msg.sender, from, to, itemIds, interoperableInterfaceAmounts)));
         ERC1155CommonLibrary.doSafeBatchTransferAcceptanceCheck(msg.sender, from, to, itemIds, amounts, data);
         emit TransferBatch(msg.sender, from, to, itemIds, amounts);
     }
@@ -202,7 +206,7 @@ abstract contract ItemProjection is IItemProjection, LazyInitCapableElement {
         for(uint256 i = 0 ; i < interoperableInterfaceAmounts.length; i++) {
             interoperableInterfaceAmounts[i] = toInteroperableInterfaceAmount(amounts[i], itemIds[i], account);
         }
-        IItemMainInterface(mainInterface).mintTransferOrBurn(true, abi.encode(msg.sender, account, address(0), itemIds, interoperableInterfaceAmounts));
+        IItemMainInterface(mainInterface).mintTransferOrBurn(true, abi.encode(true, abi.encode(msg.sender, account, address(0), itemIds, interoperableInterfaceAmounts)));
         emit TransferBatch(msg.sender, account, address(0), itemIds, amounts);
     }
 }

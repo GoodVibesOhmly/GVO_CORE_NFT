@@ -20,18 +20,18 @@ abstract contract ItemProjection is IItemProjection, LazyInitCapableElement {
     constructor(bytes memory lazyInitData) LazyInitCapableElement(lazyInitData) {
     }
 
-    function _lazyInit(bytes calldata initParams) override internal returns(bytes memory) {
+    function _lazyInit(bytes calldata lazyInitParams) override internal returns(bytes memory lazyInitResponse) {
+        (mainInterface, lazyInitResponse) = abi.decode(lazyInitParams, (address, bytes));
         Header memory header;
         CreateItem[] memory items;
-        bytes memory collateralInitData;
-        (mainInterface, collectionId, header, items, collateralInitData) = abi.decode(initParams, (address, bytes32, Header, CreateItem[], bytes));
+        (collectionId, header, items, lazyInitResponse) = abi.decode(lazyInitResponse, (bytes32, Header, CreateItem[], bytes));
         if(collectionId == bytes32(0)) {
             header.host = address(this);
             IItemMainInterface(mainInterface).createCollection(header, items);
         } else {
             IItemMainInterface(mainInterface).mintItems(items);
         }
-        return _projectionLazyInit(collateralInitData);
+        lazyInitResponse = _projectionLazyInit(lazyInitResponse);
     }
 
     function _supportsInterface(bytes4 interfaceId) override internal view returns (bool) {
@@ -39,11 +39,6 @@ abstract contract ItemProjection is IItemProjection, LazyInitCapableElement {
     }
 
     function _projectionLazyInit(bytes memory lazyInitData) internal virtual returns (bytes memory collateralInitResponse);
-
-    function setMainInterface(address value) authorizedOnly override external returns(address oldValue) {
-        oldValue = mainInterface;
-        mainInterface = value;
-    }
 
     function setHeader(Header calldata value) authorizedOnly override external returns(Header memory oldValue) {
         Header[] memory values = new Header[](1);

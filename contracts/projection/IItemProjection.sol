@@ -9,7 +9,6 @@ import "@ethereansos/swissknife/contracts/generic/model/ILazyInitCapableElement.
 interface IItemProjection is Item, ILazyInitCapableElement {
 
     function mainInterface() external view returns(address);
-    function setMainInterface(address value) external returns(address oldValue);
 
     function collectionId() external view returns(bytes32);
     function uri() external view returns(string memory);

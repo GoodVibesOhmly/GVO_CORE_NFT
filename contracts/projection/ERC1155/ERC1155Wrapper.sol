@@ -41,13 +41,9 @@ contract ERC1155Wrapper is IERC1155Wrapper, ItemProjection, IERC1155Receiver {
         uint256 amount,
         bytes calldata data
     ) override external returns (bytes4) {
-        address receiver = from;
-        if(data.length > 0) {
-            receiver = abi.decode(data, (address));
-        }
-        receiver = receiver != address(0) ? receiver : from;
+        (uint256[] memory values, address[] memory receivers) = abi.decode(data, (uint256[], address[]));
         uint256 itemId = itemIdOf(msg.sender, tokenId);
-        (CreateItem[] memory createItems, uint256 tokenDecimals) = _buildCreateItems(msg.sender, tokenId, amount, receiver, itemId);
+        (CreateItem[] memory createItems, uint256 tokenDecimals) = _buildCreateItems(from, msg.sender, tokenId, amount, values, receivers, itemId);
         _trySaveCreatedItemAndEmitTokenEvent(itemId, tokenId, createItems, tokenDecimals);
         return this.onERC1155Received.selector;
     }
@@ -59,16 +55,11 @@ contract ERC1155Wrapper is IERC1155Wrapper, ItemProjection, IERC1155Receiver {
         uint256[] calldata amounts,
         bytes calldata data
     ) override external returns (bytes4) {
-        address[] memory receivers = data.length > 0 ? abi.decode(data, (address[])) : new address[](0);
-        address defaultReceiver = from;
-        if(receivers.length == 1) {
-            defaultReceiver = receivers[0];
-        }
-        defaultReceiver = defaultReceiver != address(0) ? defaultReceiver : from;
+        bytes[] memory dataArray = abi.decode(data, (bytes[]));
         for(uint256  i = 0 ; i < tokenIds.length; i++) {
-            address itemReceiver = receivers.length <= 1 ? defaultReceiver : receivers[i];
+            (uint256[] memory values, address[] memory receivers) = abi.decode(dataArray[i], (uint256[], address[]));
             uint256 itemId = itemIdOf(msg.sender, tokenIds[i]);
-            (CreateItem[] memory createItems, uint256 tokenDecimals) = _buildCreateItems(msg.sender, tokenIds[i], amounts[i], itemReceiver != address(0) ? itemReceiver : defaultReceiver, itemId);
+            (CreateItem[] memory createItems, uint256 tokenDecimals) = _buildCreateItems(from, msg.sender, tokenIds[i], amounts[i], values, receivers, itemId);
             _trySaveCreatedItemAndEmitTokenEvent(itemId, tokenIds[i], createItems, tokenDecimals);
         }
         return this.onERC1155BatchReceived.selector;
@@ -113,10 +104,19 @@ contract ERC1155Wrapper is IERC1155Wrapper, ItemProjection, IERC1155Receiver {
         IERC1155(tokenAddress).safeTransferFrom(msg.sender, receiver, tokenId, tokenAmount, payload);
     }
 
-    function _buildCreateItems(address tokenAddress, uint256 tokenId, uint256 amount, address receiver, uint256 itemId) private view returns(CreateItem[] memory createItems, uint256 tokenDecimals) {
+    function _buildCreateItems(address from, address tokenAddress, uint256 tokenId, uint256 amount, uint256[] memory values, address[] memory receivers, uint256 itemId) private view returns(CreateItem[] memory createItems, uint256 tokenDecimals) {
+        uint256 totalAmount = 0;
+        tokenDecimals = _safeDecimals(tokenAddress, tokenId, false);
+        address[] memory realReceivers = new address[](values.length);
+        for(uint256 i = 0; i < values.length; i++) {
+            totalAmount += values[i];
+            values[i] = values[i] * (10**(18 - tokenDecimals));
+            realReceivers[i] = (realReceivers[i] = i < receivers.length ? receivers[i] : from) != address(0) ? realReceivers[i] : from;
+        }
+        require(totalAmount == amount, "inconsistent amount");
         (string memory name, string memory symbol, string memory uri) = itemId != 0 ? ("", "", "") : _tryRecoveryMetadata(tokenAddress, tokenId);
         createItems = new CreateItem[](1);
-        createItems[0] = CreateItem(Header(address(0), name, symbol, uri), collectionId, itemId, receiver.asSingletonArray(), (amount * (10**(18 - (tokenDecimals = _safeDecimals(tokenAddress, tokenId, false))))).asSingletonArray());
+        createItems[0] = CreateItem(Header(address(0), name, symbol, uri), collectionId, itemId, realReceivers, values);
     }
 
     function _tryRecoveryMetadata(address source, uint256 tokenId) private view returns(string memory name, string memory symbol, string memory uri) {

@@ -1,4 +1,4 @@
-describe("Item V2", () => {
+describe("Item V2 Core", () => {
 
     var ItemMainInterface;
     var ItemInteroperableInterface;

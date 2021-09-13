@@ -23,4 +23,11 @@ contract ItemProjectionFactory is Factory {
         emit Deployed(modelAddress, deployedAddress, msg.sender, deployedLazyInitResponse = ILazyInitCapableElement(deployedAddress).lazyInit(abi.encode(mainInterface, deployData)));
         require(ILazyInitCapableElement(deployedAddress).initializer() == address(this));
     }
+
+    function _subjectIsAuthorizedFor(address, address, bytes4 selector, bytes calldata, uint256) internal override pure returns (bool, bool) {
+        if(selector == this.setModelAddress.selector || selector == this.setDynamicUriResolver.selector) {
+            return (true, false);
+        }
+        return (false, false);
+    }
 }

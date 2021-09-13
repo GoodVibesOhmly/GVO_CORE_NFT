@@ -103,8 +103,8 @@ contract ERC20Wrapper is IERC20Wrapper, ItemProjection {
     }
 
     function _buildContreteCreateItem(address tokenAddress, uint256[] memory amounts, address[] memory receivers, uint256 itemId, string memory uri) private returns(CreateItem memory) {
-        string memory name = itemId != 0 ? "" : string(abi.encodePacked(_stringValue(tokenAddress, "name()", "NAME()"), " item"));
-        string memory symbol = itemId != 0 ? "" : string(abi.encodePacked("i", _stringValue(tokenAddress, "symbol()", "SYMBOL()")));
+        string memory name = itemId != 0 ? "" : string(abi.encodePacked(tokenAddress == address(0) ? "Ethereum" : _stringValue(tokenAddress, "name()", "NAME()"), " item"));
+        string memory symbol = itemId != 0 ? "" : string(abi.encodePacked("i", tokenAddress == address(0) ? "ETH" : _stringValue(tokenAddress, "symbol()", "SYMBOL()")));
         uint256 tokenDecimals = (_tokenDecimals[tokenAddress] = itemId != 0 ? _tokenDecimals[tokenAddress] : tokenAddress == address(0) ? 18 : IERC20Metadata(tokenAddress).decimals());
         for(uint256 i = 0; i < amounts.length; i++) {
             amounts[i] = (amounts[i] * (10**(18 - tokenDecimals)));

@@ -3,43 +3,47 @@ var blockchainConnection = require("../util/blockchainConnection");
 var mainInterfaceAddress = "0x915A22A152654714FcecA3f4704fCf6bd314624c";
 var dynamicUriResolverAddress;
 var ItemProjectionFactoryContract;
+var NativeProjection;
 
 async function deploy(host, plainUri) {
-    var nativeProjection = await compile(
-      "../contracts/projection/native/NativeProjection.sol"
+  
+    await blockchainConnection.init;
+
+    NativeProjection = await compile(
+      "projection/native/NativeProjection"
     );
     var nativeProjectionContract = await new web3.eth.Contract(
-      nativeProjection.abi
+      NativeProjection.abi
     )
-      .deploy({ data: nativeProjection.bin, arguments: ["0x"] })
+      .deploy({ data: NativeProjection.bin, arguments: ["0x"] })
       .send(blockchainConnection.getSendingOptions());
 
-    var DynamicUriResolver = await compile(
-      "../node_modules/@ethereansos/swissknife/contracts/dynamicMetadata/impl/DynamicUriResolver"
-    );
-    dynamicUriResolver = await new web3.eth.Contract(DynamicUriResolver.abi)
-      .deploy({ data: DynamicUriResolver.bin })
-      .send(blockchainConnection.getSendingOptions());
-    dynamicUriResolverAddress = dynamicUriResolver.options.address;
+    var MainInterface = await compile('model/IItemMainInterface');
+    var mainInterface = new web3.eth.Contract(MainInterface.abi, mainInterfaceAddress);
+
+    dynamicUriResolverAddress = await mainInterface.methods.dynamicUriResolver().call();
 
     var model = nativeProjectionContract.options.address;
 
     var ItemProjectionFactory = await compile(
-      "../contracts/projection/factory/impl/ItemProjectionFactory.sol"
+      "projection/factory/impl/ItemProjectionFactory"
     );
 
     var dataParam = web3.eth.abi.encodeParameters(
       ["address"],
       [mainInterfaceAddress]
     );
+
     dataParam = web3.eth.abi.encodeParameters(
       ["address", "bytes"],
       [model, dataParam]
     );
+
     dataParam = web3.eth.abi.encodeParameters(
       ["string", "address", "bytes"],
       [plainUri, dynamicUriResolverAddress, dataParam]
     );
+
     dataParam = web3.eth.abi.encodeParameters(
       ["address", "bytes"],
       [host, dataParam]
@@ -79,16 +83,13 @@ module.exports = {
 
         deployParam = abi.encode(
           ["address", "bytes"],
-          [mainInterfaceAddress, deployParam]
-        );
-
-        deployParam = abi.encode(
-          ["address", "bytes"],
           [host, deployParam]
         );
 
-      await ItemProjectionFactoryContract.methods
+      var transaction = await ItemProjectionFactoryContract.methods
         .deploy(deployParam)
         .send(blockchainConnection.getSendingOptions());
+
+      return new web3.eth.Contract(NativeProjection.abi, transaction.events.Deployed.returnValues.deployedAddress);
     }
 };

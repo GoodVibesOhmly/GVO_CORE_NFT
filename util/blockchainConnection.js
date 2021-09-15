@@ -33,20 +33,21 @@ module.exports = {
             ...edit
         };
     },
-    async fastForward(blocks) {
+    async fastForward(blocks, remote) {
         var blockNumber = parseInt(await web3.eth.getBlockNumber()) + (blocks = blocks && parseInt(blocks) || 1);
-        while (blocks-- > 0) {
-            web3.currentProvider.sendAsync({ "id": new Date().getTime(), "jsonrpc": "2.0", "method": "evm_mine", "params": [] }, () => {});
-        }
+        await new Promise(function(ok) {
+            var createBlock = async () => blocks-- === 0 ? ok() : remote ? await web3.currentProvider.sendAsync({ "id": new Date().getTime(), "jsonrpc": "2.0", "method": "evm_mine", "params": [] }, createBlock) : global.blockchainProvider.manager.state.blockchain.createBlock((_, block) => global.blockchainProvider.manager.state.blockchain.putBlock(block, [], [], createBlock));
+            createBlock();
+        });
         while (parseInt(await web3.eth.getBlockNumber()) < blockNumber) {
             await new Promise(ok => setTimeout(ok, 1000));
         }
     },
-    async jumpToBlock(block, notIncluded) {
+    async jumpToBlock(block, notIncluded, remote) {
         var currentBlock = await web3.eth.getBlockNumber();
         var blocks = block - currentBlock;
         notIncluded && blocks--;
-        await this.fastForward(blocks);
+        await this.fastForward(blocks, remote);
     },
     async calculateTransactionFee(txn) {
         try {
@@ -60,74 +61,78 @@ module.exports = {
         }
     },
     unlockAccounts(accountsInput) {
-        return Promise.all((accountsInput = accountsInput instanceof Array ? accountsInput : [accountsInput]).map(it => new Promise(async function(ok, ko) {
-            try {
-                await web3.currentProvider.sendAsync({
-                    "id": new Date().getTime(),
-                    "jsonrpc": "2.0",
-                    "method": "evm_unlockUnknownAccount",
-                    "params": [it = web3.utils.toChecksumAddress(it)]
-                }, async function(error, response) {
-                    if (error) {
-                        return ko(error);
-                    }
+        var accountsToUnlock = (accountsInput = accountsInput instanceof Array ? accountsInput : [accountsInput]).map(it => it);
+        return new Promise(function(ok, ko) {
+            var unlock = async function unlock(error, response) {
+                if (error) {
+                    return ko(error);
+                }
+                if(accountsToUnlock.length === 0) {
                     if (!response || !response.result) {
                         return ko((response && response.result) || response);
                     }
                     return ok((response && response.result) || response);
-                });
-            } catch(e) {
-                return ko(e);
+                }
+                try {
+                    await web3.currentProvider.sendAsync({
+                        "id": new Date().getTime(),
+                        "jsonrpc": "2.0",
+                        "method": "evm_unlockUnknownAccount",
+                        "params": [web3.utils.toChecksumAddress(accountsToUnlock.shift())]
+                    }, unlock);
+                } catch (e) {
+                    return ko(e);
+                }
             }
-        }))).then(() => global.blockchainConnection.safeTransferETH(accountsInput));
+            unlock();
+        }).then(() => global.blockchainConnection.safeTransferETH(accountsInput));
     },
     async safeTransferETH(accountsInput) {
-        var forceBalance = [];
-        await Promise.all((accountsInput = accountsInput instanceof Array ? accountsInput : [accountsInput]).map(it => new Promise(async function(ok, ko) {
-            try {
-                await web3.eth.sendTransaction({
-                    to: it,
-                    from: accounts[accounts.length - 1],
-                    gasLimit: global.gasLimit,
-                    value: web3.utils.toWei("99999", "ether")
-                });
-            } catch(e) {
-                forceBalance.push(it);
-            }
-            return ok();
-        })));
-        if(forceBalance.length > 0) {
-            var blockchain = global.blockchainProvider.manager.state.blockchain;
-            var stateManager = blockchain.vm.stateManager;
-            var accounts = await Promise.all(forceBalance.map(it => new Promise(function(ok) {
-                blockchain.getAccount(it, function(_, account) {
-                    account.balance = utils.toBuffer(9999999999999999999 * 1e18);
-                    return ok({
-                        address: utils.toBuffer(it.toLowerCase()),
+        accountsInput = accountsInput instanceof Array ? accountsInput : [accountsInput];
+        var previousBalances = {};
+        await Promise.all(accountsInput.map(async it => previousBalances[it] = parseInt(await web3.eth.getBalance(it))));
+        var blockchain = global.blockchainProvider.manager.state.blockchain;
+        var stateManager = blockchain.vm.stateManager;
+        var accounts = [];
+        var index = 0;
+        await new Promise(function(ok, ko) {
+            var onAccount = function onAccount(error, account) {
+                if(error) {
+                    return ko(error);
+                }
+                if(account) {
+                    account.balance = utils.toBuffer((9999999999999999999 * 1e18) + previousBalances[accountsInput[index]]);
+                    accounts.push({
+                        address: utils.toBuffer(accountsInput[index++].toLowerCase()),
                         account
                     });
-                });
-            })));
-            await new Promise(function(ok) {
-                blockchain.createBlock(function(_, block) {
-                    stateManager.checkpoint(function() {
-                        var putAccount = function() {
-                            if(accounts.length === 0) {
-                                return stateManager.commit(function() {
-                                    blockchain.putBlock(block, [], [], ok);
-                                });
-                            }
-                            var data = accounts.shift();
-                            stateManager.putAccount(data.address, data.account, putAccount);
-                        };
-                        setTimeout(putAccount);
-                    });
+                }
+                if(index === accountsInput.length) {
+                    return ok();
+                }
+                blockchain.getAccount(accountsInput[index], onAccount);
+            };
+            onAccount();
+        });
+        await new Promise(function(ok) {
+            blockchain.createBlock(function(_, block) {
+                stateManager.checkpoint(function() {
+                    var putAccount = function() {
+                        if (accounts.length === 0) {
+                            return stateManager.commit(function() {
+                                blockchain.putBlock(block, [], [], ok);
+                            });
+                        }
+                        var data = accounts.shift();
+                        stateManager.putAccount(data.address, data.account, putAccount);
+                    };
+                    putAccount();
                 });
             });
-        }
+        });
     },
     async createAndUnlockContract(Compilation, args) {
-        var contract = await new web3.eth.Contract(Compilation.abi).deploy({data : Compilation.bin, arguments : args || []}).send(blockchainConnection.getSendingOptions());
+        var contract = await new web3.eth.Contract(Compilation.abi).deploy({ data: Compilation.bin, arguments: args || [] }).send(blockchainConnection.getSendingOptions());
         await this.unlockAccounts(contract.options.address);
         return contract;
     }

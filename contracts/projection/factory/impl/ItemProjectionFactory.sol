@@ -20,7 +20,8 @@ contract ItemProjectionFactory is Factory {
 
     function deploy(bytes calldata deployData) external payable override virtual returns(address deployedAddress, bytes memory deployedLazyInitResponse) {
         deployer[deployedAddress = modelAddress.clone()] = msg.sender;
-        emit Deployed(modelAddress, deployedAddress, msg.sender, deployedLazyInitResponse = ILazyInitCapableElement(deployedAddress).lazyInit(abi.encode(mainInterface, deployData)));
+        (address host, bytes memory lazyInitData) = abi.decode(deployData, (address, bytes));
+        emit Deployed(modelAddress, deployedAddress, msg.sender, deployedLazyInitResponse = ILazyInitCapableElement(deployedAddress).lazyInit(abi.encode(host, abi.encode(mainInterface, lazyInitData))));
         require(ILazyInitCapableElement(deployedAddress).initializer() == address(this));
     }
 

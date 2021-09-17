@@ -102,10 +102,25 @@ async function initialization(
     .deploy(deployParam)
     .send(blockchainConnection.getSendingOptions());
 
-  return new web3.eth.Contract(
-    NativeProjection.abi,
-    transaction.events.Deployed.returnValues.deployedAddress
-  );
+    var logs = (await web3.eth.getTransactionReceipt(transaction.transactionHash))
+    .logs;
+    var itemIds = logs
+    .filter(
+      (it) =>
+        it.topics[0] ===
+        web3.utils.sha3("CollectionItem(bytes32,bytes32,uint256)")
+    )
+    .map((it) => web3.eth.abi.decodeParameter("uint256", it.topics[3]));
+
+    var native = new web3.eth.Contract(
+      NativeProjection.abi,
+      transaction.events.Deployed.returnValues.deployedAddress
+    )
+
+  return {
+    native,
+    itemIds
+  }
 }
 
 async function createCollection(host, itemsToMint) {

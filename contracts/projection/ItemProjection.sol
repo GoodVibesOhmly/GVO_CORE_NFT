@@ -28,7 +28,7 @@ abstract contract ItemProjection is IItemProjection, LazyInitCapableElement {
         if(collectionId == bytes32(0)) {
             header.host = address(this);
             (collectionId,) = IItemMainInterface(mainInterface).createCollection(header, items);
-        } else {
+        } else if(items.length > 0) {
             IItemMainInterface(mainInterface).mintItems(items);
         }
         lazyInitResponse = _projectionLazyInit(lazyInitResponse);

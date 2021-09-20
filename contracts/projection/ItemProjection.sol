@@ -48,7 +48,7 @@ abstract contract ItemProjection is IItemProjection, LazyInitCapableElement {
         return IItemMainInterface(mainInterface).setCollectionsMetadata(collectionIds, values)[0];
     }
 
-    function setItemsMetadata(uint256[] calldata itemIds, Header[] calldata values) authorizedOnly override external returns(Header[] memory oldValues) {
+    function setItemsMetadata(uint256[] calldata itemIds, Header[] calldata values) authorizedOnly override external virtual returns(Header[] memory oldValues) {
         return IItemMainInterface(mainInterface).setItemsMetadata(itemIds, values);
     }
 

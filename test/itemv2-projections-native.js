@@ -54,6 +54,9 @@ describe("Item V2 Projections - Native", () => {
     var native = (await itemsv2.initialization(zeroDecimals, collectionId, collectionHeader, items, accounts[1], "URI"))['native'];
     assert.equal(await native.methods.decimals(0).call(), zeroDecimals ? '0' : '18');
     assert.equal(await native.methods.collectionId().call(), collectionId);
+
+    var collectionData = await mainInterface.methods.collection(collectionId).call();
+    assert.equal(collectionData.host, native.options.address);
   });
 
   it("#620 Change Collection Metadata", async () => {
@@ -110,9 +113,16 @@ describe("Item V2 Projections - Native", () => {
     
     console.log("Native", native.options.address);
     assert.equal(await native.methods.decimals(0).call(), zeroDecimals ? '0' : '18');
+    var collectionId = await native.methods.collectionId().call();
+    var collectionData = await mainInterface.methods.collection(collectionId).call();
+    assert.equal(collectionData.host, native.options.address);
     await catchCall(native.methods.setHeader(newCollectionHeader).send(blockchainConnection.getSendingOptions({ from: accounts[2] })), 'Unauthorized');
     await native.methods.setHeader(newCollectionHeader).send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
     assert.equal(await native.methods.uri().call(), 'uri2');
+
+    collectionData = await mainInterface.methods.collection(collectionId).call();
+    assert.notStrictEqual(collectionData.host, native.options.address);
+    assert.equal(collectionData.host, newCollectionHeader[0]);
     await catchCall(native.methods.setHeader(newCollectionHeader).send(blockchainConnection.getSendingOptions({ from: accounts[1] })), 'Unauthorized');
   });
 
@@ -431,7 +441,22 @@ describe("Item V2 Projections - Native", () => {
           uri: 'uriItem1'
       },
       collectionId: web3.utils.sha3("lalelakelkl"),
-      id: 697231,
+      id: 0,
+      accounts: [accounts[1]],
+      amounts: ['10000000000000000']
+    }];
+
+    await catchCall(native.methods.mintItems(CreateItem).send(blockchainConnection.getSendingOptions({ from: accounts[1] })), 'Unauthorized');
+
+    var CreateItem = [{
+      header: {
+          host: accounts[1],
+          name: 'Item1',
+          symbol: 'I1',
+          uri: 'uriItem1'
+      },
+      collectionId: utilities.voidBytes32,
+      id: web3.eth.abi.encodeParameter("address", accounts[1]),
       accounts: [accounts[1]],
       amounts: ['10000000000000000']
     }];
@@ -555,9 +580,9 @@ describe("Item V2 Projections - Native", () => {
       id: itemids,
       accounts: [accounts[1]],
       amounts: ['10000000000000000']
-  };
+    };
 
-  await itemProjection.checkItem(ExpectedResult, await mainInterface.methods.item(itemids).call());
+    await itemProjection.checkItem(ExpectedResult, await mainInterface.methods.item(itemids).call());
 
   });
 
@@ -612,9 +637,9 @@ describe("Item V2 Projections - Native", () => {
       id: itemids,
       accounts: [accounts[1]],
       amounts: ['10000000000000000']
-  };
+    };
 
-  await itemProjection.checkItem(ExpectedResult, await mainInterface.methods.item(itemids).call());
+    await itemProjection.checkItem(ExpectedResult, await mainInterface.methods.item(itemids).call());
 
   });
 

@@ -107,6 +107,11 @@ async function assertCheckBalanceSupply(funct, createItem, isBurn) {
   );
 }
 
+async function assertCheckHeader(header, funct){
+  var newHeader = await execFunct(funct);
+  checkHeader(header, newHeader);
+}
+
 function checkHeader(h1, h2) {
   /**
    * check that 2 object Header are equal
@@ -123,7 +128,16 @@ function checkItem(h1, h2) {
   checkHeader(h1.header, h2.header);
 }
 
+async function assertCheckCollection(items, collectionId){
+  items.map(async (item, index) => {
+    assert.equal(await itemMainInterface.methods.collection(item).call(), collectionId)
+  })
+}
+
 module.exports = {
   assertCheckBalanceSupply,
-  checkItem
+  assertCheckHeader,
+  checkHeader,
+  checkItem,
+  assertCheckCollection
 };

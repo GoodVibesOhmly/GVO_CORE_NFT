@@ -144,6 +144,9 @@ describe("Item V2 Projections - Native", () => {
       zeroDecimals ? "0" : "18"
     );
     assert.equal(await native.methods.collectionId().call(), collectionId);
+
+    var collectionData = await mainInterface.methods.collection(collectionId).call();
+    assert.equal(collectionData.host, native.options.address);
   });
 
   it("#620 Change Collection Metadata", async () => {

@@ -125,6 +125,11 @@ async function initialization(
 }
 
 async function createCollection(host, itemsToMint) {
+  var MainInterface = await compile("model/IItemMainInterface");
+  mainInterface = new web3.eth.Contract(
+    MainInterface.abi,
+    mainInterfaceAddress
+  );
   var collection = {
     host,
     name: "Collection",

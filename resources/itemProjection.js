@@ -76,6 +76,7 @@ async function assertCheckBalanceSupply(
   if (idItems == 0) {
     idItems = await getItemIdFromLog(transaction);
   }
+  
   var expectedBalance = checkBal.map((it, i) => {
     return it["balances"].map((item, index) => {
       return item.map((element, indexEl) => {
@@ -159,9 +160,39 @@ async function assertCheckBalanceSupplyWithBalance(
   );
 }
 
+async function assertDecimals(funct, zeroDecimals) {
+  assert.equal(
+    await execFunct(funct),
+    zeroDecimals ? "0" : "18"
+  );
+}
+
+async function assertNotEqualCollection(funct, coll) {
+  assert.notEqual(
+    await execFunct(funct),
+    coll
+  );
+}
+
+async function assertEqualCollection(funct, coll) {
+  assert.equal(await execFunct(funct), coll);
+}
+
+async function assertEqualHeaderHost(host1, host2) {
+  assert.equal(host1, host2);
+}
+
+async function assertEqualHeaderUri(funct, uri) {
+  assert.equal(await execFunct(funct), uri);
+}
+
 async function assertCheckHeader(header, funct) {
   var newHeader = await execFunct(funct);
   checkHeader(header, newHeader);
+}
+
+async function assertCheckFinalized(funct, finalized) {
+  assert.equal(await execFunct(funct), finalized);
 }
 
 function checkHeader(h1, h2) {
@@ -201,4 +232,10 @@ module.exports = {
   checkItem,
   assertCheckCollection,
   getItemIdFromLog,
+  assertDecimals,
+  assertNotEqualCollection,
+  assertEqualCollection,
+  assertEqualHeaderHost,
+  assertEqualHeaderUri,
+  assertCheckFinalized,
 };

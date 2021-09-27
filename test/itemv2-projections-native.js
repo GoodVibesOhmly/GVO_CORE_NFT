@@ -16,17 +16,18 @@ describe("Item V2 Projections - Native", () => {
     var zeroDecimals = false;
     var collectionId = utilities.voidBytes32;
 
-    var collectionHeader = [accounts[1], "Item1", "I1", "uriItem1"];
+    var collectionHeader = [accounts[1], "Collection1", "c1", "uri1"];
 
     var items = [
       [
-        [utilities.voidEthereumAddress, "", "", ""],
+        [utilities.voidEthereumAddress, "Item1", "I1", "uriItem1"],
         collectionId,
         0,
         [accounts[1]],
         [10000],
       ],
     ];
+
     try {
       var native = (
         await itemsv2.initialization(
@@ -39,14 +40,11 @@ describe("Item V2 Projections - Native", () => {
         )
       )["native"];
       console.log("Native", native.options.address);
-      assert.equal(
-        await native.methods.decimals(0).call(),
-        zeroDecimals ? "0" : "18"
-      );
-      assert.notEqual(
-        await native.methods.collectionId().call(),
-        utilities.voidBytes32
-      );
+
+      await itemProjection.assertDecimals(native.methods.decimals(0).call(), zeroDecimals);
+
+      await itemProjection.assertNotEqualCollection(native.methods.collectionId().call(), collectionId);
+
     } catch (e) {
       console.error(e);
     }
@@ -112,12 +110,9 @@ describe("Item V2 Projections - Native", () => {
         .call()
     );
 
-    assert.equal(
-      await native.methods.decimals(0).call(),
-      zeroDecimals ? "0" : "18"
-    );
-
-    assert.equal(await native.methods.collectionId().call(), collectionId);
+    await itemProjection.assertDecimals(native.methods.decimals(0).call(), zeroDecimals);
+    
+    await itemProjection.assertEqualCollection(native.methods.collectionId().call(), collectionId);
   });
 
   it("#619/2 Alternative Initialization with items", async () => {
@@ -132,6 +127,7 @@ describe("Item V2 Projections - Native", () => {
      * The NativeProjection is created but not inizialized.
      * The collection.host is set as NativeProjection address.
      * The NativeProjection is initialized passing the collectionId and some Items to mint and create
+     * must fail: can't initialize an existing collection with items
      */
     var zeroDecimals = false;
     var collectionId = utilities.voidBytes32;
@@ -153,14 +149,14 @@ describe("Item V2 Projections - Native", () => {
 
     var items = [
       [
-        [utilities.voidEthereumAddress, "", "", ""],
+        [utilities.voidEthereumAddress, "Item1", "I1", "uriItem1"],
         collectionId,
         0,
         [accounts[1]],
         [10000],
       ],
       [
-        [utilities.voidEthereumAddress, "", "", ""],
+        [utilities.voidEthereumAddress, "Item2", "I2", "uriItem2"],
         collectionId,
         0,
         [accounts[1]],
@@ -185,19 +181,18 @@ describe("Item V2 Projections - Native", () => {
     );
   });
 
-  it("#???? Alternative Initialization", async () => {
+  it("#639 Alternative Initialization #2", async () => {
     /**
-     * Authorized subjects:
-     * -initializer address
-     * Functions used in the test:
-     * lazyInit
-     *
-     * Initialize the NativeProjection with a previously created Collection id and mint/create Items inside.
-     * In this case a Collection is created through the Main interface with a certain host.
-     * The NativeProjection is created but not inizialized.
-     * The collection.host is set as NativeProjection address.
-     * The NativeProjection is initialized passing the collectionId and some Items to mint and create
-     */
+    * Authorized subjects:
+    * -initializer address
+    * Functions used in the test:
+    * lazyInit
+    *
+    * Initialize the NativeProjection with a previously created Collection id and mint/create Items inside.
+    * In this case a Collection is created through the Main interface with a certain host.
+    * The NativeProjection is created and initialized passing the previously created CollectionId
+    * The collection.host is set as NativeProjection address.
+    */
     var zeroDecimals = false;
     var collectionId = utilities.voidBytes32;
 
@@ -226,17 +221,14 @@ describe("Item V2 Projections - Native", () => {
       .setCollectionsMetadata([collectionId], [collectionHeader])
       .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
 
-    assert.equal(
-      await native.methods.decimals(0).call(),
-      zeroDecimals ? "0" : "18"
-    );
-    assert.equal(await native.methods.collectionId().call(), collectionId);
+    await itemProjection.assertDecimals(native.methods.decimals(0).call(), zeroDecimals);
+    await itemProjection.assertEqualCollection(native.methods.collectionId().call(), collectionId);
 
     var collectionData = await mainInterface.methods
       .collection(collectionId)
       .call();
-    assert.equal(collectionData.host, native.options.address);
-    // assert.equal(collectionData.host, await native.methods.collectionId().call());
+
+    await itemProjection.assertEqualHeaderHost(collectionData.host, native.options.address);
   });
 
   it("#620 Change Collection Metadata", async () => {
@@ -248,7 +240,7 @@ describe("Item V2 Projections - Native", () => {
      * setHeader(Header calldata value)
      *
      * Change the Metadata of the Collection (not the host)
-     * must fail: an address different from the host can't change the Collection Metadata
+     * must fail: cannot change the header from an unauthorized account
      */
     var zeroDecimals = false;
     var collectionId = utilities.voidBytes32;
@@ -264,7 +256,7 @@ describe("Item V2 Projections - Native", () => {
 
     var items = [
       [
-        [utilities.voidEthereumAddress, "", "", ""],
+        [utilities.voidEthereumAddress, "Item1", "I1", "uriItem1"],
         collectionId,
         0,
         [accounts[1]],
@@ -295,33 +287,36 @@ describe("Item V2 Projections - Native", () => {
       symbol: "COL2",
       uri: "uri2",
     };
+
     await itemProjection.assertCheckHeader(
       expectedCollection,
       mainInterface.methods
         .collection(await native.methods.collectionId().call())
         .call()
     );
+
     console.log("Native", native.options.address);
-    assert.equal(
-      await native.methods.decimals(0).call(),
-      zeroDecimals ? "0" : "18"
-    );
+    await itemProjection.assertDecimals(native.methods.decimals(0).call(), zeroDecimals);
+
     await catchCall(
       native.methods
         .setHeader(newCollectionHeader)
         .send(blockchainConnection.getSendingOptions({ from: accounts[2] })),
       "Unauthorized"
     );
+
     await native.methods
       .setHeader(newCollectionHeader)
       .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
+
     await itemProjection.assertCheckHeader(
       expectedNewCollection,
       mainInterface.methods
         .collection(await native.methods.collectionId().call())
         .call()
     );
-    assert.equal(await native.methods.uri().call(), "uri2");
+
+    await itemProjection.assertEqualHeaderUri(native.methods.uri().call(), "uri2");
   });
 
   it("#621 Change Collection host", async () => {
@@ -334,7 +329,7 @@ describe("Item V2 Projections - Native", () => {
      *
      * Change the Metadata of the host of the Collection.
      * Changing the host means that the Projection address is no longer the host address and so it can't manage anymore the Collection.
-     * must fail: an address different from the host can't change the Collection host
+     * must fail: cannot change the header from an unauthorized account
      */
     var zeroDecimals = false;
     var collectionId = utilities.voidBytes32;
@@ -349,7 +344,7 @@ describe("Item V2 Projections - Native", () => {
 
     var items = [
       [
-        [utilities.voidEthereumAddress, "", "", ""],
+        [utilities.voidEthereumAddress, "Item1", "I1", "uriItem1"],
         collectionId,
         0,
         [accounts[1]],
@@ -366,6 +361,7 @@ describe("Item V2 Projections - Native", () => {
         "URI"
       )
     )["native"];
+
     var expectedCollection = {
       host: native.options.address,
       name: "Collection1",
@@ -387,26 +383,29 @@ describe("Item V2 Projections - Native", () => {
     );
 
     console.log("Native", native.options.address);
-    assert.equal(
-      await native.methods.decimals(0).call(),
-      zeroDecimals ? "0" : "18"
-    );
+
+    await itemProjection.assertDecimals(native.methods.decimals(0).call(), zeroDecimals);
+    
     await catchCall(
       native.methods
         .setHeader(newCollectionHeader)
         .send(blockchainConnection.getSendingOptions({ from: accounts[2] })),
       "Unauthorized"
     );
+
     await native.methods
       .setHeader(newCollectionHeader)
       .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
+
     await itemProjection.assertCheckHeader(
       expectedNewCollection,
       mainInterface.methods
         .collection(await native.methods.collectionId().call())
         .call()
     );
-    assert.equal(await native.methods.uri().call(), "uri2");
+
+    await itemProjection.assertEqualHeaderUri("uri2");
+
     await catchCall(
       native.methods
         .setHeader(newCollectionHeader)
@@ -428,6 +427,7 @@ describe("Item V2 Projections - Native", () => {
      * The Collection is managed by the new host.
      * The new host change it by setting the NativeProjection address again as host.
      * The Native Projection can manage the Collection another time
+     * must fail: cannot change the header from an unauthorized account
      */
     var zeroDecimals = false;
     var collectionId = utilities.voidBytes32;
@@ -442,7 +442,7 @@ describe("Item V2 Projections - Native", () => {
 
     var items = [
       [
-        [utilities.voidEthereumAddress, "", "", ""],
+        [utilities.voidEthereumAddress, "Item1", "I1", "uriItem1"],
         collectionId,
         0,
         [accounts[1]],
@@ -487,11 +487,16 @@ describe("Item V2 Projections - Native", () => {
       "uri2",
     ];
 
+    var expectedResetCollection = {
+      host: native.options.address,
+      name: "Collection2",
+      symbol: "COL2",
+      uri: "uri2",
+    };
+
     console.log("Native", native.options.address);
-    assert.equal(
-      await native.methods.decimals(0).call(),
-      zeroDecimals ? "0" : "18"
-    );
+    await itemProjection.assertDecimals(native.methods.decimals(0).call(), zeroDecimals);
+
     await catchCall(
       native.methods
         .setHeader(newCollectionHeader)
@@ -501,19 +506,23 @@ describe("Item V2 Projections - Native", () => {
     await native.methods
       .setHeader(newCollectionHeader)
       .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
+
+    
     await itemProjection.assertCheckHeader(
       expectedNewCollection,
       mainInterface.methods
         .collection(await native.methods.collectionId().call())
         .call()
     );
-    assert.equal(await native.methods.uri().call(), "uri2");
+    await itemProjection.assertEqualHeaderUri(native.methods.uri().call(), "uri2");
+
     await catchCall(
       native.methods
         .setHeader(newCollectionHeader)
         .send(blockchainConnection.getSendingOptions({ from: accounts[1] })),
       "Unauthorized"
     );
+
     await mainInterface.methods
       .setCollectionsMetadata(
         [await native.methods.collectionId().call()],
@@ -521,9 +530,23 @@ describe("Item V2 Projections - Native", () => {
       )
       .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
 
+      await itemProjection.assertCheckHeader(
+        expectedResetCollection,
+        mainInterface.methods
+          .collection(await native.methods.collectionId().call())
+          .call()
+      );
+
     await native.methods
       .setHeader(newCollectionHeader)
       .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
+
+      await itemProjection.assertCheckHeader(
+        expectedNewCollection,
+        mainInterface.methods
+          .collection(await native.methods.collectionId().call())
+          .call()
+      );
   });
 
   it("#623 Change the Metadata of Items", async () => {
@@ -544,7 +567,7 @@ describe("Item V2 Projections - Native", () => {
 
     var items = [
       [
-        [utilities.voidEthereumAddress, "", "", ""],
+        [utilities.voidEthereumAddress, "Item1", "I1", "uriItem1"],
         collectionId,
         0,
         [accounts[1]],
@@ -612,6 +635,7 @@ describe("Item V2 Projections - Native", () => {
      *
      * Change the host of Items.
      * This operation cannot be performed because the host of an Item is ever equal to void address.
+     * must fail: cannot change the header from an unauthorized account
      */
     var zeroDecimals = false;
     var collectionId = utilities.voidBytes32;
@@ -620,7 +644,7 @@ describe("Item V2 Projections - Native", () => {
 
     var items = [
       [
-        [utilities.voidEthereumAddress, "", "", ""],
+        [utilities.voidEthereumAddress, "Item1", "I1", "uriItem1"],
         collectionId,
         0,
         [accounts[1]],
@@ -784,7 +808,7 @@ describe("Item V2 Projections - Native", () => {
       .setItemsCollection(itemids, [collection2Id, collection2Id])
       .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
 
-    itemProjection.assertCheckCollection(items, collection2Id);
+    await itemProjection.assertCheckCollection(items, collection2Id);
   });
 
   it("#626 Change the Collection of Items and reset it", async () => {
@@ -809,7 +833,7 @@ describe("Item V2 Projections - Native", () => {
 
     var items = [
       [
-        [utilities.voidEthereumAddress, "", "", ""],
+        [utilities.voidEthereumAddress, "Item1", "I1", "uriItem1"],
         collectionId,
         0,
         [accounts[1]],
@@ -860,13 +884,13 @@ describe("Item V2 Projections - Native", () => {
       .setItemsCollection(itemids, [collection2Id])
       .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
 
-    itemProjection.assertCheckCollection(items, collection2Id);
+    await itemProjection.assertCheckCollection(items, collection2Id);
 
     await nativeCollection2.methods
       .setItemsCollection(itemids, [collection1Id])
       .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
 
-    itemProjection.assertCheckCollection(items, collection1Id);
+    await itemProjection.assertCheckCollection(items, collection1Id);
   });
 
   it("#627 Create Items", async () => {
@@ -936,14 +960,14 @@ describe("Item V2 Projections - Native", () => {
 
     var items = [
       [
-        [utilities.voidEthereumAddress, "", "", ""],
+        [utilities.voidEthereumAddress, "Item1", "I1", "uriItem1"],
         collectionId,
         0,
         [accounts[1]],
         [10000],
       ],
       [
-        [utilities.voidEthereumAddress, "", "", ""],
+        [utilities.voidEthereumAddress, "Item2", "I2", "uriItem2"],
         collectionId,
         0,
         [accounts[1]],
@@ -961,8 +985,6 @@ describe("Item V2 Projections - Native", () => {
     );
     var native = res["native"];
     var itemids = res["itemIds"];
-
-    // await itemsv2.checkBalances([accounts[1], accounts[1]], itemids);
 
     var CreateItem = [
       {
@@ -1031,6 +1053,7 @@ describe("Item V2 Projections - Native", () => {
      * Mint new Items for different accounts and amounts calling the Native Projection mintItems functions using wrong Collection ids and Item
      *ids
      * Using non-existent means that the Items cannot be minted
+     * must fail: I cannot mint items from a non-existing collection/id
      */
     var zeroDecimals = false;
     var collectionId = utilities.voidBytes32;
@@ -1083,6 +1106,7 @@ describe("Item V2 Projections - Native", () => {
      * Mint new Items for different accounts and amounts calling the Native Projection mintItems functions using other Collection ids and Item
      *ids
      * Using a Collection id different from the one controlled by the Projection and Items ids belonging to that Collection means that the Items cannot be minted
+     * must fail: cannot mint items with Collection ids and Items ids not controlled by the Projection
      */
     var zeroDecimals = false;
     var collectionId = utilities.voidBytes32;
@@ -1121,7 +1145,7 @@ describe("Item V2 Projections - Native", () => {
 
     var items = [
       [
-        [utilities.voidEthereumAddress, "", "", ""],
+        [utilities.voidEthereumAddress, "Item1", "I1", "uriItem1"],
         collectionIdMain,
         idItemsMain,
         [accounts[1]],
@@ -1255,7 +1279,7 @@ describe("Item V2 Projections - Native", () => {
     var collectionHeader = [accounts[1], "Collection1", "COL1", "uri1"];
 
     var items = [
-      [[accounts[1], "", "", ""], collectionId, 0, [accounts[1]], [10000]],
+      [[accounts[1], "Item1", "I1", "uriItem1"], collectionId, 0, [accounts[1]], [10000]],
     ];
 
     var res = await itemsv2.initialization(
@@ -1291,9 +1315,9 @@ describe("Item V2 Projections - Native", () => {
     var ExpectedResult = {
       header: {
         host: utilities.voidEthereumAddress,
-        name: "Collection1",
-        symbol: "COL1",
-        uri: "uri1",
+        name: "Item1",
+        symbol: "I1",
+        uri: "uriItem1",
       },
       collectionId: await native.methods.collectionId().call(),
       id: itemids,
@@ -1317,6 +1341,7 @@ describe("Item V2 Projections - Native", () => {
      *
      * Create and then mint new Items for different accounts and amounts calling the Native Projection mintItems functions passing finalized as true.
      * In this case the Items cannot be minted anymore.
+     * must fail: cannot mint finalized item
      */
     var zeroDecimals = false;
     var collectionId = utilities.voidBytes32;
@@ -1353,15 +1378,9 @@ describe("Item V2 Projections - Native", () => {
     var tx = await native.methods
       .mintItems(CreateItem, [true])
       .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
-    var logs = (await web3.eth.getTransactionReceipt(tx.transactionHash)).logs;
-    idItems = logs
-      .filter(
-        (it) =>
-          it.topics[0] ===
-          web3.utils.sha3("CollectionItem(bytes32,bytes32,uint256)")
-      )
-      .map((it) => web3.eth.abi.decodeParameter("uint256", it.topics[3]));
-
+    
+    idItems = await itemProjection.getItemIdFromLog(tx);
+    
     var CreateItem2 = [
       {
         header: {
@@ -1376,7 +1395,8 @@ describe("Item V2 Projections - Native", () => {
         amounts: ["10000000000000000"],
       },
     ];
-    assert.equal(await native.methods.isFinalized(idItems[0]).call(), true);
+
+    await itemProjection.assertCheckFinalized(native.methods.isFinalized(idItems[0]).call(), true);
     await catchCall(
       native.methods
         .mintItems(CreateItem2, [false])
@@ -1431,17 +1451,10 @@ describe("Item V2 Projections - Native", () => {
     var tx = await native.methods
       .mintItems(CreateItem, [false])
       .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
+    
+    idItems = await itemProjection.getItemIdFromLog(tx);
 
-    var logs = (await web3.eth.getTransactionReceipt(tx.transactionHash)).logs;
-    idItems = logs
-      .filter(
-        (it) =>
-          it.topics[0] ===
-          web3.utils.sha3("CollectionItem(bytes32,bytes32,uint256)")
-      )
-      .map((it) => web3.eth.abi.decodeParameter("uint256", it.topics[3]));
-
-    assert.equal(await native.methods.isFinalized(idItems[0]).call(), false);
+    await itemProjection.assertCheckFinalized(native.methods.isFinalized(idItems[0]).call(), false);
 
     await itemProjection.assertCheckBalanceSupply(
       native.methods
@@ -1465,14 +1478,14 @@ describe("Item V2 Projections - Native", () => {
 
     var items = [
       [
-        [utilities.voidEthereumAddress, "", "", ""],
+        [utilities.voidEthereumAddress, "Item1", "I1", "uriItem1"],
         collectionId,
         0,
         [accounts[1]],
         ["60000000000000000"],
       ],
       [
-        [utilities.voidEthereumAddress, "", "", ""],
+        [utilities.voidEthereumAddress, "Item2", "I2", "uriItem2"],
         collectionId,
         0,
         [accounts[2]],
@@ -1557,6 +1570,9 @@ describe("Item V2 Projections - Native", () => {
      * safeTransferFrom, safeBatchTransferFrom,
      * Burn (no data), bunBatch (no data), Burn (data), bunBatch (data) -> takes references from Items core tests from 465 to 586 .
      * Using the isApprovalForAll of the NativeProjection and the setApprovalForAll of the MainInterface because you can’t use the one of the NativeProjetion.
+     * 
+     * must fail: cannot call setApprovalForAll from nativeProjection
+     * must fail: cannot call safeTransferFrom from unauthorized address
      */
     var zeroDecimals = false;
     var collectionId = utilities.voidBytes32;
@@ -1565,14 +1581,14 @@ describe("Item V2 Projections - Native", () => {
 
     var items = [
       [
-        [utilities.voidEthereumAddress, "", "", ""],
+        [utilities.voidEthereumAddress, "Item1", "I1", "uriItem1"],
         collectionId,
         0,
         [accounts[1]],
         ["60000000000000000"],
       ],
       [
-        [utilities.voidEthereumAddress, "", "", ""],
+        [utilities.voidEthereumAddress, "Item2", "I2", "uriItem2"],
         collectionId,
         0,
         [accounts[2]],
@@ -1705,28 +1721,28 @@ describe("Item V2 Projections - Native", () => {
 
     var items = [
       [
-        [utilities.voidEthereumAddress, "", "", ""],
+        [utilities.voidEthereumAddress, "Item1", "I1", "uriItem1"],
         collectionId,
         0,
         [accounts[1]],
         ["60000000000000000"],
       ],
       [
-        [utilities.voidEthereumAddress, "", "", ""],
+        [utilities.voidEthereumAddress, "Item2", "I2", "uriItem2"],
         collectionId,
         0,
         [accounts[1]],
         ["30000000000000000"],
       ],
       [
-        [utilities.voidEthereumAddress, "", "", ""],
+        [utilities.voidEthereumAddress, "Item3", "I3", "uriItem3"],
         collectionId,
         0,
         [accounts[2]],
         ["40000000000000000"],
       ],
       [
-        [utilities.voidEthereumAddress, "", "", ""],
+        [utilities.voidEthereumAddress, "Item4", "I4", "uriItem4"],
         collectionId,
         0,
         [accounts[2]],
@@ -1829,6 +1845,9 @@ describe("Item V2 Projections - Native", () => {
      * safeTransferFrom, safeBatchTransferFrom,
      * Burn (no data), bunBatch (no data), Burn (data), bunBatch (data) -> takes references from Items core tests from 465 to 586 .
      * Using the isApprovalForAll of the NativeProjection and the setApprovalForAll of the MainInterface because you can’t use the one of the NativeProjetion.
+     * 
+     * must fail: cannot call setApprovalForAll from nativeProjection
+     * must fail: cannot call safeBatchTransferFrom from unauthorized address
      */
     var zeroDecimals = false;
     var collectionId = utilities.voidBytes32;
@@ -1837,28 +1856,28 @@ describe("Item V2 Projections - Native", () => {
 
     var items = [
       [
-        [utilities.voidEthereumAddress, "", "", ""],
+        [utilities.voidEthereumAddress, "Item1", "I1", "uriItem1"],
         collectionId,
         0,
         [accounts[1]],
         ["60000000000000000"],
       ],
       [
-        [utilities.voidEthereumAddress, "", "", ""],
+        [utilities.voidEthereumAddress, "Item2", "I2", "uriItem2"],
         collectionId,
         0,
         [accounts[1]],
         ["30000000000000000"],
       ],
       [
-        [utilities.voidEthereumAddress, "", "", ""],
+        [utilities.voidEthereumAddress, "Item3", "I3", "uriItem3"],
         collectionId,
         0,
         [accounts[2]],
         ["40000000000000000"],
       ],
       [
-        [utilities.voidEthereumAddress, "", "", ""],
+        [utilities.voidEthereumAddress, "Item4", "I4", "uriItem4"],
         collectionId,
         0,
         [accounts[2]],
@@ -2249,6 +2268,8 @@ describe("Item V2 Projections - Native", () => {
      * safeTransferFrom, safeBatchTransferFrom,
      * Burn (no data), bunBatch (no data), Burn (data), bunBatch (data) -> takes references from Items core tests from 465 to 586 .
      * Using the isApprovalForAll of the NativeProjection and the setApprovalForAll of the MainInterface because you can’t use the one of the NativeProjetion.
+     * 
+     * must fail: cannot call setApprovalForAll from nativeProjection
      */
     var zeroDecimals = false;
     var collectionId = utilities.voidBytes32;
@@ -2258,14 +2279,14 @@ describe("Item V2 Projections - Native", () => {
 
     var items = [
       [
-        [utilities.voidEthereumAddress, "", "", ""],
+        [utilities.voidEthereumAddress, "Item1", "I1", "uriItem1"],
         collectionId,
         0,
         [accounts[1]],
         ["20000000000000000"],
       ],
       [
-        [utilities.voidEthereumAddress, "", "", ""],
+        [utilities.voidEthereumAddress, "Item2", "I2", "uriItem2"],
         collectionId,
         0,
         [accounts[1]],
@@ -2430,14 +2451,14 @@ describe("Item V2 Projections - Native", () => {
 
     var items = [
       [
-        [utilities.voidEthereumAddress, "", "", ""],
+        [utilities.voidEthereumAddress, "Item1", "I1", "uriItem1"],
         collectionId,
         0,
         [accounts[1]],
         ["20000000000000000"],
       ],
       [
-        [utilities.voidEthereumAddress, "", "", ""],
+        [utilities.voidEthereumAddress, "Item2", "I2", "uriItem2"],
         collectionId,
         0,
         [accounts[1]],
@@ -2576,7 +2597,7 @@ describe("Item V2 Projections - Native", () => {
 
     var items = [
       [
-        [utilities.voidEthereumAddress, "", "", ""],
+        [utilities.voidEthereumAddress, "Item1", "I1", "uriItem1"],
         collectionId,
         0,
         [accounts[1]],
@@ -2713,14 +2734,14 @@ describe("Item V2 Projections - Native", () => {
 
     var items = [
       [
-        [utilities.voidEthereumAddress, "", "", ""],
+        [utilities.voidEthereumAddress, "Item1", "I1", "uriItem1"],
         collectionId,
         0,
         [accounts[1]],
         [10000],
       ],
       [
-        [utilities.voidEthereumAddress, "", "", ""],
+        [utilities.voidEthereumAddress, "Item2", "I2", "uriItem2"],
         collectionId,
         0,
         [accounts[1]],
@@ -2767,7 +2788,7 @@ describe("Item V2 Projections - Native", () => {
     ];
 
     itemids.map(async (ids) => {
-      assert.equal(await native.methods.isFinalized(ids).call(), false);
+      await itemProjection.assertCheckFinalized(native.methods.isFinalized(ids).call(), false);
     });
 
     var tx = await native.methods
@@ -2775,7 +2796,7 @@ describe("Item V2 Projections - Native", () => {
       .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
 
     itemids.map(async (ids) => {
-      assert.equal(await native.methods.isFinalized(ids).call(), false);
+      await itemProjection.assertCheckFinalized(native.methods.isFinalized(ids).call(), false);
     });
   });
 });

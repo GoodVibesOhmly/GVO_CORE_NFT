@@ -1621,11 +1621,13 @@ describe("Item V2 Projections - Native", () => {
 
     await Promise.all(
       operator.map(async (op, index) => {
+        await itemProjection.assertCheckIsApprovedForAll(native.methods.isApprovedForAll(fromAddress[index], op).call(), false);
         await mainInterface.methods
           .setApprovalForAll(op, true)
           .send(
             blockchainConnection.getSendingOptions({ from: fromAddress[index] })
           );
+        await itemProjection.assertCheckIsApprovedForAll(native.methods.isApprovedForAll(fromAddress[index], op).call(), true);
       })
     );
 
@@ -1921,11 +1923,13 @@ describe("Item V2 Projections - Native", () => {
 
     await Promise.all(
       operator.map(async (op, index) => {
+        await itemProjection.assertCheckIsApprovedForAll(native.methods.isApprovedForAll(fromAddress[index], op).call(), false);
         await mainInterface.methods
           .setApprovalForAll(op, true)
           .send(
             blockchainConnection.getSendingOptions({ from: fromAddress[index] })
           );
+        await itemProjection.assertCheckIsApprovedForAll(native.methods.isApprovedForAll(fromAddress[index], op).call(), true);
       })
     );
 
@@ -2210,17 +2214,37 @@ describe("Item V2 Projections - Native", () => {
       "10000000000000000",
       "2000000000000000",
     ];
+    var operator = [accounts[5], accounts[5], accounts[6], accounts[6]];
     var burnAddress = [accounts[1], accounts[1], accounts[2], accounts[2]];
     var checkBal = await itemsv2.checkBalances(
       [accounts[1], accounts[1], accounts[2], accounts[2]],
       idItems
     );
 
+    await catchCall(
+      native.methods
+        .setApprovalForAll(accounts[3], true)
+        .send(blockchainConnection.getSendingOptions({ from: accounts[1] })),
+      "call directly the setApprovalForAll on the main Interface 0x915a22a152654714fceca3f4704fcf6bd314624c"
+    );
+
+    await Promise.all(
+      operator.map(async (op, index) => {
+        await itemProjection.assertCheckIsApprovedForAll(native.methods.isApprovedForAll(burnAddress[index], op).call(), false);
+        await mainInterface.methods
+          .setApprovalForAll(op, true)
+          .send(
+            blockchainConnection.getSendingOptions({ from: burnAddress[index] })
+          );
+        await itemProjection.assertCheckIsApprovedForAll(native.methods.isApprovedForAll(burnAddress[index], op).call(), true);
+      })
+    );
+
     await mainInterface.methods
       .burnBatch(burnAddress[0], idItems.slice(0, 2), burnAmount.slice(0, 2))
       .send(
         blockchainConnection.getSendingOptions({
-          from: burnAddress[0],
+          from: operator[0],
         })
       );
 
@@ -2228,7 +2252,7 @@ describe("Item V2 Projections - Native", () => {
       .burnBatch(burnAddress[2], idItems.slice(2, 4), burnAmount.slice(2, 4))
       .send(
         blockchainConnection.getSendingOptions({
-          from: burnAddress[2],
+          from: operator[2],
         })
       );
 

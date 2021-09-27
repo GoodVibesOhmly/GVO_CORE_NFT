@@ -195,6 +195,10 @@ async function assertCheckFinalized(funct, finalized) {
   assert.equal(await execFunct(funct), finalized);
 }
 
+async function assertCheckIsApprovedForAll(funct, approved) {
+  assert.equal(await execFunct(funct), approved);
+}
+
 function checkHeader(h1, h2) {
   /**
    * check that 2 object Header are equal
@@ -238,4 +242,5 @@ module.exports = {
   assertEqualHeaderHost,
   assertEqualHeaderUri,
   assertCheckFinalized,
+  assertCheckIsApprovedForAll
 };

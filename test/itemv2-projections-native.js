@@ -108,7 +108,6 @@ describe("Item V2 Projections - Native", () => {
     await mainInterface.methods
       .setCollectionsMetadata([collectionId], [collectionHeader])
       .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
-console.log("kdjkld")
     var native = (
       await itemsv2.initialization(
         zeroDecimals,
@@ -120,8 +119,6 @@ console.log("kdjkld")
         nativeProjectionAddress
       )
     )["native"];
-    console.log("qq2wq23")
-
 
     await itemProjection.assertCheckHeader(
       expectedCollection,
@@ -219,22 +216,6 @@ console.log("kdjkld")
       );
 
       native.methods.lazyInit(deployParam).send(blockchainConnection.getSendingOptions())
-      console.log(await mainInterface.methods.collection(await native.methods.collectionId().call()).call())
-
-
-    // console.log("qua")
-    //   var native = (
-    //     await itemsv2.initialization(
-    //       zeroDecimals,
-    //       collectionId,
-    //       collectionHeader,
-    //       items,
-    //       nativeProjectionAddress,
-    //       "URI",
-    //       nativeProjectionAddress
-    //     )
-    //   )["native"];
-    //   console.log("qui")
 
       await itemProjection.assertCheckHeader(
         expectedCollection,
@@ -494,9 +475,6 @@ console.log("kdjkld")
     collectionData = await mainInterface.methods
       .collection(await native.methods.collectionId().call())
       .call()
-    
-    console.log(accounts[3])
-    console.log(collectionData)
     
     await itemProjection.assertEqualHeaderHost(collectionData.host, accounts[3]);
 
@@ -1897,7 +1875,7 @@ console.log("kdjkld")
     var items1 = itemids.slice(0, 2);
     var items2 = itemids.slice(2, 4);
 
-    await mainInterface.methods
+    await native.methods
       .safeBatchTransferFrom(
         fromAddress[0],
         toAddress[0],
@@ -1911,7 +1889,7 @@ console.log("kdjkld")
         })
       );
 
-    await mainInterface.methods
+    await native.methods
       .safeBatchTransferFrom(
         fromAddress[2],
         toAddress[2],
@@ -2661,7 +2639,7 @@ console.log("kdjkld")
       idItems
     );
 
-    await mainInterface.methods
+    await native.methods
       .burnBatch(burnAddress[0], idItems.slice(0, 2), burnAmount.slice(0, 2))
       .send(
         blockchainConnection.getSendingOptions({
@@ -2669,7 +2647,7 @@ console.log("kdjkld")
         })
       );
 
-    await mainInterface.methods
+    await native.methods
       .burnBatch(burnAddress[2], idItems.slice(2, 4), burnAmount.slice(2, 4))
       .send(
         blockchainConnection.getSendingOptions({

@@ -100,12 +100,10 @@ async function initialization(
   );
 
   deployParam = abi.encode(["address", "bytes"], [host, deployParam]);
-  console.log("pre transaction")
 
   var transaction = await ItemProjectionFactoryContract.methods
     .deploy(deployParam)
     .send(blockchainConnection.getSendingOptions());
-  console.log("post transaction")
 
     var logs = (await web3.eth.getTransactionReceipt(transaction.transactionHash))
     .logs;

@@ -60,6 +60,8 @@ async function assertCheckBalanceSupply(
   var amounts = createItem.map((it) => it.amounts);
   var accounts = createItem.map((it) => it.accounts);
 
+  console.log(amounts)
+
   createNoneBal(accounts, idItems);
   var checkBal =
     idItems[0] == 0
@@ -80,6 +82,7 @@ async function assertCheckBalanceSupply(
   var expectedBalance = checkBal.map((it, i) => {
     return it["balances"].map((item, index) => {
       return item.map((element, indexEl) => {
+        console.log(amounts[i][indexEl])
         return isBurn
           ? element.sub(burnAmount[indexEl])
           : element.add(amounts[i][indexEl]);
@@ -148,6 +151,7 @@ async function assertCheckBalanceSupplyWithBalance(
       });
     });
   });
+
   await Promise.all(
     idItems.map(async (event, index) => {
       await itemsv2.checkBalances(

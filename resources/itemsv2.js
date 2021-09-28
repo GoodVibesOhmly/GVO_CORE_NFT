@@ -17,6 +17,7 @@ async function deployNativeProjection(nativeProjectionAddress = utilities.voidEt
   );
   
   if(nativeProjectionAddress == utilities.voidEthereumAddress){
+    console.log("deploy della native projection")
     NativeProjection = await compile("projection/native/NativeProjection");
     var nativeProjectionContract = await new web3.eth.Contract(
       NativeProjection.abi
@@ -28,6 +29,7 @@ async function deployNativeProjection(nativeProjectionAddress = utilities.voidEt
 
     return model;
   }
+  console.log("native projection esistente, address: "+nativeProjectionAddress)
   return nativeProjectionAddress
 }
 
@@ -98,10 +100,12 @@ async function initialization(
   );
 
   deployParam = abi.encode(["address", "bytes"], [host, deployParam]);
+  console.log("pre transaction")
 
   var transaction = await ItemProjectionFactoryContract.methods
     .deploy(deployParam)
     .send(blockchainConnection.getSendingOptions());
+  console.log("post transaction")
 
     var logs = (await web3.eth.getTransactionReceipt(transaction.transactionHash))
     .logs;

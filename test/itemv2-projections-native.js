@@ -12,43 +12,6 @@ describe("Item V2 Projections - Native", () => {
       knowledgeBase.mainInterfaceAddress
     );
   });
-  it("#0", async () => {
-    var zeroDecimals = false;
-    var collectionId = utilities.voidBytes32;
-
-    var collectionHeader = [accounts[1], "Collection1", "c1", "uri1"];
-
-    var items = [
-      [
-        [utilities.voidEthereumAddress, "Item1", "I1", "uriItem1"],
-        collectionId,
-        0,
-        [accounts[1]],
-        [10000],
-      ],
-    ];
-
-    try {
-      var native = (
-        await itemsv2.initialization(
-          zeroDecimals,
-          collectionId,
-          collectionHeader,
-          items,
-          accounts[1],
-          "URI"
-        )
-      )["native"];
-      console.log("Native", native.options.address);
-
-      await itemProjection.assertDecimals(native.methods.decimals(0).call(), zeroDecimals);
-
-      await itemProjection.assertNotEqualCollection(native.methods.collectionId().call(), collectionId);
-
-    } catch (e) {
-      console.error(e);
-    }
-  });
 
   it("#619 Alternative Initialization", async () => {
     /**
@@ -63,171 +26,88 @@ describe("Item V2 Projections - Native", () => {
      * The collection.host is set as NativeProjection address.
      * The NativeProjection is initialized passing the collectionId and some Items to mint and create
      */
-    var zeroDecimals = false;
-    var collectionId = utilities.voidBytes32;
-
-    var mainItems = [];
-
-    var items = [
-      [
-        [utilities.voidEthereumAddress, "Item1", "I1", "uriItem1"],
-        collectionId,
-        0,
-        [accounts[1]],
-        [10000],
-      ],
-      [
-        [utilities.voidEthereumAddress, "Item2", "I2", "uriItem2"],
-        collectionId,
-        0,
-        [accounts[1]],
-        [10000],
-      ],
-    ];
-
-    var collectionId = (await itemsv2.createCollection(accounts[1], mainItems))[
-      "collectionId"
-    ];
-
-    var nativeProjectionAddress = await itemsv2.deployNativeProjection();
-
-    var collectionHeader = [
-      nativeProjectionAddress,
-      "Collection",
-      "COL",
-      "uri",
-    ];
-
-    var expectedCollection = {
-      host: nativeProjectionAddress,
-      name: "Collection",
-      symbol: "COL",
-      uri: "uri",
-    };
-
-    await mainInterface.methods
-      .setCollectionsMetadata([collectionId], [collectionHeader])
-      .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
-    var native = (
-      await itemsv2.initialization(
-        zeroDecimals,
-        collectionId,
-        collectionHeader,
-        items,
-        nativeProjectionAddress,
-        "URI",
-        nativeProjectionAddress
-      )
-    )["native"];
-
-    await itemProjection.assertCheckHeader(
-      expectedCollection,
-      mainInterface.methods
-        .collection(await native.methods.collectionId().call())
-        .call()
-    );
-
-    await itemProjection.assertDecimals(native.methods.decimals(0).call(), zeroDecimals);
-    
-    await itemProjection.assertEqualCollection(native.methods.collectionId().call(), collectionId);
-  });
-
-  it("#619/2 Alternative Initialization with items", async () => {
-    /**
-     * Authorized subjects:
-     * -initializer address
-     * Functions used in the test:
-     * lazyInit
-     *
-     * Initialize the NativeProjection with a previously created Collection id and mint/create Items inside.
-     * In this case a Collection is created through the Main interface with a certain host.
-     * The NativeProjection is created but not inizialized.
-     * The collection.host is set as NativeProjection address.
-     * The NativeProjection is initialized passing the collectionId and some Items to mint and create
-     * must fail: can't initialize an existing collection with items
-     */
-    var zeroDecimals = false;
-    var collectionId = utilities.voidBytes32;
-
-    var mainItems = [];
-
-    collectionId = (await itemsv2.createCollection(accounts[1], mainItems))[
-      "collectionId"
-    ];
-
-    var nativeProjectionAddress = await itemsv2.deployNativeProjection();
-
-    var expectedCollection = {
-      host: nativeProjectionAddress,
-      name: "Collection",
-      symbol: "COL",
-      uri: "uri",
-    };
-
-    var collectionHeader = [
-      nativeProjectionAddress,
-      "Collection",
-      "COL",
-      "uri",
-    ];
-
-    var items = [
-      [
-        [utilities.voidEthereumAddress, "Item1", "I1", "uriItem1"],
-        collectionId,
-        0,
-        [accounts[1]],
-        [10000],
-      ],
-      [
-        [utilities.voidEthereumAddress, "Item2", "I2", "uriItem2"],
-        collectionId,
-        0,
-        [accounts[1]],
-        [10000],
-      ],
-    ];
-
-    await mainInterface.methods
-      .setCollectionsMetadata([collectionId], [collectionHeader])
-      .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
-
-
-      var deployParam = abi.encode(["bool"], [zeroDecimals]);
-
-      deployParam = abi.encode(
-        [
-          "bytes32",
-          "tuple(address,string,string,string)",
-          "tuple(tuple(address,string,string,string),bytes32,uint256,address[],uint256[])[]",
-          "bytes",
-        ],
-        [collectionId, collectionHeader, items, deployParam]
-      );
-    
-      deployParam = abi.encode(["address", "bytes"], [accounts[1], deployParam]);
-
-      NativeProjection = await compile("projection/native/NativeProjection");
-    
-
-      var native = new web3.eth.Contract(
-        NativeProjection.abi,
-        nativeProjectionAddress
-      );
-
-      native.methods.lazyInit(deployParam).send(blockchainConnection.getSendingOptions())
-
-      await itemProjection.assertCheckHeader(
-        expectedCollection,
-        mainInterface.methods
-          .collection(await native.methods.collectionId().call())
-          .call()
-      );
-  
-      await itemProjection.assertDecimals(native.methods.decimals(0).call(), zeroDecimals);
-      
-      await itemProjection.assertEqualCollection(native.methods.collectionId().call(), collectionId);
-  });
+     var zeroDecimals = false;
+     var collectionId = utilities.voidBytes32;
+ 
+     var mainItems = [];
+ 
+     collectionId = (await itemsv2.createCollection(accounts[1], mainItems))[
+       "collectionId"
+     ];
+ 
+     var nativeProjectionAddress = await itemsv2.deployNativeProjection();
+ 
+     var expectedCollection = {
+       host: nativeProjectionAddress,
+       name: "Collection",
+       symbol: "COL",
+       uri: "uri",
+     };
+ 
+     var collectionHeader = [
+       nativeProjectionAddress,
+       "Collection",
+       "COL",
+       "uri",
+     ];
+ 
+     var items = [
+       [
+         [utilities.voidEthereumAddress, "Item1", "I1", "uriItem1"],
+         collectionId,
+         0,
+         [accounts[1]],
+         [10000],
+       ],
+       [
+         [utilities.voidEthereumAddress, "Item2", "I2", "uriItem2"],
+         collectionId,
+         0,
+         [accounts[1]],
+         [10000],
+       ],
+     ];
+ 
+     await mainInterface.methods
+       .setCollectionsMetadata([collectionId], [collectionHeader])
+       .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
+ 
+ 
+       var deployParam = abi.encode(["bool"], [zeroDecimals]);
+ 
+       deployParam = abi.encode(
+         [
+           "bytes32",
+           "tuple(address,string,string,string)",
+           "tuple(tuple(address,string,string,string),bytes32,uint256,address[],uint256[])[]",
+           "bytes",
+         ],
+         [collectionId, collectionHeader, items, deployParam]
+       );
+     
+       deployParam = abi.encode(["address", "bytes"], [accounts[1], deployParam]);
+ 
+       NativeProjection = await compile("projection/native/NativeProjection");
+     
+ 
+       var native = new web3.eth.Contract(
+         NativeProjection.abi,
+         nativeProjectionAddress
+       );
+ 
+       native.methods.lazyInit(deployParam).send(blockchainConnection.getSendingOptions())
+ 
+       await itemProjection.assertCheckHeader(
+         expectedCollection,
+         mainInterface.methods
+           .collection(await native.methods.collectionId().call())
+           .call()
+       );
+   
+       await itemProjection.assertDecimals(native.methods.decimals(0).call(), zeroDecimals);
+       
+       await itemProjection.assertEqualCollection(native.methods.collectionId().call(), collectionId);
+   });
 
   it("#639 Alternative Initialization #2", async () => {
     /**
@@ -244,13 +124,7 @@ describe("Item V2 Projections - Native", () => {
     var zeroDecimals = false;
     var collectionId = utilities.voidBytes32;
 
-    var mainItems = []
-
-    var collectionId = (await itemsv2.createCollection(accounts[1], mainItems))[
-      "collectionId"
-    ];
-
-    var items = [
+    var mainItems = [
       [
         [utilities.voidEthereumAddress, "Item1", "I1", "uriItem1"],
         collectionId,
@@ -265,6 +139,27 @@ describe("Item V2 Projections - Native", () => {
         [accounts[1]],
         [10000],
       ],
+    ]
+
+    var collectionId = (await itemsv2.createCollection(accounts[1], mainItems))[
+      "collectionId"
+    ];
+
+    var items = [
+      // [
+      //   [utilities.voidEthereumAddress, "Item1", "I1", "uriItem1"],
+      //   collectionId,
+      //   0,
+      //   [accounts[1]],
+      //   [10000],
+      // ],
+      // [
+      //   [utilities.voidEthereumAddress, "Item2", "I2", "uriItem2"],
+      //   collectionId,
+      //   0,
+      //   [accounts[1]],
+      //   [10000],
+      // ],
     ];
 
     var collectionHeader = [accounts[1], "Collection", "COL", "uri"];
@@ -1562,12 +1457,117 @@ describe("Item V2 Projections - Native", () => {
         .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
   });
 
-  it("#637/1 Items operations safeTransaferFrom", async () => {
+  it("#640 Mint previously created items passing finalized as true", async () => {
     /**
-     * safeTransferFrom, safeBatchTransferFrom,
-     * Burn (no data), bunBatch (no data), Burn (data), bunBatch (data) -> takes references from Items core tests from 465 to 586 .
-     * Using the isApprovalForAll of the NativeProjection and the setApprovalForAll of the MainInterface because you can’t use the one of the NativeProjetion.
+     * Authorized subjects:
+     * Collection host address
+     * Functions used in the test:
+     * lazyInit
+     * mintItems (CreateItem[] calldata items, bool[] memory finalized)
+     *
+     * Create Items when initializing the Native Projection
+     * Mint Items calling the Native Projection mintItems functions passing finalized as true.
+     * In this case the Items can be minted.
      */
+    var zeroDecimals = false;
+    var collectionId = utilities.voidBytes32;
+
+    var collectionHeader = [accounts[1], "Collection1", "COL1", "uri1"];
+
+    var items = [
+      [
+        [utilities.voidEthereumAddress, "Item1", "I1", "uriItem1"],
+        collectionId,
+        0,
+        [accounts[1]],
+        [10000],
+      ],
+      [
+        [utilities.voidEthereumAddress, "Item2", "I2", "uriItem2"],
+        collectionId,
+        0,
+        [accounts[1]],
+        [10000],
+      ],
+    ];
+
+    var res = await itemsv2.initialization(
+      zeroDecimals,
+      collectionId,
+      collectionHeader,
+      items,
+      accounts[1],
+      "URI"
+    );
+    var native = res["native"];
+    var itemids = res["itemIds"];
+
+    var CreateItem = [
+      {
+        header: {
+          host: accounts[1],
+          name: "Item1",
+          symbol: "I1",
+          uri: "uriItem1",
+        },
+        collectionId: await native.methods.collectionId().call(),
+        id: itemids[0],
+        accounts: [accounts[1]],
+        amounts: ["10000000000000000"],
+      },
+      {
+        header: {
+          host: accounts[1],
+          name: "Item2",
+          symbol: "I2",
+          uri: "uriItem2",
+        },
+        collectionId: await native.methods.collectionId().call(),
+        id: itemids[1],
+        accounts: [accounts[1]],
+        amounts: ["10000000000000000"],
+      },
+    ];
+
+    itemids.map(async (ids) => {
+      await itemProjection.assertCheckFinalized(native.methods.isFinalized(ids).call(), false);
+    });
+
+    var checkBal = await Promise.all(
+      itemids.map(async (it, i) => {
+        return await itemsv2.checkBalances(
+          accounts[1],
+          Array(1).fill(it)
+        );
+      })
+    );
+
+      await itemProjection.assertCheckBalanceSupplyWithBalance(
+        native.methods
+      .mintItems(CreateItem, [true, true])
+      .send(blockchainConnection.getSendingOptions({ from: accounts[1] })),
+        CreateItem,
+        checkBal,
+        false
+      );
+
+    itemids.map(async (ids) => {
+      await itemProjection.assertCheckFinalized(native.methods.isFinalized(ids).call(), false);
+    });
+  });
+
+  it("#637 Items operation: safeTransferFrom", async () => {
+    /**
+    * Authorized subjects:
+    * Item holders
+    * approved operators addresses
+    * Functions used in the test:
+    * lazyInit
+    * safeTransferFrom
+    *
+    * Create Items when initializing the Native Projection
+    * The Items holders perform a safeTransferFrom using the Native projection method
+    */
     var zeroDecimals = false;
     var collectionId = utilities.voidBytes32;
 
@@ -1662,15 +1662,21 @@ describe("Item V2 Projections - Native", () => {
     );
   });
 
-  it("#637/2 Items operations safeTransaferFrom and setApproval", async () => {
+  it("#641 Items operation: SafeTransferFrom and approved operators", async () => {
     /**
-     * safeTransferFrom, safeBatchTransferFrom,
-     * Burn (no data), bunBatch (no data), Burn (data), bunBatch (data) -> takes references from Items core tests from 465 to 586 .
-     * Using the isApprovalForAll of the NativeProjection and the setApprovalForAll of the MainInterface because you can’t use the one of the NativeProjetion.
-     * 
-     * must fail: cannot call setApprovalForAll from nativeProjection
-     * must fail: cannot call safeTransferFrom from unauthorized address
-     */
+    * Authorized subjects:
+    * Item holders
+    * approved operators addresses
+    * Functions used in the test:
+    * lazyInit
+    * setApprovalForAll
+    * safeTransferFrom
+    *
+    * Create Items when initializing the Native Projection
+    * The Items holders approve operators to act on their Items using the setApprovalForAll (Main Interface)
+    * must fail: cannot call setApprovalForAll from nativeProjection
+    * must fail: cannot call safeTransferFrom from unauthorized address
+    */
     var zeroDecimals = false;
     var collectionId = utilities.voidBytes32;
 
@@ -1807,12 +1813,18 @@ describe("Item V2 Projections - Native", () => {
     );
   });
 
-  it("#637/3 Items operations safeBatchTransaferFrom", async () => {
+  it("#642 Items operation: SafeBatchTransferFrom", async () => {
     /**
-     * safeTransferFrom, safeBatchTransferFrom,
-     * Burn (no data), bunBatch (no data), Burn (data), bunBatch (data) -> takes references from Items core tests from 465 to 586 .
-     * Using the isApprovalForAll of the NativeProjection and the setApprovalForAll of the MainInterface because you can’t use the one of the NativeProjetion.
-     */
+    * Authorized subjects:
+    * Item holders
+    * approved operators addresses
+    * Functions used in the test:
+    * lazyInit
+    * safeBatchTransferFrom
+    *
+    * Create Items when initializing the Native Projection
+    * The Items holders perform a safeBatchTransferFrom using the Native projection method transferring multiple Items at once
+    */
     var zeroDecimals = false;
     var collectionId = utilities.voidBytes32;
 
@@ -1939,15 +1951,22 @@ describe("Item V2 Projections - Native", () => {
     );
   });
 
-  it("#637/4 Items operations safeBatchTransaferFrom and setApproval", async () => {
+  it("#643 Items operation: safeBatchTransferFrom and approved operators", async () => {
     /**
-     * safeTransferFrom, safeBatchTransferFrom,
-     * Burn (no data), bunBatch (no data), Burn (data), bunBatch (data) -> takes references from Items core tests from 465 to 586 .
-     * Using the isApprovalForAll of the NativeProjection and the setApprovalForAll of the MainInterface because you can’t use the one of the NativeProjetion.
-     * 
-     * must fail: cannot call setApprovalForAll from nativeProjection
-     * must fail: cannot call safeBatchTransferFrom from unauthorized address
-     */
+    * Authorized subjects:
+    * Item holders
+    * approved operators addresses
+    * Functions used in the test:
+    * lazyInit
+    * safeBatchTransferFrom
+    * setApprovalForAll
+    *
+    * Create Items when initializing the Native Projection
+    * The Items holders approve operators to act on their Items using the setApprovalForAll (Main Interface)
+    * The operators perform a safeBatchTransferFrom using the Native projection method transferring multiple Items at once
+    * must fail: cannot call setApprovalForAll from nativeProjection
+    * must fail: cannot call safeBatchTransferFrom from unauthorized address
+    */
     var zeroDecimals = false;
     var collectionId = utilities.voidBytes32;
 
@@ -2115,12 +2134,18 @@ describe("Item V2 Projections - Native", () => {
     );
   });
 
-  it("#637/5 Items operations burn", async () => {
+  it("#644 Items operation: Burn", async () => {
     /**
-     * safeTransferFrom, safeBatchTransferFrom,
-     * Burn (no data), bunBatch (no data), Burn (data), bunBatch (data) -> takes references from Items core tests from 465 to 586 .
-     * Using the isApprovalForAll of the NativeProjection and the setApprovalForAll of the MainInterface because you can’t use the one of the NativeProjetion.
-     */
+    * Authorized subjects:
+    * Item holders
+    * approved operators addresses
+    * Functions used in the test:
+    * lazyInit
+    * Burn
+    *
+    * Create Items when initializing the Native Projection
+    * The Items holders perform a burn using the Native projection burn method
+    */
     var zeroDecimals = false;
     var collectionId = utilities.voidBytes32;
 
@@ -2225,12 +2250,20 @@ describe("Item V2 Projections - Native", () => {
     );
   });
 
-  it("#637/9 Items operations burn and setApproval", async () => {
+  it("#645 Items operation: Burn and approved operators", async () => {
     /**
-     * safeTransferFrom, safeBatchTransferFrom,
-     * Burn (no data), bunBatch (no data), Burn (data), bunBatch (data) -> takes references from Items core tests from 465 to 586 .
-     * Using the isApprovalForAll of the NativeProjection and the setApprovalForAll of the MainInterface because you can’t use the one of the NativeProjetion.
-     */
+    * Authorized subjects:
+    * Item holders
+    * approved operators addresses
+    * Functions used in the test:
+    * lazyInit
+    * setApprovalForAll
+    * Burn
+    *
+    * Create Items when initializing the Native Projection
+    * The Items holders approve operators to act on their Items
+    * The opertators perform a burn using the Native projection burn method
+    */
     var zeroDecimals = false;
     var collectionId = utilities.voidBytes32;
 
@@ -2371,15 +2404,22 @@ describe("Item V2 Projections - Native", () => {
     );
   });
 
-  it("#637/6 Items operations burnBatch and setApproval", async () => {
+  it("#647 Items operation: burnBatch and approved operators", async () => {
     /**
-     * safeTransferFrom, safeBatchTransferFrom,
-     * Burn (no data), bunBatch (no data), Burn (data), bunBatch (data) -> takes references from Items core tests from 465 to 586 .
-     * Using the isApprovalForAll of the NativeProjection and the setApprovalForAll of the MainInterface because you can’t use the one of the NativeProjetion.
-     * 
-     * must fail: cannot call setApprovalForAll from nativeProjection
-     * must fail: cannot call burnBatch from unauthorized address
-     */
+    * Authorized subjects:
+    * Item holders
+    * approved operators addresses
+    * Functions used in the test:
+    * lazyInit
+    * setApprovalForAll
+    * burnBatch
+    *
+    * Create Items when initializing the Native Projection
+    * The Items holders approve operators to act on their Items
+    * The operators perform a burnBatch using the Native projection method burning multiple Items at once
+    * must fail: cannot call setApprovalForAll from nativeProjection
+    * must fail: cannot call burnBatch from unauthorized address
+    */
     var zeroDecimals = false;
     var collectionId = utilities.voidBytes32;
 
@@ -2543,15 +2583,21 @@ describe("Item V2 Projections - Native", () => {
   });
 
 
-  it("#637/10 Items operations burnBatch", async () => {
+  it("#646 Items operation: burnBatch", async () => {
     /**
-     * safeTransferFrom, safeBatchTransferFrom,
-     * Burn (no data), bunBatch (no data), Burn (data), bunBatch (data) -> takes references from Items core tests from 465 to 586 .
-     * Using the isApprovalForAll of the NativeProjection and the setApprovalForAll of the MainInterface because you can’t use the one of the NativeProjetion.
-     * 
-     * must fail: cannot call setApprovalForAll from nativeProjection
-     * must fail: cannot call burnBatch from unauthorized address
-     */
+    * Authorized subjects:
+    * Item holders
+    * approved operators addresses
+    * Functions used in the test:
+    * lazyInit
+    * burnBatch
+    *
+    * Create Items when initializing the Native Projection
+    * The Items holders perform a burnBatch using the Native projection method burning multiple Items at once
+    *
+    * must fail: cannot call setApprovalForAll from nativeProjection
+    * must fail: cannot call burnBatch from unauthorized address
+    */
     var zeroDecimals = false;
     var collectionId = utilities.voidBytes32;
 
@@ -2687,12 +2733,21 @@ describe("Item V2 Projections - Native", () => {
     );
   });
 
-  it("#637/8 Items operations burnBatch with mainInterface", async () => {
+  it("#648 Batch burn operation using the Main Interface methods", async () => {
     /**
-     * safeTransferFrom, safeBatchTransferFrom,
-     * Burn (no data), bunBatch (no data), Burn (data), bunBatch (data) -> takes references from Items core tests from 465 to 586 .
-     * Using the isApprovalForAll of the NativeProjection and the setApprovalForAll of the MainInterface because you can’t use the one of the NativeProjetion.
-     */
+    * Authorized subjects:
+    * Items holders
+    * approved operators
+    *
+    * Functions used in the test:
+    * lazyInit
+    * createCollection (main interface)
+    *burnBatch (main interface)
+    *
+    * Create multiple Collection using the Main Interface.
+    * Create and initialize a Native Projection with Items
+    * Using the main interface batch method burnBatch, a user can manage different Items from different Collection and one of them is the Projection Collection
+    */
     var zeroDecimals = false;
     var collectionId = utilities.voidBytes32;
 
@@ -2953,130 +3008,5 @@ describe("Item V2 Projections - Native", () => {
       expectedBalanceFrom,
       totalSupply
     );
-
-    checkBal = await itemsv2.checkBalances(toAccounts, totalItemsId);
-    previousBalance = checkBal["balances"];
-
-    checkBal = await itemsv2.checkBalances(fromAccounts, totalItemsId);
-    previousBalanceFrom = checkBal["balances"];
-
-    var burnValue = 100000000;
-    await mainInterface.methods
-      .burnBatch(accounts[4], totalItemsId, [burnValue, burnValue, burnValue, burnValue])
-      .send(blockchainConnection.getSendingOptions({ from: accounts[4] }));
-
-    expectedBalanceFrom = await Promise.all(
-      previousBalance.map((key, value) => key[0].sub(burnValue))
-    );
-
-    var expectedTotalSuplly = await Promise.all(
-      totalSupply.map((value, key) => value.sub(burnValue))
-    );
-
-    await itemsv2.checkBalances(
-      accounts[4],
-      totalItemsId,
-      expectedBalanceFrom,
-      expectedTotalSuplly
-    );
-  });
-
-  it("#640 Mint previously created items passing finalized as true", async () => {
-    /**
-     * Authorized subjects:
-     * Collection host address
-     * Functions used in the test:
-     * lazyInit
-     * mintItems (CreateItem[] calldata items, bool[] memory finalized)
-     *
-     * Create Items when initializing the Native Projection
-     * Mint Items calling the Native Projection mintItems functions passing finalized as true.
-     * In this case the Items can be minted.
-     */
-    var zeroDecimals = false;
-    var collectionId = utilities.voidBytes32;
-
-    var collectionHeader = [accounts[1], "Collection1", "COL1", "uri1"];
-
-    var items = [
-      [
-        [utilities.voidEthereumAddress, "Item1", "I1", "uriItem1"],
-        collectionId,
-        0,
-        [accounts[1]],
-        [10000],
-      ],
-      [
-        [utilities.voidEthereumAddress, "Item2", "I2", "uriItem2"],
-        collectionId,
-        0,
-        [accounts[1]],
-        [10000],
-      ],
-    ];
-
-    var res = await itemsv2.initialization(
-      zeroDecimals,
-      collectionId,
-      collectionHeader,
-      items,
-      accounts[1],
-      "URI"
-    );
-    var native = res["native"];
-    var itemids = res["itemIds"];
-
-    var CreateItem = [
-      {
-        header: {
-          host: accounts[1],
-          name: "Item1",
-          symbol: "I1",
-          uri: "uriItem1",
-        },
-        collectionId: await native.methods.collectionId().call(),
-        id: itemids[0],
-        accounts: [accounts[1]],
-        amounts: ["10000000000000000"],
-      },
-      {
-        header: {
-          host: accounts[1],
-          name: "Item2",
-          symbol: "I2",
-          uri: "uriItem2",
-        },
-        collectionId: await native.methods.collectionId().call(),
-        id: itemids[1],
-        accounts: [accounts[1]],
-        amounts: ["10000000000000000"],
-      },
-    ];
-
-    itemids.map(async (ids) => {
-      await itemProjection.assertCheckFinalized(native.methods.isFinalized(ids).call(), false);
-    });
-
-    var checkBal = await Promise.all(
-      itemids.map(async (it, i) => {
-        return await itemsv2.checkBalances(
-          accounts[1],
-          Array(1).fill(it)
-        );
-      })
-    );
-
-      await itemProjection.assertCheckBalanceSupplyWithBalance(
-        native.methods
-      .mintItems(CreateItem, [true, true])
-      .send(blockchainConnection.getSendingOptions({ from: accounts[1] })),
-        CreateItem,
-        checkBal,
-        false
-      );
-
-    itemids.map(async (ids) => {
-      await itemProjection.assertCheckFinalized(native.methods.isFinalized(ids).call(), false);
-    });
   });
 });

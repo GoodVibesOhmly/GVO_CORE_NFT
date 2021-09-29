@@ -76,7 +76,7 @@ async function assertCheckBalanceSupply(
   if (idItems == 0) {
     idItems = await getItemIdFromLog(transaction);
   }
-  
+
   var expectedBalance = checkBal.map((it, i) => {
     return it["balances"].map((item, index) => {
       return item.map((element, indexEl) => {
@@ -162,17 +162,11 @@ async function assertCheckBalanceSupplyWithBalance(
 }
 
 async function assertDecimals(funct, zeroDecimals) {
-  assert.equal(
-    await execFunct(funct),
-    zeroDecimals ? "0" : "18"
-  );
+  assert.equal(await execFunct(funct), zeroDecimals ? "0" : "18");
 }
 
 async function assertNotEqualCollection(funct, coll) {
-  assert.notEqual(
-    await execFunct(funct),
-    coll
-  );
+  assert.notEqual(await execFunct(funct), coll);
 }
 
 async function assertEqualCollection(funct, coll) {
@@ -243,5 +237,5 @@ module.exports = {
   assertEqualHeaderHost,
   assertEqualHeaderUri,
   assertCheckFinalized,
-  assertCheckIsApprovedForAll
+  assertCheckIsApprovedForAll,
 };

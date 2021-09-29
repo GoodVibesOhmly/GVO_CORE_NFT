@@ -1,23 +1,23 @@
 var compile = require("../util/compile");
 var blockchainConnection = require("../util/blockchainConnection");
-var mainInterfaceAddress = "0x915A22A152654714FcecA3f4704fCf6bd314624c";
 var dynamicUriResolverAddress;
-var ItemProjectionFactoryContract;
+var itemProjectionFactoryContract;
 var NativeProjection;
 var mainInterface;
 var ItemInteroperableInterface;
 
-async function deployNativeProjection(nativeProjectionAddress = utilities.voidEthereumAddress) {
+async function deployNativeProjection(
+  nativeProjectionAddress = utilities.voidEthereumAddress
+) {
   await blockchainConnection.init;
 
   var MainInterface = await compile("model/IItemMainInterface");
   mainInterface = new web3.eth.Contract(
     MainInterface.abi,
-    mainInterfaceAddress
+    knowledgeBase.mainInterfaceAddress
   );
-  
-  if(nativeProjectionAddress == utilities.voidEthereumAddress){
-    console.log("deploy della native projection")
+
+  if (nativeProjectionAddress == utilities.voidEthereumAddress) {
     NativeProjection = await compile("projection/native/NativeProjection");
     var nativeProjectionContract = await new web3.eth.Contract(
       NativeProjection.abi
@@ -29,13 +29,15 @@ async function deployNativeProjection(nativeProjectionAddress = utilities.voidEt
 
     return model;
   }
-  console.log("native projection esistente, address: "+nativeProjectionAddress)
-  return nativeProjectionAddress
+  return nativeProjectionAddress;
 }
 
-async function deploy(host, plainUri, nativeProjectionAddress = utilities.voidEthereumAddress) {
-
-  var model = await deployNativeProjection(nativeProjectionAddress)
+async function deploy(
+  host,
+  plainUri,
+  nativeProjectionAddress = utilities.voidEthereumAddress
+) {
+  var model = await deployNativeProjection(nativeProjectionAddress);
 
   dynamicUriResolverAddress = await mainInterface.methods
     .dynamicUriResolver()
@@ -47,7 +49,7 @@ async function deploy(host, plainUri, nativeProjectionAddress = utilities.voidEt
 
   var dataParam = web3.eth.abi.encodeParameters(
     ["address"],
-    [mainInterfaceAddress]
+    [knowledgeBase.mainInterfaceAddress]
   );
 
   dataParam = web3.eth.abi.encodeParameters(
@@ -65,7 +67,7 @@ async function deploy(host, plainUri, nativeProjectionAddress = utilities.voidEt
     [host, dataParam]
   );
 
-  ItemProjectionFactoryContract = await new web3.eth.Contract(
+  itemProjectionFactoryContract = await new web3.eth.Contract(
     ItemProjectionFactory.abi
   )
     .deploy({ data: ItemProjectionFactory.bin, arguments: [dataParam] })
@@ -101,13 +103,13 @@ async function initialization(
 
   deployParam = abi.encode(["address", "bytes"], [host, deployParam]);
 
-  var transaction = await ItemProjectionFactoryContract.methods
+  var transaction = await itemProjectionFactoryContract.methods
     .deploy(deployParam)
     .send(blockchainConnection.getSendingOptions());
 
-    var logs = (await web3.eth.getTransactionReceipt(transaction.transactionHash))
+  var logs = (await web3.eth.getTransactionReceipt(transaction.transactionHash))
     .logs;
-    var itemIds = logs
+  var itemIds = logs
     .filter(
       (it) =>
         it.topics[0] ===
@@ -115,22 +117,22 @@ async function initialization(
     )
     .map((it) => web3.eth.abi.decodeParameter("uint256", it.topics[3]));
 
-    var native = new web3.eth.Contract(
-      NativeProjection.abi,
-      transaction.events.Deployed.returnValues.deployedAddress
-    )
+  var native = new web3.eth.Contract(
+    NativeProjection.abi,
+    transaction.events.Deployed.returnValues.deployedAddress
+  );
 
   return {
     native,
-    itemIds
-  }
+    itemIds,
+  };
 }
 
 async function createCollection(host, itemsToMint) {
   var MainInterface = await compile("model/IItemMainInterface");
   mainInterface = new web3.eth.Contract(
     MainInterface.abi,
-    mainInterfaceAddress
+    knowledgeBase.mainInterfaceAddress
   );
   var collection = {
     host,
@@ -180,61 +182,137 @@ async function createCollection(host, itemsToMint) {
 }
 
 function asArray(item, asArray) {
-  return !item ? [] : (item instanceof Array ? item : [item]).map(it => it instanceof Array ? it : asArray ? [it] : it);
+  return !item
+    ? []
+    : (item instanceof Array ? item : [item]).map((it) =>
+        it instanceof Array ? it : asArray ? [it] : it
+      );
 }
 
 async function asInteroperableInterface(itemId) {
-  ItemInteroperableInterface = await compile('impl/ItemInteroperableInterface');
-  var c = new web3.eth.Contract(ItemInteroperableInterface.abi, await mainInterface.methods.interoperableOf(itemId).call());
+  ItemInteroperableInterface = await compile("impl/ItemInteroperableInterface");
+  var itemInteroperableInterface = new web3.eth.Contract(
+    ItemInteroperableInterface.abi,
+    await mainInterface.methods.interoperableOf(itemId).call()
+  );
   try {
-      await blockchainConnection.unlockAccounts(c.options.address);
-  } catch(e) {
-  }
-  return c;
+    await blockchainConnection.unlockAccounts(
+      itemInteroperableInterface.options.address
+    );
+  } catch (e) {}
+  return itemInteroperableInterface;
 }
 
-async function checkBalances(owners, itemIds, expectedBalances, expectedTotalSupplies) {
+async function checkBalances(
+  owners,
+  itemIds,
+  expectedBalances,
+  expectedTotalSupplies
+) {
   itemIds = asArray(itemIds, (owners = asArray(owners)).length > 1);
   if (owners.length === 0 || itemIds.length === 0) {
-      throw new Error("owners and itemIds are empty");
+    throw new Error("owners and itemIds are empty");
   }
   expectedBalances = asArray(expectedBalances, owners.length > 1);
   expectedTotalSupplies = asArray(expectedTotalSupplies, owners.length > 1);
-  var balances = [owners.map(() => '0')];
-  var totalSupplies = [owners.map(() => '0')];
-  var checkStep = async function checkStep(owner, itemIds, expectedBalances, expectedTotalSupplies) {
-      var b = itemIds.map(() => '0');
-      var t = itemIds.map(() => '0');
-      await Promise.all(itemIds.map(async (_, i) => {
-          var itemId = itemIds[i];
-          var mainTotalSupply = t[i] = await mainInterface.methods.totalSupply(itemId).call();
-          var interoperableInterface = await asInteroperableInterface(itemId);
-          var interoperableTotalSupply = await interoperableInterface.methods.totalSupply().call();
-          assert.equal(mainTotalSupply, interoperableTotalSupply, `totalSupply mismatch for item #${itemId}`);
+  var balances = [owners.map(() => "0")];
+  var totalSupplies = [owners.map(() => "0")];
+  var checkStep = async function checkStep(
+    owner,
+    itemIds,
+    expectedBalances,
+    expectedTotalSupplies
+  ) {
+    var b = itemIds.map(() => "0");
+    var t = itemIds.map(() => "0");
+    await Promise.all(
+      itemIds.map(async (_, i) => {
+        var itemId = itemIds[i];
+        var mainTotalSupply = (t[i] = await mainInterface.methods
+          .totalSupply(itemId)
+          .call());
+        var interoperableInterface = await asInteroperableInterface(itemId);
+        var interoperableTotalSupply = await interoperableInterface.methods
+          .totalSupply()
+          .call();
+        assert.equal(
+          mainTotalSupply,
+          interoperableTotalSupply,
+          `totalSupply mismatch for item #${itemId}`
+        );
 
-          expectedTotalSupplies && expectedTotalSupplies.length > 0 && assert.equal(mainTotalSupply, expectedTotalSupplies[i], `expected totalSupply mismatch for item #${itemId}`);
+        expectedTotalSupplies &&
+          expectedTotalSupplies.length > 0 &&
+          assert.equal(
+            mainTotalSupply,
+            expectedTotalSupplies[i],
+            `expected totalSupply mismatch for item #${itemId}`
+          );
 
-          var mainBalance = b[i] = await mainInterface.methods.balanceOf(owner, itemId).call();
-          var interoperableBalance = await interoperableInterface.methods.balanceOf(owner).call();
+        var mainBalance = (b[i] = await mainInterface.methods
+          .balanceOf(owner, itemId)
+          .call());
+        var interoperableBalance = await interoperableInterface.methods
+          .balanceOf(owner)
+          .call();
 
-          assert.equal(mainBalance, interoperableBalance, `balanceOf mismatch for owner ${owner} and item #${itemId}`);
-          expectedBalances && expectedBalances.length > 0 && assert.equal(mainBalance, expectedBalances[i], `expected balanceOf mismatch for owner ${owner} and item #${itemId}`);
-      }));
+        assert.equal(
+          mainBalance,
+          interoperableBalance,
+          `balanceOf mismatch for owner ${owner} and item #${itemId}`
+        );
+        expectedBalances &&
+          expectedBalances.length > 0 &&
+          assert.equal(
+            mainBalance,
+            expectedBalances[i],
+            `expected balanceOf mismatch for owner ${owner} and item #${itemId}`
+          );
+      })
+    );
 
-      var balanceOfBatch = await mainInterface.methods.balanceOfBatch(itemIds.map(() => owner), itemIds).call();
-      assert.equal(JSON.stringify(b), JSON.stringify(balanceOfBatch), `balanceOfBatch mismatch for owner ${owner}`);
-      expectedBalances && expectedBalances.length > 0 && assert.equal(JSON.stringify(expectedBalances), JSON.stringify(b), `expected balanceOfBatch mismatch for owner ${owner}`);
-      expectedBalances && expectedBalances.length > 0 && assert.equal(JSON.stringify(expectedBalances), JSON.stringify(balanceOfBatch), `expected balanceOfBatch mismatch for owner ${owner}`);
-      return [b, t];
-  }
-  await Promise.all(owners.map(async (_, i) => {
-      var step = await checkStep(owners[i], owners.length === 1 ? itemIds : itemIds[i], owners.length === 1 ? expectedBalances : expectedBalances[i], owners.length === 1 ? expectedTotalSupplies : expectedTotalSupplies[i]);
+    var balanceOfBatch = await mainInterface.methods
+      .balanceOfBatch(
+        itemIds.map(() => owner),
+        itemIds
+      )
+      .call();
+    assert.equal(
+      JSON.stringify(b),
+      JSON.stringify(balanceOfBatch),
+      `balanceOfBatch mismatch for owner ${owner}`
+    );
+    expectedBalances &&
+      expectedBalances.length > 0 &&
+      assert.equal(
+        JSON.stringify(expectedBalances),
+        JSON.stringify(b),
+        `expected balanceOfBatch mismatch for owner ${owner}`
+      );
+    expectedBalances &&
+      expectedBalances.length > 0 &&
+      assert.equal(
+        JSON.stringify(expectedBalances),
+        JSON.stringify(balanceOfBatch),
+        `expected balanceOfBatch mismatch for owner ${owner}`
+      );
+    return [b, t];
+  };
+  await Promise.all(
+    owners.map(async (_, i) => {
+      var step = await checkStep(
+        owners[i],
+        owners.length === 1 ? itemIds : itemIds[i],
+        owners.length === 1 ? expectedBalances : expectedBalances[i],
+        owners.length === 1 ? expectedTotalSupplies : expectedTotalSupplies[i]
+      );
       balances[i] = step[0];
       totalSupplies[i] = step[1];
-  }));
+    })
+  );
   return {
-      balances,
-      totalSupplies
+    balances,
+    totalSupplies,
   };
 }
 
@@ -243,5 +321,5 @@ module.exports = {
   deployNativeProjection,
   deploy,
   createCollection,
-  checkBalances
+  checkBalances,
 };

@@ -9,10 +9,11 @@ import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@ethereansos/swissknife/contracts/generic/impl/LazyInitCapableElement.sol";
 import "../util/ERC1155CommonLibrary.sol";
-import { AddressUtilities } from "@ethereansos/swissknife/contracts/lib/GeneralUtilities.sol";
+import { AddressUtilities, BytesUtilities } from "@ethereansos/swissknife/contracts/lib/GeneralUtilities.sol";
 
 abstract contract ItemProjection is IItemProjection, LazyInitCapableElement {
     using AddressUtilities for address;
+    using BytesUtilities for bytes;
 
     address public override mainInterface;
     bytes32 public override collectionId;
@@ -178,7 +179,7 @@ abstract contract ItemProjection is IItemProjection, LazyInitCapableElement {
         for(uint256 i = 0 ; i < interoperableInterfaceAmounts.length; i++) {
             interoperableInterfaceAmounts[i] = toInteroperableInterfaceAmount(amounts[i], itemIds[i], from);
         }
-        IItemMainInterface(mainInterface).mintTransferOrBurn(true, abi.encode(true, abi.encode(msg.sender, from, to, itemIds, interoperableInterfaceAmounts)));
+        IItemMainInterface(mainInterface).mintTransferOrBurn(true, abi.encode(true, abi.encode(abi.encode(msg.sender, from, to, itemIds, interoperableInterfaceAmounts).asSingletonArray())));
         ERC1155CommonLibrary.doSafeBatchTransferAcceptanceCheck(msg.sender, from, to, itemIds, amounts, data);
         emit TransferBatch(msg.sender, from, to, itemIds, amounts);
     }
@@ -201,7 +202,7 @@ abstract contract ItemProjection is IItemProjection, LazyInitCapableElement {
         for(uint256 i = 0 ; i < interoperableInterfaceAmounts.length; i++) {
             interoperableInterfaceAmounts[i] = toInteroperableInterfaceAmount(amounts[i], itemIds[i], account);
         }
-        IItemMainInterface(mainInterface).mintTransferOrBurn(true, abi.encode(true, abi.encode(msg.sender, account, address(0), itemIds, interoperableInterfaceAmounts)));
+        IItemMainInterface(mainInterface).mintTransferOrBurn(true, abi.encode(true, abi.encode(abi.encode(msg.sender, account, address(0), itemIds, interoperableInterfaceAmounts).asSingletonArray())));
         emit TransferBatch(msg.sender, account, address(0), itemIds, amounts);
     }
 }

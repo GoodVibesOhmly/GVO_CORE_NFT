@@ -1,6 +1,6 @@
 var blockchainConnection = require("./blockchainConnection");
 var utilities = require("./utilities");
-var context = require("./context.json");
+var context = require("./knowledgeBase.json");
 var dfoManager = require("./dfo");
 var blockchainConnection = require("./blockchainConnection");
 

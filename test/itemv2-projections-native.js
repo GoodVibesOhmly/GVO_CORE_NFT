@@ -485,12 +485,12 @@ describe("Item V2 Projections - Native", () => {
       "uri2"
     );
 
-    await mainInterface.methods
-      .setCollectionsMetadata(
-        [await native.methods.collectionId().call()],
-        [expectedCollection]
-      )
-      .send(blockchainConnection.getSendingOptions({ from: accounts[3] }));
+    // await mainInterface.methods
+    //   .setCollectionsMetadata(
+    //     [await native.methods.collectionId().call()],
+    //     [expectedCollection]
+    //   )
+    //   .send(blockchainConnection.getSendingOptions({ from: accounts[3] }));
   });
 
   it("#622 Change Collection host and reset it", async () => {
@@ -517,7 +517,7 @@ describe("Item V2 Projections - Native", () => {
       "COL1",
       "uri1",
     ];
-    var newCollectionHeader = [accounts[1], "Collection2", "COL2", "uri2"];
+    var newCollectionHeader = [accounts[3], "Collection2", "COL2", "uri2"];
 
     var items = [
       [
@@ -547,7 +547,7 @@ describe("Item V2 Projections - Native", () => {
     };
 
     var expectedNewCollection = {
-      host: accounts[1],
+      host: accounts[3],
       name: "Collection2",
       symbol: "COL2",
       uri: "uri2",
@@ -613,7 +613,7 @@ describe("Item V2 Projections - Native", () => {
         [await native.methods.collectionId().call()],
         [resetCollectionHeader]
       )
-      .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
+      .send(blockchainConnection.getSendingOptions({ from: accounts[3] }));
 
     await itemProjection.assertCheckHeader(
       expectedResetCollection,

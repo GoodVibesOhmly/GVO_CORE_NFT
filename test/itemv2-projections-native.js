@@ -604,7 +604,7 @@ describe("Item V2 Projections - Native", () => {
     await catchCall(
       native.methods
         .setHeader(newCollectionHeader)
-        .send(blockchainConnection.getSendingOptions({ from: accounts[1] })),
+        .send(blockchainConnection.getSendingOptions({ from: accounts[3] })),
       "Unauthorized"
     );
 
@@ -1088,9 +1088,9 @@ describe("Item V2 Projections - Native", () => {
         id: itemids[0],
         accounts: [accounts[1], accounts[2], accounts[3]],
         amounts: [
-          "10000000000000000",
-          "10000000000000000",
-          "10000000000000000",
+          "10000000000",
+          "30000000000000000",
+          "100000000000000000000",
         ],
       },
       {
@@ -1104,9 +1104,9 @@ describe("Item V2 Projections - Native", () => {
         id: itemids[1],
         accounts: [accounts[4], accounts[7], accounts[9]],
         amounts: [
-          "10000000000000000",
-          "10000000000000000",
-          "10000000000000000",
+          "300000000000000000",
+          "10000000000",
+          "100000000000000",
         ],
       },
     ];
@@ -1132,7 +1132,7 @@ describe("Item V2 Projections - Native", () => {
     );
   });
 
-  it("#630 Mint Items for Collection ids and Items ids that don't exist", async () => {
+  it("#630 Create Items for Collection ids and Items ids that don't exist", async () => {
     /**
      * Authorized subjects:
      * Collection host address
@@ -1140,10 +1140,10 @@ describe("Item V2 Projections - Native", () => {
      * lazyInit
      * mintItems (CreateItem[] calldata items)
      *
-     * Mint new Items for different accounts and amounts calling the Native Projection mintItems functions using wrong Collection ids and Item
+     * Create new Items for different accounts and amounts calling the Native Projection mintItems functions using wrong Collection ids and Item
      *ids
-     * Using non-existent means that the Items cannot be minted
-     * must fail: I cannot mint items from a non-existing collection/id
+     * Using non-existent means that the Items cannot be created
+     * must fail: I cannot create items from a non-existing collection/id
      */
     var zeroDecimals = false;
     var collectionId = utilities.voidBytes32;
@@ -1252,6 +1252,10 @@ describe("Item V2 Projections - Native", () => {
       "URI"
     );
     var native = res["native"];
+    var itemids = res["itemIds"][0];
+
+    assert.notEqual(itemids, idItemsMain);
+    assert.notEqual(await native.methods.collectionId().call(), collectionId);
 
     var CreateItem = [
       {
@@ -2990,9 +2994,9 @@ describe("Item V2 Projections - Native", () => {
 
     var burnAmount = [
       "10000000000000000",
-      "10000000000000000",
-      "10000000000000000",
-      "10000000000000000",
+      "30000000000000000",
+      "10000000000",
+      "200000000000000000",
     ];
     var burnAddress = accounts[1];
     var totalItemIds = mainItemId.concat(itemids).map((item, index) => {
@@ -3041,21 +3045,21 @@ describe("Item V2 Projections - Native", () => {
     );
   });
 
-  it("#638 Batch operation using the Main Interface methods", async () => {
+  it("#638 Batch transfer operation using the Main Interface methods", async () => {
     /**
-     * Authorized subjects:
-     * Items holders
-     * approved operators
-     *
-     * Functions used in the test:
-     * lazyInit
-     * createCollection (main interface)
-     *safeBatchTransferFrom (main interface)
-     * burnBatch (main interface)
-     *
-     * Create multiple Collection using the Main Interface.
-     * Using the main interface batch methods (safeBatchTransferFrom and burnBatch), a user can manage different Items from different Collection and one of them is the Projection Collection
-     */
+    * Authorized subjects:
+    * Items holders
+    * approved operators
+    *
+    * Functions used in the test:
+    * lazyInit
+    * createCollection (main interface)
+    *safeBatchTransferFrom (main interface)
+    *
+    * Create multiple Collection using the Main Interface.
+    * Create and initialize a Native Projection with Items
+    * Using the main interface batch methods safeBatchTransferFrom, a user can manage different Items from different Collection and one of them is the Projection Collection
+    */
     var zeroDecimals = false;
     var collectionId = utilities.voidBytes32;
 

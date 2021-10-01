@@ -5,7 +5,6 @@ const { isCommunityResourcable } = require("@ethersproject/providers");
 var mainInterfaceAddress = "0x915A22A152654714FcecA3f4704fCf6bd314624c";
 var mainInterface;
 var noneBalance = [];
-var balance = { balances: [], totalSupplies: [] };
 
 async function createNoneBal(address, items) {
   for (let i = 0; i < items.length; i++) {
@@ -13,6 +12,7 @@ async function createNoneBal(address, items) {
     items.balances.push(Array(address[i].length).fill(0));
     items.totalSupplies.push(Array(1).fill(0));
     noneBalance.push(items);
+    return noneBalance;
   }
 }
 
@@ -43,6 +43,82 @@ async function getItemIdFromLog(transaction) {
         web3.utils.sha3("CollectionItem(bytes32,bytes32,uint256)")
     )
     .map((it) => web3.eth.abi.decodeParameter("uint256", it.topics[3]));
+}
+
+async function assertTransferBalance(
+  fromAddress,
+  toAddress,
+  itemids,
+  transferAmount,
+  checkBalFrom,
+  checkBalTo
+) {
+  var expectedBalanceFrom = await Promise.all(
+    checkBalFrom["balances"].map(async (item, index) => {
+      return await Promise.all(
+        item.map((it, i) => {
+          return it.sub(transferAmount[index]);
+        })
+      );
+    })
+  );
+  var expectedBalanceTo = await Promise.all(
+    checkBalTo["balances"].map(async (item, index) => {
+      return await Promise.all(
+        item.map((it, i) => {
+          return it.add(transferAmount[index]);
+        })
+      );
+    })
+  );
+
+  var expectedTotalSupplies = checkBalFrom["totalSupplies"];
+
+  await itemsv2.checkBalances(
+    fromAddress,
+    itemids,
+    expectedBalanceFrom,
+    expectedTotalSupplies
+  );
+  await itemsv2.checkBalances(
+    toAddress,
+    itemids,
+    expectedBalanceTo,
+    expectedTotalSupplies
+  );
+}
+
+async function assertBurnBalance(checkBal, burnAmount, burnAddress, idItems) {
+  var expectedBalance = await Promise.all(
+    checkBal["balances"].map(async (item, index) => {
+      return await Promise.all(
+        item.map((it, i) => {
+          return it.sub(burnAmount[index][i]);
+        })
+      );
+    })
+  );
+
+  var expectedSupply = await Promise.all(
+    checkBal["totalSupplies"].map(async (item, index) => {
+      return await Promise.all(
+        item.map((it, i) => {
+          return it.sub(burnAmount[index][i]);
+        })
+      );
+    })
+  );
+
+  await Promise.all(
+    idItems.map(async (item, index) => {
+      await itemsv2.checkBalances(
+        burnAddress[index],
+        [idItems[index]],
+        expectedBalance[index],
+        expectedSupply[index]
+      );
+    })
+  );
 }
 
 async function assertCheckBalanceSupply(
@@ -86,6 +162,7 @@ async function assertCheckBalanceSupply(
       });
     });
   });
+
   var expectedSupply = checkBal.map((it, i) => {
     return it["totalSupplies"].map((item, index) => {
       return item.map((element, indexEl) => {
@@ -103,6 +180,49 @@ async function assertCheckBalanceSupply(
         Array(accounts[index].length).fill(event),
         expectedBalance[0][index],
         expectedSupply[0][index]
+      );
+    })
+  );
+
+  return transaction;
+}
+
+async function assertCheckBalance(checkBal, CreateItem, itemids) {
+  if (!Array.isArray(itemids)) {
+    itemids = [itemids];
+  }
+  var expectedBalance = await Promise.all(
+    checkBal.map(async (bal, index) => {
+      return await Promise.all(
+        bal["balances"].map(async (b, i) => {
+          return b[0].add(CreateItem[index]["amounts"][i]);
+        })
+      );
+    })
+  );
+
+  var expectedSupply = await Promise.all(
+    checkBal.map(async (bal, index) => {
+      return await Promise.all(
+        bal["totalSupplies"].map(async (b, i) => {
+          return b[0].add(
+            CreateItem[index]["amounts"].reduce(
+              (total, arg) => total.add(arg),
+              0
+            )
+          );
+        })
+      );
+    })
+  );
+
+  await Promise.all(
+    CreateItem.map(async (it, i) => {
+      await itemsv2.checkBalances(
+        it.accounts,
+        Array(it.accounts.length).fill(itemids[i]),
+        expectedBalance[i],
+        expectedSupply[i]
       );
     })
   );
@@ -154,8 +274,8 @@ async function assertCheckBalanceSupplyWithBalance(
       await itemsv2.checkBalances(
         accounts[index],
         Array(accounts[index].length).fill(event),
-        expectedBalance[0][index],
-        expectedSupply[0][index]
+        expectedBalance[index].flat(),
+        expectedSupply[index].flat()
       );
     })
   );
@@ -238,4 +358,8 @@ module.exports = {
   assertEqualHeaderUri,
   assertCheckFinalized,
   assertCheckIsApprovedForAll,
+  assertTransferBalance,
+  assertBurnBalance,
+  assertCheckBalance,
+  createNoneBal,
 };

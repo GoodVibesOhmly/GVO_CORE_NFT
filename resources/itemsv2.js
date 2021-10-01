@@ -6,6 +6,14 @@ var NativeProjection;
 var mainInterface;
 var ItemInteroperableInterface;
 
+function convertHeader(header) {
+  return Object.values(header);
+}
+
+function convertItem(item) {
+  return item.map(async doc => doc != "Header" ? Object.values(doc) : convertHeader(doc));
+}
+
 async function deployNativeProjection(
   nativeProjectionAddress = utilities.voidEthereumAddress
 ) {
@@ -85,6 +93,7 @@ async function initialization(
   plainUri,
   nativeProjectionAddress = utilities.voidEthereumAddress
 ) {
+  header = await convertHeader(header)
   await deploy(host, plainUri, nativeProjectionAddress);
 
   var isDecimals = zeroDecimals;
@@ -121,7 +130,19 @@ async function initialization(
     NativeProjection.abi,
     transaction.events.Deployed.returnValues.deployedAddress
   );
-
+  
+  if(itemIds.length > 0){
+    await Promise.all(
+      itemIds.map(async (it, index) => {
+        var checkBal = await checkBalances(item[index][3][0], it)
+        await Promise.all(checkBal["balances"].map(async(bal, ind) => {
+          await Promise.all(bal.map((b, i) =>{
+            assert.equal(b.sub(item[index][4][i]), '0')
+          }))
+        }))
+      })
+    );
+  }
   return {
     native,
     itemIds,
@@ -322,4 +343,6 @@ module.exports = {
   deploy,
   createCollection,
   checkBalances,
+  convertHeader,
+  convertItem
 };

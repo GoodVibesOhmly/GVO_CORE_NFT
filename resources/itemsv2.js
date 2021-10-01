@@ -10,8 +10,8 @@ function convertHeader(header) {
   return Object.values(header);
 }
 
-function convertItem(item) {
-  return item.map(async doc => doc != "Header" ? Object.values(doc) : convertHeader(doc));
+async function convertItem(item) {
+  return await item.map(async doc => doc != "Header" ? Object.values(doc) : await convertHeader(doc));
 }
 
 async function deployNativeProjection(
@@ -93,7 +93,7 @@ async function initialization(
   plainUri,
   nativeProjectionAddress = utilities.voidEthereumAddress
 ) {
-  header = await convertHeader(header)
+  header = await convertHeader(header);
   await deploy(host, plainUri, nativeProjectionAddress);
 
   var isDecimals = zeroDecimals;

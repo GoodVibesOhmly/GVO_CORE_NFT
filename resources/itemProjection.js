@@ -123,9 +123,7 @@ async function assertBurnBalance(checkBal, burnAmount, burnAddress, idItems) {
 
 async function assertCheckBalanceSupply(
   funct,
-  createItem,
-  isBurn,
-  burnAmount = 0
+  createItem
 ) {
   var MainInterface = await compile("model/IItemMainInterface");
   mainInterface = new web3.eth.Contract(
@@ -156,9 +154,7 @@ async function assertCheckBalanceSupply(
   var expectedBalance = checkBal.map((it, i) => {
     return it["balances"].map((item, index) => {
       return item.map((element, indexEl) => {
-        return isBurn
-          ? element.sub(burnAmount[indexEl])
-          : element.add(amounts[i][indexEl]);
+        return element.add(amounts[i][indexEl]);
       });
     });
   });
@@ -166,9 +162,7 @@ async function assertCheckBalanceSupply(
   var expectedSupply = checkBal.map((it, i) => {
     return it["totalSupplies"].map((item, index) => {
       return item.map((element, indexEl) => {
-        return isBurn
-          ? element.sub(burnAmount[index])
-          : element.add(amounts[i].reduce((total, arg) => total.add(arg), 0));
+        return element.add(amounts[i].reduce((total, arg) => total.add(arg), 0));
       });
     });
   });
@@ -223,59 +217,6 @@ async function assertCheckBalance(checkBal, CreateItem, itemids) {
         Array(it.accounts.length).fill(itemids[i]),
         expectedBalance[i],
         expectedSupply[i]
-      );
-    })
-  );
-}
-
-async function assertCheckBalanceSupplyWithBalance(
-  funct,
-  createItem,
-  balance,
-  isBurn,
-  burnAmount = 0
-) {
-  var MainInterface = await compile("model/IItemMainInterface");
-  mainInterface = new web3.eth.Contract(
-    MainInterface.abi,
-    mainInterfaceAddress
-  );
-  var idItems = createItem.map((it) => it.id);
-  var amounts = createItem.map((it) => it.amounts);
-  var accounts = createItem.map((it) => it.accounts);
-
-  createNoneBal(accounts, idItems);
-  var checkBal = idItems[0] == 0 ? noneBalance : balance;
-  var transaction = await execFunct(funct);
-  if (idItems == 0) {
-    idItems = await getItemIdFromLog(transaction);
-  }
-  var expectedBalance = checkBal.map((it, i) => {
-    return it["balances"].map((item, index) => {
-      return item.map((element, indexEl) => {
-        return isBurn
-          ? element.sub(burnAmount[indexEl])
-          : element.add(amounts[i][indexEl]);
-      });
-    });
-  });
-  var expectedSupply = checkBal.map((it, i) => {
-    return it["totalSupplies"].map((item, index) => {
-      return item.map((element, indexEl) => {
-        return isBurn
-          ? element.sub(burnAmount[index])
-          : element.add(amounts[i].reduce((total, arg) => total.add(arg), 0));
-      });
-    });
-  });
-
-  await Promise.all(
-    idItems.map(async (event, index) => {
-      await itemsv2.checkBalances(
-        accounts[index],
-        Array(accounts[index].length).fill(event),
-        expectedBalance[index].flat(),
-        expectedSupply[index].flat()
       );
     })
   );
@@ -345,7 +286,6 @@ async function assertCheckCollection(items, collectionId) {
 
 module.exports = {
   assertCheckBalanceSupply,
-  assertCheckBalanceSupplyWithBalance,
   assertCheckHeader,
   checkHeader,
   checkItem,

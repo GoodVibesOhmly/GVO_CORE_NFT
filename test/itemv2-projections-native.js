@@ -125,11 +125,185 @@ describe("Item V2 Projections - Native", () => {
       native.options.address
     );
   });
-
-  it("#??? Alternative Initialization ???", async () => {
+  it("#639 Alternative Initialization #2", async () => {
     /**
+     * Authorized subjects:
+     * -initializer address
+     * Functions used in the test:
+     * lazyInit
      *
+     * Initialize the NativeProjection with a previously created Collection id and mint/create Items inside.
+     * In this case a Collection is created through the Main interface with a certain host.
+     * The NativeProjection is created and initialized passing the previously created CollectionId
+     * The collection.host is set as NativeProjection address.
      */
+    var zeroDecimals = false;
+    var collectionId = utilities.voidBytes32;
+
+    var headerCollection = {
+      host: accounts[1],
+      name: "Colection1",
+      symbol: "C1",
+      uri: "uriC1",
+    };
+
+    var mainItems = [
+      {
+        header: {
+          host: accounts[1],
+          name: "Item1",
+          symbol: "I1",
+          uri: "uriItem1",
+        },
+        collectionId: utilities.voidBytes32,
+        id: 0,
+        accounts: [accounts[1]],
+        amounts: ["10000000000000000"],
+      },
+      {
+        header: {
+          host: accounts[1],
+          name: "Item1",
+          symbol: "I1",
+          uri: "uriItem1",
+        },
+        collectionId: utilities.voidBytes32,
+        id: 0,
+        accounts: [accounts[1]],
+        amounts: ["10000000000000000"],
+      },
+    ];
+
+    var transaction = await mainInterface.methods
+      .createCollection(headerCollection, mainItems)
+      .send(blockchainConnection.getSendingOptions());
+    var logs = (
+      await web3.eth.getTransactionReceipt(transaction.transactionHash)
+    ).logs;
+    var collectionId = web3.eth.abi.decodeParameter(
+      "bytes32",
+      logs.filter(
+        (it) =>
+          it.topics[0] ===
+          web3.utils.sha3("Collection(address,address,bytes32)")
+      )[0].topics[3]
+    );
+    var itemIds = logs
+      .filter(
+        (it) =>
+          it.topics[0] ===
+          web3.utils.sha3("CollectionItem(bytes32,bytes32,uint256)")
+      )
+      .map((it) => web3.eth.abi.decodeParameter("uint256", it.topics[3]));
+
+    var items = [];
+
+    var collectionHeader = [accounts[1], "Collection", "COL", "uri"];
+
+    var native = (
+      await itemsv2.initialization(
+        zeroDecimals,
+        collectionId,
+        collectionHeader,
+        items,
+        accounts[1],
+        "URI"
+      )
+    )["native"];
+
+    collectionHeader = {
+      host: native.options.address,
+      name: "Collection",
+      symbol: "COL",
+      uri: "uri",
+    };
+
+    await mainInterface.methods
+      .setCollectionsMetadata([collectionId], [collectionHeader])
+      .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
+
+    await itemProjection.assertDecimals(
+      native.methods.decimals(0).call(),
+      zeroDecimals
+    );
+    await itemProjection.assertEqualCollection(
+      native.methods.collectionId().call(),
+      collectionId
+    );
+
+    var collectionData = await mainInterface.methods
+      .collection(collectionId)
+      .call();
+
+    await itemProjection.assertEqualHeaderHost(
+      collectionData.host,
+      native.options.address
+    );
+
+    var CreateItem = [
+      {
+        header: {
+          host: accounts[1],
+          name: "Item1",
+          symbol: "I1",
+          uri: "uriItem1",
+        },
+        collectionId: await native.methods.collectionId().call(),
+        id: itemIds[0],
+        accounts: [accounts[1], accounts[2], accounts[3]],
+        amounts: [
+          "10000000000000",
+          "2000000000000000",
+          "30000000000000000",
+        ],
+      },
+      {
+        header: {
+          host: accounts[1],
+          name: "Item2",
+          symbol: "I2",
+          uri: "uriItem2",
+        },
+        collectionId: await native.methods.collectionId().call(),
+        id: itemIds[1],
+        accounts: [accounts[4], accounts[7], accounts[9]],
+        amounts: [
+          "10000000000000000",
+          "100000000000",
+          "300000000000000",
+        ],
+      },
+    ];
+
+    var checkBal = await Promise.all(
+      CreateItem.map(async (it, i) => {
+        return await itemsv2.checkBalances(
+          it.accounts,
+          Array(it.accounts.length).fill(itemIds[i])
+        );
+      })
+    );
+
+    await native.methods
+      .mintItems(CreateItem)
+      .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
+    await itemProjection.assertCheckBalance(checkBal, CreateItem, itemIds);
+  });
+
+  it("#649 Alternative initialization #3", async () => {
+    /**
+    * Authorized subjects:
+    * -initializer address
+    * Functions used in the test:
+    * lazyInit
+    *
+    * Initialize the NativeProjection with a previously created Collection id and mint Items inside.
+    * In this case a Collection, with some Items, is created through the Main interface with a certain host.
+    * The NativeProjection is created but not inizialized.
+    * The collection.host is set as NativeProjection address.
+    * The NativeProjection is initialized passing the collectionId and some Items to mint and create
+    * The mintItems function is called on the Native Projection minting the previously created Items
+    */
     var zeroDecimals = false;
     var collectionId = utilities.voidBytes32;
     var headerCollection = {
@@ -320,171 +494,6 @@ describe("Item V2 Projections - Native", () => {
     await itemProjection.assertCheckBalance(checkBal, CreateItem, itemIds);
   });
 
-  it("#639 Alternative Initialization #2", async () => {
-    /**
-     * Authorized subjects:
-     * -initializer address
-     * Functions used in the test:
-     * lazyInit
-     *
-     * Initialize the NativeProjection with a previously created Collection id and mint/create Items inside.
-     * In this case a Collection is created through the Main interface with a certain host.
-     * The NativeProjection is created and initialized passing the previously created CollectionId
-     * The collection.host is set as NativeProjection address.
-     */
-    var zeroDecimals = false;
-    var collectionId = utilities.voidBytes32;
-
-    var headerCollection = {
-      host: accounts[1],
-      name: "Colection1",
-      symbol: "C1",
-      uri: "uriC1",
-    };
-
-    var mainItems = [
-      {
-        header: {
-          host: accounts[1],
-          name: "Item1",
-          symbol: "I1",
-          uri: "uriItem1",
-        },
-        collectionId: utilities.voidBytes32,
-        id: 0,
-        accounts: [accounts[1]],
-        amounts: ["10000000000000000"],
-      },
-      {
-        header: {
-          host: accounts[1],
-          name: "Item1",
-          symbol: "I1",
-          uri: "uriItem1",
-        },
-        collectionId: utilities.voidBytes32,
-        id: 0,
-        accounts: [accounts[1]],
-        amounts: ["10000000000000000"],
-      },
-    ];
-
-    var transaction = await mainInterface.methods
-      .createCollection(headerCollection, mainItems)
-      .send(blockchainConnection.getSendingOptions());
-    var logs = (
-      await web3.eth.getTransactionReceipt(transaction.transactionHash)
-    ).logs;
-    var collectionId = web3.eth.abi.decodeParameter(
-      "bytes32",
-      logs.filter(
-        (it) =>
-          it.topics[0] ===
-          web3.utils.sha3("Collection(address,address,bytes32)")
-      )[0].topics[3]
-    );
-    var itemIds = logs
-      .filter(
-        (it) =>
-          it.topics[0] ===
-          web3.utils.sha3("CollectionItem(bytes32,bytes32,uint256)")
-      )
-      .map((it) => web3.eth.abi.decodeParameter("uint256", it.topics[3]));
-
-    var items = [];
-
-    var collectionHeader = [accounts[1], "Collection", "COL", "uri"];
-
-    var native = (
-      await itemsv2.initialization(
-        zeroDecimals,
-        collectionId,
-        collectionHeader,
-        items,
-        accounts[1],
-        "URI"
-      )
-    )["native"];
-
-    collectionHeader = {
-      host: native.options.address,
-      name: "Collection",
-      symbol: "COL",
-      uri: "uri",
-    };
-
-    await mainInterface.methods
-      .setCollectionsMetadata([collectionId], [collectionHeader])
-      .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
-
-    await itemProjection.assertDecimals(
-      native.methods.decimals(0).call(),
-      zeroDecimals
-    );
-    await itemProjection.assertEqualCollection(
-      native.methods.collectionId().call(),
-      collectionId
-    );
-
-    var collectionData = await mainInterface.methods
-      .collection(collectionId)
-      .call();
-
-    await itemProjection.assertEqualHeaderHost(
-      collectionData.host,
-      native.options.address
-    );
-
-    var CreateItem = [
-      {
-        header: {
-          host: accounts[1],
-          name: "Item1",
-          symbol: "I1",
-          uri: "uriItem1",
-        },
-        collectionId: await native.methods.collectionId().call(),
-        id: itemIds[0],
-        accounts: [accounts[1], accounts[2], accounts[3]],
-        amounts: [
-          "10000000000000",
-          "2000000000000000",
-          "30000000000000000",
-        ],
-      },
-      {
-        header: {
-          host: accounts[1],
-          name: "Item2",
-          symbol: "I2",
-          uri: "uriItem2",
-        },
-        collectionId: await native.methods.collectionId().call(),
-        id: itemIds[1],
-        accounts: [accounts[4], accounts[7], accounts[9]],
-        amounts: [
-          "10000000000000000",
-          "100000000000",
-          "300000000000000",
-        ],
-      },
-    ];
-
-    var checkBal = await Promise.all(
-      CreateItem.map(async (it, i) => {
-        return await itemsv2.checkBalances(
-          it.accounts,
-          Array(it.accounts.length).fill(itemIds[i])
-        );
-      })
-    );
-
-    await native.methods
-      .mintItems(CreateItem)
-      .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
-    await itemProjection.assertCheckBalance(checkBal, CreateItem, itemIds);
-  });
-
   it("#620 Change Collection Metadata", async () => {
     /**
      * Authorized subjects:
@@ -522,6 +531,7 @@ describe("Item V2 Projections - Native", () => {
         [10000],
       ],
     ];
+    
     var native = (
       await itemsv2.initialization(
         zeroDecimals,
@@ -1352,7 +1362,6 @@ describe("Item V2 Projections - Native", () => {
         .mintItems(CreateItem)
         .send(blockchainConnection.getSendingOptions({ from: accounts[1] })),
       CreateItem,
-      false
     );
   });
 
@@ -1365,6 +1374,7 @@ describe("Item V2 Projections - Native", () => {
      * mintItems (CreateItem[] calldata items)
      *
      * Mint previously created Items for different accounts and amounts calling the Native Projection mintItems functions.
+     * must fail: cannot mint items from unauthorized address
      */
     var zeroDecimals = false;
     var collectionId = utilities.voidBytes32;
@@ -1440,6 +1450,13 @@ describe("Item V2 Projections - Native", () => {
       })
     );
 
+    await catchCall(
+      native.methods
+        .mintItems(CreateItem)
+        .send(blockchainConnection.getSendingOptions({ from: accounts[8] })),
+      "Unauthorized"
+    );
+
     await native.methods
       .mintItems(CreateItem)
       .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
@@ -1506,17 +1523,17 @@ describe("Item V2 Projections - Native", () => {
 
   it("#631 Create and mint Items with Collection ids and Items ids not controlled by the Projection", async () => {
     /**
-     * Authorized subjects:
-     * Collection host address
-     * Functions used in the test:
-     * lazyInit
-     * mintItems (CreateItem[] calldata items)
-     *
-     * Mint new Items for different accounts and amounts calling the Native Projection mintItems functions using other Collection ids and Item
-     *ids
-     * Using a Collection id different from the one controlled by the Projection and Items ids belonging to that Collection means that the Items cannot be minted
-     * must fail: cannot mint items with Collection ids and Items ids not controlled by the Projection
-     */
+    * Authorized subjects:
+    * Collection host address
+    * Functions used in the test:
+    * lazyInit
+    * mintItems (CreateItem[] calldata items)
+    *
+    * Mint new Items for different accounts and amounts calling the Native Projection mintItems functions using other Collection ids and Item
+    *ids
+    * Using a Collection id different from the one controlled by the Projection and Items ids belonging to that Collection means that the Items cannot be minted
+    * must fail: cannot mint items with Collection ids and Items ids not controlled by the Projection
+    */
     var zeroDecimals = false;
     var collectionId = utilities.voidBytes32;
 
@@ -1867,7 +1884,6 @@ describe("Item V2 Projections - Native", () => {
         .mintItems(CreateItem, [true])
         .send(blockchainConnection.getSendingOptions({ from: accounts[1] })),
       CreateItem,
-      false
     );
 
     idItems = await itemProjection.getItemIdFromLog(tx);
@@ -1952,7 +1968,6 @@ describe("Item V2 Projections - Native", () => {
         .mintItems(CreateItem, [false])
         .send(blockchainConnection.getSendingOptions({ from: accounts[1] })),
       CreateItem,
-      false
     );
 
     idItems = await itemProjection.getItemIdFromLog(tx);
@@ -2869,6 +2884,150 @@ describe("Item V2 Projections - Native", () => {
     );
   });
 
+  it("#646 Items operation: burnBatch", async () => {
+    /**
+     * Authorized subjects:
+     * Item holders
+     * approved operators addresses
+     * Functions used in the test:
+     * lazyInit
+     * burnBatch
+     *
+     * Create Items when initializing the Native Projection
+     * The Items holders perform a burnBatch using the Native projection method burning multiple Items at once
+     *
+     * must fail: cannot call setApprovalForAll from nativeProjection
+     * must fail: cannot call burnBatch from unauthorized address
+     */
+    var zeroDecimals = false;
+    var collectionId = utilities.voidBytes32;
+
+    var collectionHeader = {
+      host: accounts[1],
+      name: "Collection1",
+      symbol: "COL1",
+      uri: "uri1",
+    };
+
+    var items = [];
+
+    var res = await itemsv2.initialization(
+      zeroDecimals,
+      collectionId,
+      collectionHeader,
+      items,
+      accounts[1],
+      "URI"
+    );
+    var native = res["native"];
+
+    var CreateItem = [
+      {
+        header: {
+          host: accounts[1],
+          name: "Item1",
+          symbol: "I1",
+          uri: "uriItem1",
+        },
+        collectionId: await native.methods.collectionId().call(),
+        id: 0,
+        accounts: [accounts[1]],
+        amounts: ["50000000000000000"],
+      },
+      {
+        header: {
+          host: accounts[1],
+          name: "Item2",
+          symbol: "I2",
+          uri: "uriItem2",
+        },
+        collectionId: await native.methods.collectionId().call(),
+        id: 0,
+        accounts: [accounts[1]],
+        amounts: ["60000000000000000"],
+      },
+      {
+        header: {
+          host: accounts[1],
+          name: "Item3",
+          symbol: "I3",
+          uri: "uriItem3",
+        },
+        collectionId: await native.methods.collectionId().call(),
+        id: 0,
+        accounts: [accounts[2]],
+        amounts: ["50000000000000000"],
+      },
+      {
+        header: {
+          host: accounts[1],
+          name: "Item4",
+          symbol: "I4",
+          uri: "uriItem4",
+        },
+        collectionId: await native.methods.collectionId().call(),
+        id: 0,
+        accounts: [accounts[2]],
+        amounts: ["60000000000000000"],
+      },
+    ];
+
+    var tx = await native.methods
+      .mintItems(CreateItem)
+      .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
+    var idItems = await itemProjection.getItemIdFromLog(tx);
+
+    var accountsList = CreateItem.map((it) => it.accounts);
+    var noneBal = await itemProjection.createNoneBal(accountsList, idItems);
+    await itemProjection.assertCheckBalance(noneBal, CreateItem, idItems);
+
+    var idItems = await itemProjection.getItemIdFromLog(tx);
+
+    var burnAmount = [
+      ["10000000000000000"],
+      ["2000000000000000"],
+      ["10000000000000000"],
+      ["2000000000000000"],
+    ];
+
+    var burnAddress = [accounts[1], accounts[1], accounts[2], accounts[2]];
+    var checkBal = await itemsv2.checkBalances(
+      [accounts[1], accounts[1], accounts[2], accounts[2]],
+      idItems
+    );
+
+    await native.methods
+      .burnBatch(
+        burnAddress[0],
+        idItems.slice(0, 2),
+        burnAmount.slice(0, 2).flat()
+      )
+      .send(
+        blockchainConnection.getSendingOptions({
+          from: burnAddress[0],
+        })
+      );
+
+    await native.methods
+      .burnBatch(
+        burnAddress[2],
+        idItems.slice(2, 4),
+        burnAmount.slice(2, 4).flat()
+      )
+      .send(
+        blockchainConnection.getSendingOptions({
+          from: burnAddress[2],
+        })
+      );
+
+    await itemProjection.assertBurnBalance(
+      checkBal,
+      burnAmount,
+      burnAddress,
+      idItems
+    );
+  });
+
   it("#647 Items operation: burnBatch and approved operators", async () => {
     /**
      * Authorized subjects:
@@ -3043,150 +3202,6 @@ describe("Item V2 Projections - Native", () => {
       .send(
         blockchainConnection.getSendingOptions({
           from: operator[2],
-        })
-      );
-
-    await itemProjection.assertBurnBalance(
-      checkBal,
-      burnAmount,
-      burnAddress,
-      idItems
-    );
-  });
-
-  it("#646 Items operation: burnBatch", async () => {
-    /**
-     * Authorized subjects:
-     * Item holders
-     * approved operators addresses
-     * Functions used in the test:
-     * lazyInit
-     * burnBatch
-     *
-     * Create Items when initializing the Native Projection
-     * The Items holders perform a burnBatch using the Native projection method burning multiple Items at once
-     *
-     * must fail: cannot call setApprovalForAll from nativeProjection
-     * must fail: cannot call burnBatch from unauthorized address
-     */
-    var zeroDecimals = false;
-    var collectionId = utilities.voidBytes32;
-
-    var collectionHeader = {
-      host: accounts[1],
-      name: "Collection1",
-      symbol: "COL1",
-      uri: "uri1",
-    };
-
-    var items = [];
-
-    var res = await itemsv2.initialization(
-      zeroDecimals,
-      collectionId,
-      collectionHeader,
-      items,
-      accounts[1],
-      "URI"
-    );
-    var native = res["native"];
-
-    var CreateItem = [
-      {
-        header: {
-          host: accounts[1],
-          name: "Item1",
-          symbol: "I1",
-          uri: "uriItem1",
-        },
-        collectionId: await native.methods.collectionId().call(),
-        id: 0,
-        accounts: [accounts[1]],
-        amounts: ["50000000000000000"],
-      },
-      {
-        header: {
-          host: accounts[1],
-          name: "Item2",
-          symbol: "I2",
-          uri: "uriItem2",
-        },
-        collectionId: await native.methods.collectionId().call(),
-        id: 0,
-        accounts: [accounts[1]],
-        amounts: ["60000000000000000"],
-      },
-      {
-        header: {
-          host: accounts[1],
-          name: "Item3",
-          symbol: "I3",
-          uri: "uriItem3",
-        },
-        collectionId: await native.methods.collectionId().call(),
-        id: 0,
-        accounts: [accounts[2]],
-        amounts: ["50000000000000000"],
-      },
-      {
-        header: {
-          host: accounts[1],
-          name: "Item4",
-          symbol: "I4",
-          uri: "uriItem4",
-        },
-        collectionId: await native.methods.collectionId().call(),
-        id: 0,
-        accounts: [accounts[2]],
-        amounts: ["60000000000000000"],
-      },
-    ];
-
-    var tx = await native.methods
-      .mintItems(CreateItem)
-      .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
-    var idItems = await itemProjection.getItemIdFromLog(tx);
-
-    var accountsList = CreateItem.map((it) => it.accounts);
-    var noneBal = await itemProjection.createNoneBal(accountsList, idItems);
-    await itemProjection.assertCheckBalance(noneBal, CreateItem, idItems);
-
-    var idItems = await itemProjection.getItemIdFromLog(tx);
-
-    var burnAmount = [
-      ["10000000000000000"],
-      ["2000000000000000"],
-      ["10000000000000000"],
-      ["2000000000000000"],
-    ];
-
-    var burnAddress = [accounts[1], accounts[1], accounts[2], accounts[2]];
-    var checkBal = await itemsv2.checkBalances(
-      [accounts[1], accounts[1], accounts[2], accounts[2]],
-      idItems
-    );
-
-    await native.methods
-      .burnBatch(
-        burnAddress[0],
-        idItems.slice(0, 2),
-        burnAmount.slice(0, 2).flat()
-      )
-      .send(
-        blockchainConnection.getSendingOptions({
-          from: burnAddress[0],
-        })
-      );
-
-    await native.methods
-      .burnBatch(
-        burnAddress[2],
-        idItems.slice(2, 4),
-        burnAmount.slice(2, 4).flat()
-      )
-      .send(
-        blockchainConnection.getSendingOptions({
-          from: burnAddress[2],
         })
       );
 

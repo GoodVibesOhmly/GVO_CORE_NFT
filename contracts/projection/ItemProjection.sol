@@ -39,7 +39,9 @@ abstract contract ItemProjection is IItemProjection, LazyInitCapableElement {
         //TODO SupportsInterface
     }
 
-    function _projectionLazyInit(bytes memory lazyInitData) internal virtual returns (bytes memory collateralInitResponse);
+    function _projectionLazyInit(bytes memory) internal virtual returns (bytes memory) {
+        return "";
+    }
 
     function setHeader(Header calldata value) authorizedOnly override external returns(Header memory oldValue) {
         Header[] memory values = new Header[](1);
@@ -91,7 +93,7 @@ abstract contract ItemProjection is IItemProjection, LazyInitCapableElement {
         return header.symbol;
     }
 
-    function decimals(uint256) virtual override public view returns(uint256) {
+    function decimals(uint256) override public view returns(uint256) {
         return 18;
     }
 
@@ -99,13 +101,14 @@ abstract contract ItemProjection is IItemProjection, LazyInitCapableElement {
         if(interoperableInterfaceAmount == 0) {
             return 0;
         }
-        if(decimals(itemId) == 18) {
+        uint256 itemDecimals = decimals(itemId);
+        if(itemDecimals == 18) {
             return interoperableInterfaceAmount;
         }
         uint256 interoperableTotalSupply = IERC20(interoperableOf(itemId)).totalSupply();
         uint256 interoperableUnity = 1e18;
         uint256 interoperableHalfUnity = (interoperableUnity / 51) * 100;
-        uint256 mainInterfaceUnity = 10 ** decimals(itemId);
+        uint256 mainInterfaceUnity = 10 ** itemDecimals;
         if(interoperableTotalSupply <= interoperableUnity && interoperableInterfaceAmount <= interoperableUnity) {
             return interoperableInterfaceAmount < interoperableHalfUnity ? 0 : mainInterfaceUnity;
         }

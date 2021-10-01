@@ -7,19 +7,9 @@ import "../ItemProjection.sol";
 
 contract NativeProjection is ItemProjection {
 
-    bool private _decimalsZero;
     mapping(uint256 => bool) public isFinalized;
 
     constructor(bytes memory lazyInitData) ItemProjection(lazyInitData) {
-    }
-
-    function _projectionLazyInit(bytes memory collateralInitData) internal override returns (bytes memory) {
-        _decimalsZero = abi.decode(collateralInitData, (bool));
-        return "";
-    }
-
-    function decimals(uint256) override public view returns(uint256) {
-        return _decimalsZero ? 0 : 18;
     }
 
     function mintItems(CreateItem[] calldata items, bool[] memory finalized) authorizedOnly public returns(uint256[] memory itemIds) {

@@ -19,9 +19,6 @@ contract ERC20Wrapper is IERC20Wrapper, ItemProjection {
     constructor(bytes memory lazyInitData) ItemProjection(lazyInitData) {
     }
 
-    function _projectionLazyInit(bytes memory collateralInitData) internal override returns (bytes memory) {
-    }
-
     function mintItems(CreateItem[] calldata) virtual override(Item, ItemProjection) external returns(uint256[] memory) {
         revert("You need to call proper mint function");
     }

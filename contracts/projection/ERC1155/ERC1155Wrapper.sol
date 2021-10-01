@@ -30,10 +30,6 @@ contract ERC1155Wrapper is IERC1155Wrapper, ItemProjection, IERC1155Receiver {
         revert("You need to send ERC1155 token(s)");
     }
 
-    function decimals(uint256 tokenId) virtual override(IERC1155Views, ItemProjection) public view returns(uint256) {
-        return _tokenDecimals[tokenId];
-    }
-
     function onERC1155Received(
         address,
         address from,
@@ -75,48 +71,40 @@ contract ERC1155Wrapper is IERC1155Wrapper, ItemProjection, IERC1155Receiver {
     }
 
     function burn(address account, uint256 itemId, uint256 amount, bytes memory data) override(Item, ItemProjection) public {
-        IItemMainInterface(mainInterface).mintTransferOrBurn(false, abi.encode(msg.sender, account, address(0), itemId, toInteroperableInterfaceAmount(amount, itemId, account)));
+        IItemMainInterface(mainInterface).mintTransferOrBurn(false, abi.encode(msg.sender, account, address(0), itemId, _unwrap(account, itemId, amount, data)));
         emit TransferSingle(msg.sender, account, address(0), itemId, amount);
-        _unwrap(account, itemId, amount, data);
     }
 
     function burnBatch(address account, uint256[] calldata itemIds, uint256[] calldata amounts, bytes memory data) override(Item, ItemProjection) public {
         uint256[] memory interoperableInterfaceAmounts = new uint256[](amounts.length);
-        for(uint256 i = 0; i < interoperableInterfaceAmounts.length; i++) {
-            interoperableInterfaceAmounts[i] = toInteroperableInterfaceAmount(amounts[i], itemIds[i], account);
-        }
-        IItemMainInterface(mainInterface).mintTransferOrBurn(true, abi.encode(msg.sender, account, address(0), itemIds, interoperableInterfaceAmounts));
-        emit TransferBatch(msg.sender, account, address(0), itemIds, amounts);
         bytes[] memory datas = abi.decode(data, (bytes[]));
         for(uint256 i = 0; i < itemIds.length; i++) {
-            _unwrap(account, itemIds[i], amounts[i], datas[i]);
+            IItemMainInterface(mainInterface).mintTransferOrBurn(false, abi.encode(msg.sender, account, address(0), itemIds[i], interoperableInterfaceAmounts[i] = _unwrap(account, itemIds[i], amounts[i], datas[i])));
         }
-    }
-
-    function _unwrap(address from, uint256 itemId, uint256 amount, bytes memory data) private {
-        (address tokenAddress, uint256 tokenId, address receiver, bytes memory payload) = abi.decode(data, (address, uint256, address, bytes));
-        receiver = receiver != address(0) ? receiver : from;
-        require(itemIdOf(tokenAddress, tokenId) == itemId, "Wrong ERC1155");
-        uint256 converter = 10**(18 - _safeDecimals(tokenAddress, tokenId, true));
-        uint256 tokenAmount = amount / converter;
-        uint256 rebuiltAmount = tokenAmount * converter;
-        require(amount == rebuiltAmount, "Insufficient amount");
-        IERC1155(tokenAddress).safeTransferFrom(msg.sender, receiver, tokenId, tokenAmount, payload);
+        emit TransferBatch(msg.sender, account, address(0), itemIds, interoperableInterfaceAmounts);
     }
 
     function _buildCreateItems(address from, address tokenAddress, uint256 tokenId, uint256 amount, uint256[] memory values, address[] memory receivers, uint256 itemId) private view returns(CreateItem[] memory createItems, uint256 tokenDecimals) {
         uint256 totalAmount = 0;
-        tokenDecimals = _safeDecimals(tokenAddress, tokenId, false);
+        tokenDecimals = itemId != 0 ? _tokenDecimals[itemId] : _safeDecimals(tokenAddress, tokenId);
         address[] memory realReceivers = new address[](values.length);
         for(uint256 i = 0; i < values.length; i++) {
             totalAmount += values[i];
-            values[i] = values[i] * (10**(18 - tokenDecimals));
+            values[i] = _convertAmount(i, tokenDecimals, values[i], tokenId);
             realReceivers[i] = (realReceivers[i] = i < receivers.length ? receivers[i] : from) != address(0) ? realReceivers[i] : from;
         }
         require(totalAmount == amount, "inconsistent amount");
         (string memory name, string memory symbol, string memory uri) = itemId != 0 ? ("", "", "") : _tryRecoveryMetadata(tokenAddress, tokenId);
         createItems = new CreateItem[](1);
         createItems[0] = CreateItem(Header(address(0), name, symbol, uri), collectionId, itemId, realReceivers, values);
+    }
+
+    function _convertAmount(uint256 i, uint256 tokenDecimals, uint256 plainValue, uint256 itemId) private view returns(uint256) {
+        uint256 totalSupply = 0;
+        if(i > 0 || tokenDecimals != 0 || itemId == 0 || (itemId != 0 && (totalSupply = Item(mainInterface).totalSupply(itemId)) >= 1e18)) {
+            return plainValue * (10**(18 - tokenDecimals));
+        }
+        return (1e18 - totalSupply) + ((plainValue - 1)  * (10**(18 - tokenDecimals)));
     }
 
     function _tryRecoveryMetadata(address source, uint256 tokenId) private view returns(string memory name, string memory symbol, string memory uri) {
@@ -160,15 +148,33 @@ contract ERC1155Wrapper is IERC1155Wrapper, ItemProjection, IERC1155Receiver {
         }
     }
 
-    function _safeDecimals(address tokenAddress, uint256 tokenId, bool forBurn) private view returns(uint256) {
-        try Item(tokenAddress).decimals(tokenId) returns(uint256 dec) {
-            return dec;
-        } catch {
-            return forBurn ? 0 : 18;
+    function _safeDecimals(address tokenAddress, uint256 tokenId) private view returns(uint256 dec) {
+        (bool result, bytes memory response) = tokenAddress.staticcall(abi.encodeWithSelector(Item(tokenAddress).decimals.selector, tokenId));
+        if(result) {
+            dec = abi.decode(response, (uint256));
+        } else {
+            (result, response) = tokenAddress.staticcall(abi.encodeWithSelector(IERC20Metadata(tokenAddress).decimals.selector));
+            if(result) {
+                dec = abi.decode(response, (uint256));
+            }
         }
+        require(dec == 0 || dec == 18, "decimals");
     }
 
     function _toItemKey(address tokenAddress, uint256 tokenId) private pure returns(bytes32) {
         return keccak256(abi.encodePacked(tokenAddress, tokenId));
+    }
+
+    function _unwrap(address from, uint256 itemId, uint256 amount, bytes memory data) private returns (uint256 interoperableAmount) {
+        require(amount > 0, "burn zero");
+        (address tokenAddress, uint256 tokenId, address receiver, bytes memory payload) = abi.decode(data, (address, uint256, address, bytes));
+        receiver = receiver != address(0) ? receiver : from;
+        require(itemIdOf(tokenAddress, tokenId) == itemId, "Wrong ERC1155");
+        uint256 tokenAmount = toMainInterfaceAmount(amount, itemId);
+        interoperableAmount = toInteroperableInterfaceAmount(tokenAmount, itemId, from);
+        require(interoperableAmount > 0, "Wrong conversion");
+        uint256 balanceOf = IItemMainInterface(mainInterface).balanceOf(from, itemId);
+        require(balanceOf > 0 && balanceOf >= interoperableAmount, "Insufficient amount");
+        IERC1155(tokenAddress).safeTransferFrom(msg.sender, receiver, tokenId, tokenAmount, payload);
     }
 }

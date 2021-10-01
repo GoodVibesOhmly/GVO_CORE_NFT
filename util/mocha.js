@@ -37,12 +37,24 @@ global.onCompilation = function onCompilation(contract) {
     (global.contractsInfo = global.contractsInfo || {})[global.web3Util.utils.sha3(JSON.stringify(contract.abi))] = contract;
 }
 
-function instrumentContract() {
-    var OldContract = global.web3.eth.Contract;
-    global.web3.eth.Contract = function Contract(abi, address) {
+function setupTransactionDebugger(web3) {
+    var path = require('path');
+    var fs = require('fs');
+    var buildPath = path.resolve(__dirname, '../build');
+    try {
+        fs.mkdirSync(buildPath);
+    } catch (e) {}
+    var jsonPath = path.resolve(buildPath, 'dump.json');
+    try {
+        fs.unlinkSync(jsonPath);
+    } catch (e) {}
+    require('./ganache-transactionDebugger');
+    global.transactionDebugger = require('./transactionDebugger')(web3);
+    var OldContract = web3.eth.Contract;
+    web3.eth.Contract = function Contract(abi, address) {
         var contract;
         try {
-            contract = global.contractsInfo[global.web3.utils.sha3(JSON.stringify(abi))];
+            contract = global.contractsInfo[web3.utils.sha3(JSON.stringify(abi))];
         } catch (e) {}
         var oldContract = new OldContract(abi, address);
         if (contract) {
@@ -61,7 +73,7 @@ function instrumentContract() {
                         var address = deployedContract.options.address;
                         var set = async() => {
                             try {
-                                var key = web3.utils.sha3(await global.web3.eth.getCode(address));
+                                var key = web3.utils.sha3(await web3.eth.getCode(address));
                                 if(!key) {
                                     setTimeout(set);
                                 }
@@ -80,7 +92,9 @@ function instrumentContract() {
 }
 
 async function dumpBlocks() {
-    var transactions = await require('./transactionDebugger')(global.web3)(global.blockchainConnection.forkBlock, (await global.web3.eth.getBlock('latest')).number);
+    var transactions = await global.transactionDebugger.debugBlocks(global.blockchainConnection.forkBlock, (await global.web3.eth.getBlock('latest')).number);
+    var wellknownAddresses = {};
+    global.accounts.forEach((it, i) => wellknownAddresses[it] = `Ganache Account ${i}`);
     var path = require('path');
     var fs = require('fs');
     var buildPath = path.resolve(__dirname, '../build');
@@ -92,7 +106,7 @@ async function dumpBlocks() {
         fs.unlinkSync(jsonPath);
     } catch (e) {}
     try {
-        fs.writeFileSync(jsonPath, JSON.stringify({ transactions, compiledContracts: global.compiledContracts }, null, 4));
+        fs.writeFileSync(jsonPath, JSON.stringify({ transactions, compiledContracts: global.compiledContracts, wellknownAddresses }, null, 4));
     } catch (e) {
         console.error(e);
     }
@@ -101,7 +115,7 @@ async function dumpBlocks() {
 exports.mochaHooks = {
     beforeAll(done) {
         Promise.all([
-            blockchainConnection.init.then(instrumentContract)
+            blockchainConnection.init.then(setupTransactionDebugger)
         ]).then(() => done()).catch(done);
     },
     afterAll(done) {

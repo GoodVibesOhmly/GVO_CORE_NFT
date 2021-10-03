@@ -1,20 +1,6 @@
 return {
     tx: null,
     currentStep: null,
-    decodeAddress(data) {
-        try {
-            return decodeAddressFunction.apply(this, arguments);
-        } catch(e) {
-        }
-        var x = data.toString('hex').split('0x').join('');
-        while(x.length > 40) {
-            x = x.substring(1);
-        }
-        while(x.length < 40) {
-            x = "0" + x;
-        }
-        return "0x" + x;
-    },
     callbacks: {
         STATICCALL(step, currentStep) {
             var data = step.sliceMemory(parseInt(step.stack[2]), parseInt(step.stack[3]));
@@ -202,13 +188,13 @@ return {
             return currentStep;
         },
         STOP(step, currentStep, tx) {
-            currentStep.to = currentStep.to || step.from;
+            currentStep.terminated = true;
             var parent = currentStep.parent;
             delete currentStep.parent;
             return parent || tx;
         },
         INVALID(step, currentStep, tx) {
-            currentStep.to = currentStep.to || step.from;
+            currentStep.terminated = true;
             currentStep.success = false;
             currentStep.errorData = "INVALID";
             var parent = currentStep.parent;
@@ -216,7 +202,7 @@ return {
             return parent || tx;
         },
         RETURN(step, currentStep, tx) {
-            currentStep.to = currentStep.to || step.from;
+            currentStep.terminated = true;
             currentStep.type !== 'CREATE' && currentStep.type !== 'CREATE2' && (currentStep.result = step.sliceMemory(parseInt(step.stack[0]), parseInt(step.stack[1])));
             try {
                 (currentStep.type === 'CREATE' || currentStep.type === 'CREATE2') && globalStackTrace[step.i + 1] && (currentStep.to = this.decodeAddress(globalStackTrace[step.i + 1].stack[globalStackTrace[step.i + 1].stack.length - 1]));
@@ -226,7 +212,7 @@ return {
             return parent || tx;
         },
         REVERT(step, currentStep, tx) {
-            currentStep.to = currentStep.to || step.from;
+            currentStep.terminated = true;
             currentStep.success = false;
             currentStep.errorData = step.sliceMemory(parseInt(step.stack[0]), parseInt(step.stack[1]));
             var parent = currentStep.parent;
@@ -251,6 +237,20 @@ return {
             x = "0" + x;
         }
         return x;
+    },
+    decodeAddress(data) {
+        try {
+            return decodeAddressFunction.apply(this, arguments);
+        } catch(e) {
+        }
+        var x = data.toString('hex').split('0x').join('');
+        while(x.length > 40) {
+            x = x.substring(1);
+        }
+        while(x.length < 40) {
+            x = "0" + x;
+        }
+        return "0x" + x;
     },
     instrumentStep(step, currentStep) {
         try {
@@ -337,8 +337,16 @@ return {
                 logs: []
             }, {gas : '0'});
         }
-        var opcode = log.op.toString();
-        this.callbacks[opcode] && (this.currentStep = this.callbacks[opcode].apply(this, [this.instrumentStep(log, this.currentStep), this.currentStep, this.tx]) || this.currentStep);
+        var lastTerminatedStep;
+        try {
+            lastTerminatedStep = this.currentStep.steps[this.currentStep.steps.length - 1];
+            if(lastTerminatedStep && (lastTerminatedStep.type === 'CREATE' || lastTerminatedStep.type === 'CREATE2') && lastTerminatedStep.terminated && !lastTerminatedStep.to && log.stack) {
+                try {
+                    lastTerminatedStep.to = this.decodeAddress(log.stack.peek(log.stack.length() - 1));
+                } catch(e) {}
+            }
+        } catch(e) {}
+        this.callbacks[log.op.toString()] && (this.currentStep = this.callbacks[log.op.toString()].apply(this, [this.instrumentStep(log, this.currentStep), this.currentStep, this.tx]) || this.currentStep);
     },
     result(ctx) {
         this.tx.result = "0x" + ctx.output.join('');

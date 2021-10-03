@@ -34,6 +34,10 @@ global.onCompilation = function onCompilation(contract) {
         var Web3 = require('web3');
         global.web3Util = new Web3();
     }
+    (global.compiledContracts = global.compiledContracts || {})[global.web3Util.utils.sha3("0x" + contract['bin-runtime'])] = {
+        name : contract.contractName,
+        abi : contract.abi
+    };
     (global.contractsInfo = global.contractsInfo || {})[global.web3Util.utils.sha3(JSON.stringify(contract.abi))] = contract;
 }
 
@@ -91,6 +95,12 @@ function setupTransactionDebugger(web3) {
     };
 }
 
+async function initDFOHub() {
+    global.dfo = require('./dfo')
+    global.dfoHub = require('./dfoHub');
+    await global.dfoHub.init;
+}
+
 async function dumpBlocks() {
     var transactions = await global.transactionDebugger.debugBlocks(global.blockchainConnection.forkBlock, (await global.web3.eth.getBlock('latest')).number);
     var wellknownAddresses = {};
@@ -115,7 +125,7 @@ async function dumpBlocks() {
 exports.mochaHooks = {
     beforeAll(done) {
         Promise.all([
-            blockchainConnection.init.then(setupTransactionDebugger)
+            blockchainConnection.init.then(setupTransactionDebugger).then(initDFOHub)
         ]).then(() => done()).catch(done);
     },
     afterAll(done) {

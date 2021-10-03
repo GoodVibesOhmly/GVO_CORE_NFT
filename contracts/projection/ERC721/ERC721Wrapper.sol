@@ -22,10 +22,6 @@ contract ERC721Wrapper is IERC721Wrapper, ItemProjection, IERC721Receiver {
         return _itemIdOf[_toItemKey(tokenAddress, tokenId)];
     }
 
-    function decimals(uint256) override(IERC1155Views, ItemProjection) public pure returns(uint256) {
-        return 0;
-    }
-
     function mintItems(CreateItem[] calldata) virtual override(Item, ItemProjection) external returns(uint256[] memory) {
         revert("You need to send ERC721 token or call proper mint function");
     }

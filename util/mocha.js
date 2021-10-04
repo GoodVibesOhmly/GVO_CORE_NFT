@@ -95,11 +95,11 @@ function setupTransactionDebugger(web3) {
     };
 }
 
-async function initDFOHub() {
-    global.dfo = require('./dfo')
-    global.dfoHub = require('./dfoHub');
-    await global.dfoHub.init;
-}
+async function initDFOHubManager() {
+    global.dfoManager = require('./dfo')
+    global.dfoHubManager = require('./dfoHub');
+    await global.dfoHubManager.init;
+}}
 
 async function dumpBlocks() {
     var transactions = await global.transactionDebugger.debugBlocks(global.blockchainConnection.forkBlock, (await global.web3.eth.getBlock('latest')).number);
@@ -125,7 +125,7 @@ async function dumpBlocks() {
 exports.mochaHooks = {
     beforeAll(done) {
         Promise.all([
-            blockchainConnection.init.then(setupTransactionDebugger).then(initDFOHub)
+            blockchainConnection.init.then(setupTransactionDebugger).then(initDFOHubManager)
         ]).then(() => done()).catch(done);
     },
     afterAll(done) {

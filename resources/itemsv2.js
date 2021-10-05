@@ -1,5 +1,6 @@
 var compile = require("../util/compile");
 var blockchainConnection = require("../util/blockchainConnection");
+const utilities = require("../util/utilities");
 var dynamicUriResolverAddress;
 var itemProjectionFactoryContract;
 var NativeProjection;
@@ -85,7 +86,6 @@ async function deploy(
 }
 
 async function initialization(
-  zeroDecimals,
   collectionId,
   header,
   item,
@@ -94,20 +94,17 @@ async function initialization(
   nativeProjectionAddress = utilities.voidEthereumAddress
 ) {
   header = await convertHeader(header);
+
   await deploy(host, plainUri, nativeProjectionAddress);
 
-  var isDecimals = zeroDecimals;
-
-  var deployParam = abi.encode(["bool"], [isDecimals]);
-
-  deployParam = abi.encode(
+  var deployParam = abi.encode(
     [
       "bytes32",
       "tuple(address,string,string,string)",
       "tuple(tuple(address,string,string,string),bytes32,uint256,address[],uint256[])[]",
       "bytes",
     ],
-    [collectionId, header, item, deployParam]
+    [collectionId, header, item, utilities.voidBytes32]
   );
 
   deployParam = abi.encode(["address", "bytes"], [host, deployParam]);

@@ -1,6 +1,7 @@
 var itemsv2 = require("../resources/itemsv2");
 var itemProjection = require("../resources/itemProjection");
 const blockchainConnection = require("../util/blockchainConnection");
+const utilities = require("../util/utilities");
 
 var MainInterface;
 var mainInterface;
@@ -26,7 +27,6 @@ describe("Item V2 Projections - Native", () => {
      * The collection.host is set as NativeProjection address.
      * The NativeProjection is initialized passing the collectionId and some Items to mint and create
      */
-    var zeroDecimals = false;
     var collectionId = utilities.voidBytes32;
 
     var mainItems = [];
@@ -70,16 +70,14 @@ describe("Item V2 Projections - Native", () => {
       mainInterface.methods.collection(collectionId).call()
     );
 
-    var deployParam = abi.encode(["bool"], [zeroDecimals]);
-
-    deployParam = abi.encode(
+    var deployParam = abi.encode(
       [
         "bytes32",
         "tuple(address,string,string,string)",
         "tuple(tuple(address,string,string,string),bytes32,uint256,address[],uint256[])[]",
         "bytes",
       ],
-      [collectionId, await itemsv2.convertHeader(collectionHeader), items, deployParam]
+      [collectionId, await itemsv2.convertHeader(collectionHeader), items, utilities.voidBytes32]
     );
 
     deployParam = abi.encode(
@@ -109,7 +107,7 @@ describe("Item V2 Projections - Native", () => {
 
     await itemProjection.assertDecimals(
       native.methods.decimals(0).call(),
-      zeroDecimals
+      0
     );
 
     await itemProjection.assertEqualCollection(
@@ -137,7 +135,6 @@ describe("Item V2 Projections - Native", () => {
      * The NativeProjection is created and initialized passing the previously created CollectionId
      * The collection.host is set as NativeProjection address.
      */
-    var zeroDecimals = false;
     var collectionId = utilities.voidBytes32;
 
     var headerCollection = {
@@ -202,7 +199,6 @@ describe("Item V2 Projections - Native", () => {
 
     var native = (
       await itemsv2.initialization(
-        zeroDecimals,
         collectionId,
         collectionHeader,
         items,
@@ -224,7 +220,7 @@ describe("Item V2 Projections - Native", () => {
 
     await itemProjection.assertDecimals(
       native.methods.decimals(0).call(),
-      zeroDecimals
+      0
     );
     await itemProjection.assertEqualCollection(
       native.methods.collectionId().call(),
@@ -304,7 +300,6 @@ describe("Item V2 Projections - Native", () => {
     * The NativeProjection is initialized passing the collectionId and some Items to mint and create
     * The mintItems function is called on the Native Projection minting the previously created Items
     */
-    var zeroDecimals = false;
     var collectionId = utilities.voidBytes32;
     var headerCollection = {
       host: accounts[1],
@@ -390,16 +385,14 @@ describe("Item V2 Projections - Native", () => {
       mainInterface.methods.collection(collectionId).call()
     );
 
-    var deployParam = abi.encode(["bool"], [zeroDecimals]);
-
-    deployParam = abi.encode(
+    var deployParam = abi.encode(
       [
         "bytes32",
         "tuple(address,string,string,string)",
         "tuple(tuple(address,string,string,string),bytes32,uint256,address[],uint256[])[]",
         "bytes",
       ],
-      [collectionId, await itemsv2.convertHeader(collectionHeader), items, deployParam]
+      [collectionId, await itemsv2.convertHeader(collectionHeader), items, utilities.voidBytes32]
     );
 
     deployParam = abi.encode(
@@ -429,7 +422,7 @@ describe("Item V2 Projections - Native", () => {
 
     await itemProjection.assertDecimals(
       native.methods.decimals(0).call(),
-      zeroDecimals
+      0
     );
 
     await itemProjection.assertEqualCollection(
@@ -505,7 +498,6 @@ describe("Item V2 Projections - Native", () => {
      * Change the Metadata of the Collection (not the host)
      * must fail: cannot change the header from an unauthorized account
      */
-    var zeroDecimals = false;
     var collectionId = utilities.voidBytes32;
 
     var collectionHeader = {
@@ -534,7 +526,6 @@ describe("Item V2 Projections - Native", () => {
     
     var native = (
       await itemsv2.initialization(
-        zeroDecimals,
         collectionId,
         collectionHeader,
         items,
@@ -567,7 +558,7 @@ describe("Item V2 Projections - Native", () => {
     console.log("Native", native.options.address);
     await itemProjection.assertDecimals(
       native.methods.decimals(0).call(),
-      zeroDecimals
+      0
     );
 
     await catchCall(
@@ -606,7 +597,6 @@ describe("Item V2 Projections - Native", () => {
      * Changing the host means that the Projection address is no longer the host address and so it can't manage anymore the Collection.
      * must fail: cannot change the header from an unauthorized account
      */
-    var zeroDecimals = false;
     var collectionId = utilities.voidBytes32;
 
     var collectionHeader = {
@@ -633,7 +623,6 @@ describe("Item V2 Projections - Native", () => {
       ],
     ];
     var res = await itemsv2.initialization(
-      zeroDecimals,
       collectionId,
       collectionHeader,
       items,
@@ -668,7 +657,7 @@ describe("Item V2 Projections - Native", () => {
 
     await itemProjection.assertDecimals(
       native.methods.decimals(0).call(),
-      zeroDecimals
+      0
     );
     await catchCall(
       native.methods
@@ -750,7 +739,6 @@ describe("Item V2 Projections - Native", () => {
      * The Native Projection can manage the Collection another time
      * must fail: cannot change the header from an unauthorized account
      */
-    var zeroDecimals = false;
     var collectionId = utilities.voidBytes32;
 
     var collectionHeader =  {
@@ -777,7 +765,6 @@ describe("Item V2 Projections - Native", () => {
       ],
     ];
     var res = await itemsv2.initialization(
-      zeroDecimals,
       collectionId,
       collectionHeader,
       items,
@@ -818,7 +805,7 @@ describe("Item V2 Projections - Native", () => {
     console.log("Native", native.options.address);
     await itemProjection.assertDecimals(
       native.methods.decimals(0).call(),
-      zeroDecimals
+      0
     );
 
     await catchCall(
@@ -919,7 +906,6 @@ describe("Item V2 Projections - Native", () => {
      * Change the Metadata of the Collection Items (not host).
      * must fail: an address different from the host can't change the Items Metadata
      */
-    var zeroDecimals = false;
     var collectionId = utilities.voidBytes32;
 
     var collectionHeader = {
@@ -939,7 +925,6 @@ describe("Item V2 Projections - Native", () => {
       ],
     ];
     var res = await itemsv2.initialization(
-      zeroDecimals,
       collectionId,
       collectionHeader,
       items,
@@ -1004,7 +989,6 @@ describe("Item V2 Projections - Native", () => {
      * This operation cannot be performed because the host of an Item is ever equal to void address.
      * must fail: cannot change the header from an unauthorized account
      */
-    var zeroDecimals = false;
     var collectionId = utilities.voidBytes32;
 
     var collectionHeader = {
@@ -1024,7 +1008,6 @@ describe("Item V2 Projections - Native", () => {
       ],
     ];
     var res = await itemsv2.initialization(
-      zeroDecimals,
       collectionId,
       collectionHeader,
       items,
@@ -1093,7 +1076,6 @@ describe("Item V2 Projections - Native", () => {
      * Changing the Collection id, the Items can be no longer managed by the Projection
      * must fail: an address different from the host can't change the Items Collection
      */
-    var zeroDecimals = false;
     var collectionId = utilities.voidBytes32;
 
     var collectionHeader = {
@@ -1129,7 +1111,6 @@ describe("Item V2 Projections - Native", () => {
     var itemsCollection2 = [];
 
     var res = await itemsv2.initialization(
-      zeroDecimals,
       collectionId,
       collectionHeader,
       items,
@@ -1153,7 +1134,6 @@ describe("Item V2 Projections - Native", () => {
     );
 
     var resCollection2 = await itemsv2.initialization(
-      zeroDecimals,
       collectionId,
       collectionHeader2,
       itemsCollection2,
@@ -1192,7 +1172,6 @@ describe("Item V2 Projections - Native", () => {
      * The new Collection host change the Collection by setting the NativeProjection Collection again as Collection.
      * The Items can be managed by the Projection another time.
      */
-    var zeroDecimals = false;
     var collectionId = utilities.voidBytes32;
 
     var collectionHeader = {
@@ -1235,7 +1214,6 @@ describe("Item V2 Projections - Native", () => {
     var itemsCollection3 = [];
 
     var res = await itemsv2.initialization(
-      zeroDecimals,
       collectionId,
       collectionHeader,
       items,
@@ -1259,7 +1237,6 @@ describe("Item V2 Projections - Native", () => {
     );
 
     var resCollection2 = await itemsv2.initialization(
-      zeroDecimals,
       collectionId,
       collectionHeader2,
       itemsCollection2,
@@ -1272,7 +1249,6 @@ describe("Item V2 Projections - Native", () => {
     var collection1Id = await native.methods.collectionId().call();
 
     var resCollection3 = await itemsv2.initialization(
-      zeroDecimals,
       collectionId,
       collectionHeader3,
       itemsCollection3,
@@ -1318,7 +1294,6 @@ describe("Item V2 Projections - Native", () => {
      *
      * Create new Items for different accounts and amounts calling the Native Projection mintItems functions.
      */
-    var zeroDecimals = false;
     var collectionId = utilities.voidBytes32;
 
     var collectionHeader = [accounts[1], "Collection1", "COL1", "uri1"];
@@ -1326,7 +1301,6 @@ describe("Item V2 Projections - Native", () => {
     var items = [];
 
     var res = await itemsv2.initialization(
-      zeroDecimals,
       collectionId,
       collectionHeader,
       items,
@@ -1376,7 +1350,6 @@ describe("Item V2 Projections - Native", () => {
      * Mint previously created Items for different accounts and amounts calling the Native Projection mintItems functions.
      * must fail: cannot mint items from unauthorized address
      */
-    var zeroDecimals = false;
     var collectionId = utilities.voidBytes32;
 
     var collectionHeader = {
@@ -1404,7 +1377,6 @@ describe("Item V2 Projections - Native", () => {
     ];
 
     var res = await itemsv2.initialization(
-      zeroDecimals,
       collectionId,
       collectionHeader,
       items,
@@ -1476,7 +1448,6 @@ describe("Item V2 Projections - Native", () => {
      * Using non-existent means that the Items cannot be created
      * must fail: I cannot create items from a non-existing collection/id
      */
-    var zeroDecimals = false;
     var collectionId = utilities.voidBytes32;
 
     var collectionHeader = {
@@ -1489,7 +1460,6 @@ describe("Item V2 Projections - Native", () => {
     var items = [];
 
     var res = await itemsv2.initialization(
-      zeroDecimals,
       collectionId,
       collectionHeader,
       items,
@@ -1534,7 +1504,6 @@ describe("Item V2 Projections - Native", () => {
     * Using a Collection id different from the one controlled by the Projection and Items ids belonging to that Collection means that the Items cannot be minted
     * must fail: cannot mint items with Collection ids and Items ids not controlled by the Projection
     */
-    var zeroDecimals = false;
     var collectionId = utilities.voidBytes32;
 
     var headerCollection = {
@@ -1580,7 +1549,6 @@ describe("Item V2 Projections - Native", () => {
     ];
 
     var res = await itemsv2.initialization(
-      zeroDecimals,
       collectionId,
       collectionHeader,
       items,
@@ -1660,7 +1628,6 @@ describe("Item V2 Projections - Native", () => {
      * Create and Mint new Items for different accounts and amounts calling the Native Projection mintItems functions without passing the Header.
      * The data are automatically taken from the Collection Header.
      */
-    var zeroDecimals = false;
     var collectionId = utilities.voidBytes32;
 
     var collectionHeader = {
@@ -1681,7 +1648,6 @@ describe("Item V2 Projections - Native", () => {
     ];
 
     var res = await itemsv2.initialization(
-      zeroDecimals,
       collectionId,
       collectionHeader,
       items,
@@ -1751,7 +1717,6 @@ describe("Item V2 Projections - Native", () => {
      * The Item host set is not a valid parameter.
      * The host is automatically set as void address.
      */
-    var zeroDecimals = false;
     var collectionId = utilities.voidBytes32;
 
     var collectionHeader = {
@@ -1772,7 +1737,6 @@ describe("Item V2 Projections - Native", () => {
     ];
 
     var res = await itemsv2.initialization(
-      zeroDecimals,
       collectionId,
       collectionHeader,
       items,
@@ -1842,7 +1806,6 @@ describe("Item V2 Projections - Native", () => {
      * In this case the Items cannot be minted anymore.
      * must fail: cannot mint finalized item
      */
-    var zeroDecimals = false;
     var collectionId = utilities.voidBytes32;
 
     var collectionHeader = {
@@ -1855,7 +1818,6 @@ describe("Item V2 Projections - Native", () => {
     var items = [];
 
     var res = await itemsv2.initialization(
-      zeroDecimals,
       collectionId,
       collectionHeader,
       items,
@@ -1926,7 +1888,6 @@ describe("Item V2 Projections - Native", () => {
      * Mint new Items for different accounts and amounts calling the Native Projection mintItems functions passing finalized as false.
      * In this case the Items can be minted afterwards.
      */
-    var zeroDecimals = false;
     var collectionId = utilities.voidBytes32;
 
     var collectionHeader = {
@@ -1939,7 +1900,6 @@ describe("Item V2 Projections - Native", () => {
     var items = [];
 
     var res = await itemsv2.initialization(
-      zeroDecimals,
       collectionId,
       collectionHeader,
       items,
@@ -2033,7 +1993,6 @@ describe("Item V2 Projections - Native", () => {
      * Mint Items calling the Native Projection mintItems functions passing finalized as true.
      * In this case the Items can be minted.
      */
-    var zeroDecimals = false;
     var collectionId = utilities.voidBytes32;
 
     var collectionHeader = {
@@ -2061,7 +2020,6 @@ describe("Item V2 Projections - Native", () => {
     ];
 
     var res = await itemsv2.initialization(
-      zeroDecimals,
       collectionId,
       collectionHeader,
       items,
@@ -2139,7 +2097,6 @@ describe("Item V2 Projections - Native", () => {
      * Create Items when initializing the Native Projection
      * The Items holders perform a safeTransferFrom using the Native projection method
      */
-    var zeroDecimals = false;
     var collectionId = utilities.voidBytes32;
 
     var collectionHeader = {
@@ -2167,7 +2124,6 @@ describe("Item V2 Projections - Native", () => {
     ];
 
     var res = await itemsv2.initialization(
-      zeroDecimals,
       collectionId,
       collectionHeader,
       items,
@@ -2227,7 +2183,6 @@ describe("Item V2 Projections - Native", () => {
      * must fail: cannot call setApprovalForAll from nativeProjection
      * must fail: cannot call safeTransferFrom from unauthorized address
      */
-    var zeroDecimals = false;
     var collectionId = utilities.voidBytes32;
 
     var collectionHeader = {
@@ -2255,7 +2210,6 @@ describe("Item V2 Projections - Native", () => {
     ];
 
     var res = await itemsv2.initialization(
-      zeroDecimals,
       collectionId,
       collectionHeader,
       items,
@@ -2360,7 +2314,6 @@ describe("Item V2 Projections - Native", () => {
      * Create Items when initializing the Native Projection
      * The Items holders perform a safeBatchTransferFrom using the Native projection method transferring multiple Items at once
      */
-    var zeroDecimals = false;
     var collectionId = utilities.voidBytes32;
 
     var collectionHeader = {
@@ -2402,7 +2355,6 @@ describe("Item V2 Projections - Native", () => {
     ];
 
     var res = await itemsv2.initialization(
-      zeroDecimals,
       collectionId,
       collectionHeader,
       items,
@@ -2481,7 +2433,6 @@ describe("Item V2 Projections - Native", () => {
      * must fail: cannot call setApprovalForAll from nativeProjection
      * must fail: cannot call safeBatchTransferFrom from unauthorized address
      */
-    var zeroDecimals = false;
     var collectionId = utilities.voidBytes32;
 
     var collectionHeader = {
@@ -2523,7 +2474,6 @@ describe("Item V2 Projections - Native", () => {
     ];
 
     var res = await itemsv2.initialization(
-      zeroDecimals,
       collectionId,
       collectionHeader,
       items,
@@ -2645,7 +2595,6 @@ describe("Item V2 Projections - Native", () => {
      * Create Items when initializing the Native Projection
      * The Items holders perform a burn using the Native projection burn method
      */
-    var zeroDecimals = false;
     var collectionId = utilities.voidBytes32;
 
     var collectionHeader = {
@@ -2658,7 +2607,6 @@ describe("Item V2 Projections - Native", () => {
     var items = [];
 
     var res = await itemsv2.initialization(
-      zeroDecimals,
       collectionId,
       collectionHeader,
       items,
@@ -2748,7 +2696,6 @@ describe("Item V2 Projections - Native", () => {
      * The Items holders approve operators to act on their Items
      * The opertators perform a burn using the Native projection burn method
      */
-    var zeroDecimals = false;
     var collectionId = utilities.voidBytes32;
 
     var collectionHeader = {
@@ -2761,7 +2708,6 @@ describe("Item V2 Projections - Native", () => {
     var items = [];
 
     var res = await itemsv2.initialization(
-      zeroDecimals,
       collectionId,
       collectionHeader,
       items,
@@ -2899,7 +2845,6 @@ describe("Item V2 Projections - Native", () => {
      * must fail: cannot call setApprovalForAll from nativeProjection
      * must fail: cannot call burnBatch from unauthorized address
      */
-    var zeroDecimals = false;
     var collectionId = utilities.voidBytes32;
 
     var collectionHeader = {
@@ -2912,7 +2857,6 @@ describe("Item V2 Projections - Native", () => {
     var items = [];
 
     var res = await itemsv2.initialization(
-      zeroDecimals,
       collectionId,
       collectionHeader,
       items,
@@ -3044,7 +2988,6 @@ describe("Item V2 Projections - Native", () => {
      * must fail: cannot call setApprovalForAll from nativeProjection
      * must fail: cannot call burnBatch from unauthorized address
      */
-    var zeroDecimals = false;
     var collectionId = utilities.voidBytes32;
 
     var collectionHeader = {
@@ -3057,7 +3000,6 @@ describe("Item V2 Projections - Native", () => {
     var items = [];
 
     var res = await itemsv2.initialization(
-      zeroDecimals,
       collectionId,
       collectionHeader,
       items,
@@ -3228,7 +3170,6 @@ describe("Item V2 Projections - Native", () => {
      * Create and initialize a Native Projection with Items
      * Using the main interface batch method burnBatch, a user can manage different Items from different Collection and one of them is the Projection Collection
      */
-    var zeroDecimals = false;
     var collectionId = utilities.voidBytes32;
 
     var collectionHeader = {
@@ -3264,7 +3205,6 @@ describe("Item V2 Projections - Native", () => {
     var mainItems = [];
 
     var res = await itemsv2.initialization(
-      zeroDecimals,
       collectionId,
       collectionHeader,
       items,
@@ -3364,7 +3304,6 @@ describe("Item V2 Projections - Native", () => {
      * Create and initialize a Native Projection with Items
      * Using the main interface batch methods safeBatchTransferFrom, a user can manage different Items from different Collection and one of them is the Projection Collection
      */
-    var zeroDecimals = false;
     var collectionId = utilities.voidBytes32;
 
     var collectionHeader = {
@@ -3419,7 +3358,6 @@ describe("Item V2 Projections - Native", () => {
     ];
 
     var res = await itemsv2.initialization(
-      zeroDecimals,
       collectionId,
       collectionHeader,
       items,

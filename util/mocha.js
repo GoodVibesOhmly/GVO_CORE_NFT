@@ -99,7 +99,7 @@ async function initDFOHubManager() {
     global.dfoManager = require('./dfo')
     global.dfoHubManager = require('./dfoHub');
     await global.dfoHubManager.init;
-}}
+}
 
 async function dumpBlocks() {
     var transactions = await global.transactionDebugger.debugBlocks(global.blockchainConnection.forkBlock, (await global.web3.eth.getBlock('latest')).number);

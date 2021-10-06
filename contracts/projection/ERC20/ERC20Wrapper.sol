@@ -12,6 +12,7 @@ contract ERC20Wrapper is IERC20Wrapper, ItemProjection {
     using AddressUtilities for address;
     using Uint256Utilities for uint256;
     using TransferUtilities for address;
+    using BytesUtilities for bytes;
 
     mapping(address => uint256) public override itemIdOf;
     mapping(address => uint256) private _tokenDecimals;
@@ -58,7 +59,7 @@ contract ERC20Wrapper is IERC20Wrapper, ItemProjection {
         for(uint256 i = 0 ; i < interoperableInterfaceAmounts.length; i++) {
             interoperableInterfaceAmounts[i] = toInteroperableInterfaceAmount(amounts[i], itemIds[i], account);
         }
-        IItemMainInterface(mainInterface).mintTransferOrBurn(true, abi.encode(true, abi.encode(msg.sender, account, address(0), itemIds, interoperableInterfaceAmounts)));
+        IItemMainInterface(mainInterface).mintTransferOrBurn(true, abi.encode(true, abi.encode(abi.encode(msg.sender, account, address(0), itemIds, interoperableInterfaceAmounts).asSingletonArray())));
         emit TransferBatch(msg.sender, account, address(0), itemIds, amounts);
         bytes[] memory datas = abi.decode(data, (bytes[]));
         for(uint256 i = 0; i < itemIds.length; i++) {

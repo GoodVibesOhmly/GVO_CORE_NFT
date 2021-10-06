@@ -12,6 +12,7 @@ import { Uint256Utilities } from "@ethereansos/swissknife/contracts/lib/GeneralU
 contract ERC1155Wrapper is IERC1155Wrapper, ItemProjection, IERC1155Receiver {
     using AddressUtilities for address;
     using Uint256Utilities for uint256;
+    using BytesUtilities for bytes;
 
     mapping(bytes32 => uint256) private _itemIdOf;
     mapping(uint256 => uint256) private _tokenDecimals;
@@ -79,7 +80,7 @@ contract ERC1155Wrapper is IERC1155Wrapper, ItemProjection, IERC1155Receiver {
         uint256[] memory interoperableInterfaceAmounts = new uint256[](amounts.length);
         bytes[] memory datas = abi.decode(data, (bytes[]));
         for(uint256 i = 0; i < itemIds.length; i++) {
-            IItemMainInterface(mainInterface).mintTransferOrBurn(false, abi.encode(msg.sender, account, address(0), itemIds[i], interoperableInterfaceAmounts[i] = _unwrap(account, itemIds[i], amounts[i], datas[i])));
+            IItemMainInterface(mainInterface).mintTransferOrBurn(false, abi.encode(abi.encode(msg.sender, account, address(0), itemIds[i], interoperableInterfaceAmounts[i] = _unwrap(account, itemIds[i], amounts[i], datas[i])).asSingletonArray()));
         }
         emit TransferBatch(msg.sender, account, address(0), itemIds, interoperableInterfaceAmounts);
     }

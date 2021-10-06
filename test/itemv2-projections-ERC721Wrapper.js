@@ -404,13 +404,6 @@ describe("itemv2 projections ERC721Wrapper", () => {
 
     assert.equal(await mainToken.methods.balanceOf(accounts[9]).call(), "1");
 
-    assert.equal(
-      await wrapper.methods
-        .balanceOf(itemsList[1].account, itemsList[1].itemId)
-        .call(),
-      prevItemBalance2.sub(itemsList[1].account)
-    );
-
     await mainInterface.methods
       .approve(
         itemsList[2].account,

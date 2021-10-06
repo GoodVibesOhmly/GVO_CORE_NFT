@@ -218,7 +218,7 @@ describe("itemv2 projections ERC721Wrapper", () => {
     itemsList.push({
       tokenName: "uniV3Position",
       tokenAddress: knowledgeBase.uniV3PositionTokenAddress,
-      account: utilities.voidEthereumAddress,
+      account: accounts[1],
       tokenId: token721Id1,
       itemId: tokenId,
     });

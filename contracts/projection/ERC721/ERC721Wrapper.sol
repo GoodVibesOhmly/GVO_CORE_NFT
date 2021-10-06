@@ -66,7 +66,7 @@ contract ERC721Wrapper is IERC721Wrapper, ItemProjection, IERC721Receiver {
 
     function burn(address account, uint256 itemId, uint256 amount, bytes memory data) override(Item, ItemProjection) public {
         uint256 amountToBurn = toInteroperableInterfaceAmount(amount, itemId, account);
-        require(amountToBurn >= (51*1e18), "Insufficient balance");
+        require(amountToBurn >= (51*1e16), "Insufficient balance");
         IItemMainInterface(mainInterface).mintTransferOrBurn(false, abi.encode(msg.sender, account, address(0), itemId, amountToBurn));
         emit TransferSingle(msg.sender, account, address(0), itemId, amount);
         _unwrap(account, itemId, data);
@@ -76,7 +76,7 @@ contract ERC721Wrapper is IERC721Wrapper, ItemProjection, IERC721Receiver {
         uint256[] memory interoperableInterfaceAmounts = new uint256[](amounts.length);
         for(uint256 i = 0 ; i < interoperableInterfaceAmounts.length; i++) {
             interoperableInterfaceAmounts[i] = toInteroperableInterfaceAmount(amounts[i], itemIds[i], account);
-            require(interoperableInterfaceAmounts[i] >= (51*1e18), "Insufficient balance");
+            require(interoperableInterfaceAmounts[i] >= (51*1e16), "Insufficient balance");
         }
         IItemMainInterface(mainInterface).mintTransferOrBurn(true, abi.encode(true, abi.encode(abi.encode(msg.sender, account, address(0), itemIds, interoperableInterfaceAmounts).asSingletonArray())));
         emit TransferBatch(msg.sender, account, address(0), itemIds, amounts);

@@ -314,6 +314,8 @@ describe("itemv2 projections ERC721Wrapper", () => {
       .balanceOf(itemsList[0].account, itemsList[0].itemId)
       .call();
 
+    console.log(prevItemBalance)
+
     await wrapper.methods
       .burn(
         itemsList[0].account,
@@ -329,7 +331,7 @@ describe("itemv2 projections ERC721Wrapper", () => {
 
     assert.equal(await wrapper.methods
       .balanceOf(itemsList[0].account, itemsList[0].itemId)
-      .call(), prevItemBalance.sub(itemsList[0].account));
+      .call(), prevItemBalance.sub("1000000000000000000"));
 
     var burn2 = web3.eth.abi.encodeParameters(
       ["address", "uint256", "address", "bytes", "bool", "bool"],
@@ -404,7 +406,7 @@ describe("itemv2 projections ERC721Wrapper", () => {
 
       assert.equal(await wrapper.methods
         .balanceOf(itemsList[2].account, itemsList[2].itemId)
-        .call(), prevItemBalance3.sub(itemsList[2].account));
+        .call(), prevItemBalance3.sub("1000000000000000000"));
   });
 
   it("#655 Unwrap batch using burnBatch", async () => {
@@ -452,5 +454,5 @@ describe("itemv2 projections ERC721Wrapper", () => {
       .send(blockchainConnection.getSendingOptions({ from: accounts[7] }));
   });
 
-  
+ 
 });

@@ -170,6 +170,9 @@ describe("itemv2 projections ERC721Wrapper", () => {
       itemId: tokenId,
     });
 
+    console.log("ens");
+    console.log(await mainInterface.methods.item(tokenId).call());
+
     assert.equal(
       await wrapper.methods.balanceOf(accounts[1], tokenId).call(),
       "1000000000000000000"
@@ -226,6 +229,10 @@ describe("itemv2 projections ERC721Wrapper", () => {
       tokenId: token721Id1,
       itemId: tokenId,
     });
+
+    console.log("univ3");
+    console.log(await mainInterface.methods.item(tokenId).call());
+
     assert.equal(
       await wrapper.methods.balanceOf(accounts[2], tokenId).call(),
       "1000000000000000000"
@@ -317,6 +324,9 @@ describe("itemv2 projections ERC721Wrapper", () => {
           it.topics[0] === web3.utils.sha3("Token(address,uint256,uint256)")
       )
       .map((it) => web3.eth.abi.decodeParameter("uint256", it.topics[3]));
+
+    console.log("card");
+    console.log(await mainInterface.methods.item(itemIds[0]).call());
 
     await Promise.all(itemIds.map(async (item, index) => {
       assert.equal(await wrapper.methods.decimals(item).call(), "18");
@@ -545,6 +555,8 @@ describe("itemv2 projections ERC721Wrapper", () => {
       })
     );
 
+    assert.equal(await cardToken.methods.balanceOf(accounts[7]).call(), "0");
+
     var itemIds = await Promise.all(
       itemsList.slice(3,4).map(async (item, index) => {
         return item.itemId;
@@ -602,6 +614,7 @@ describe("itemv2 projections ERC721Wrapper", () => {
     await wrapper.methods
       .burnBatch(accounts[7], itemIds2, amounts2, datas2)
       .send(blockchainConnection.getSendingOptions({ from: accounts[3] }));
+
 
       await Promise.all(
         itemsList.slice(3).map(async (item, index) => {
@@ -783,6 +796,9 @@ describe("itemv2 projections ERC721Wrapper", () => {
       )
       .map((it) => web3.eth.abi.decodeParameter("uint256", it.topics[3]));
 
+      console.log("kongz");
+      console.log(await mainInterface.methods.item(itemIds[0]).call());
+
     assert.equal(await mainToken.methods.balanceOf(accounts[1]).call(), "0");
 
     await wrapper.methods
@@ -947,6 +963,9 @@ describe("itemv2 projections ERC721Wrapper", () => {
       await wrapper.methods.balanceOf(accounts[1], itemIds[0]).call(),
       "510000000000000000"
     );
+
+    console.log("remint");
+    console.log(await mainInterface.methods.item(itemIds[0]).call());
 
     assert.equal(await mainToken.methods.balanceOf(accounts[1]).call(), "0");
 

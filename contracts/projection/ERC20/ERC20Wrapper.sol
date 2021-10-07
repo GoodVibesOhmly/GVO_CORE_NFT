@@ -25,7 +25,7 @@ contract ERC20Wrapper is IERC20Wrapper, ItemProjection {
     }
 
     function mint(address[] calldata tokenAddresses, uint256[][] calldata amounts, address[][] calldata receivers) override payable external returns(uint256[] memory itemIds) {
-        require(tokenAddresses.length == amounts.length && amounts.length > receivers.length, "length");
+        require(tokenAddresses.length == amounts.length && amounts.length == receivers.length, "length");
         uint256[] memory loadedItemIds = new uint256[](tokenAddresses.length);
         uint256 ethAmount = 0;
         string memory uri = plainUri();

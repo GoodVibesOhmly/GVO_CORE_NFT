@@ -1,6 +1,7 @@
 const blockchainConnection = require("../util/blockchainConnection");
 var utilities = require("../util/utilities");
 var itemsv2 = require("../resources/itemsv2");
+var wrapperResource = require("../resources/wrapper");
 describe("itemv2 projections ERC20Wrapper", () => {
   var wrapper;
   var MainInterface;
@@ -124,37 +125,34 @@ describe("itemv2 projections ERC20Wrapper", () => {
     await buyForETH(daiToken, 2, accounts[1]);
     await buyForETH(uniToken, 2, accounts[1]);
 
-    var daiAmounts = (await daiToken.methods.balanceOf(accounts[1]).call()).div(2)
-    console.log(daiAmounts)
-    console.log(await daiToken.methods.balanceOf(accounts[1]).call());
-    await daiToken.methods.approve(
-      wrapper.options.address,
-      await daiToken.methods.balanceOf(accounts[1]).call()
+    var daiAmounts = (await daiToken.methods.balanceOf(accounts[1]).call()).div(
+      2
     );
-
-    console.log(await uniToken.methods.balanceOf(accounts[1]).call());
-    await uniToken.methods.approve(
-      wrapper.options.address,
-      await uniToken.methods.balanceOf(accounts[1]).call()
+    var uniAmounts = (await uniToken.methods.balanceOf(accounts[1]).call()).div(
+      2
     );
-    //TODO: controlla balance erc20
-    var tx = await wrapper.methods
-      .mint(
-        [uniToken.options.address],
-        [
-          [(await uniToken.methods.balanceOf(accounts[1]).call()).div(2)],
-        ],
-        [[accounts[1]]]
+    var ethAmount = "1000000000000000000";
+    var amounts = [uniAmounts, daiAmounts, ethAmount];
+    await daiToken.methods
+      .approve(
+        wrapper.options.address,
+        await daiToken.methods.balanceOf(accounts[1]).call()
       )
       .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
-    // TODO: controlla balance item
-    var logs = (await web3.eth.getTransactionReceipt(tx.transactionHash)).logs;
 
-    var itemIds = logs
-      .filter(
-        (it) =>
-          it.topics[0] === web3.utils.sha3("Token(address,uint256,uint256)")
+    await uniToken.methods
+      .approve(
+        wrapper.options.address,
+        await uniToken.methods.balanceOf(accounts[1]).call()
       )
-      .map((it) => web3.eth.abi.decodeParameter("uint256", it.topics[3]));
+      .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
+
+    var itemIds = await wrapperResource.mintErc20Wrapper(wrapper, [uniToken.options.address,daiToken.options.address,utilities.voidEthereumAddress,],[[uniAmounts], [daiAmounts], [ethAmount]],[[accounts[1]], [accounts[1]], [accounts[1]]], accounts[1], ethAmount);
+
+    await Promise.all(itemIds.map(async(item, index) => {
+      assert.equal(await wrapper.methods.balanceOf(accounts[1], item).call(), amounts[index])
+      assert.equal(await wrapper.methods.decimals(item).call(), "18");
+    }))
+
   });
 });

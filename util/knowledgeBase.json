@@ -18,6 +18,7 @@
     "ckTokenAddress" : "0x06012c8cf97bead5deae237070f9587f8e7a266d",
     "uniV3PositionTokenAddress" : "0xc36442b4a4522e871399cd717abdd847ab11fe88",
     "godsTokenAddress" : "0x6ebeaf8e8e946f0716e6533a6f2cefc83f60e8ab",
+    "cardTokenAddress": "0x0e3a2a1f2146d86a604adc220b4967a898d7fe07",
     "balTokenAddress" : "0xba100000625a3754423978a60c9317c58a424e3d",
     "chainLinkTokenAddress" : "0x514910771af9ca656af840dff83e8264ecf986ca",
     "ammAggregatorAddress" : "0x81391d117a03A6368005e447197739D06550D4CD",

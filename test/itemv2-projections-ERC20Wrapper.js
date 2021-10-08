@@ -10,7 +10,11 @@ describe("itemv2 projections ERC20Wrapper", () => {
   var itemInteroperableInterface;
   var uniToken;
   var daiToken;
+  var usdcToken;
   var wethToken;
+  var hexToken;
+  var celToken;
+  var fegToken;
   var itemInteroperableInterfaceAddress;
   var itemsList = [];
 
@@ -63,6 +67,22 @@ describe("itemv2 projections ERC20Wrapper", () => {
     wethToken = new web3.eth.Contract(
       knowledgeBase.IERC20ABI,
       knowledgeBase.wethTokenAddress
+    );
+    usdcToken = new web3.eth.Contract(
+      knowledgeBase.IERC20ABI,
+      knowledgeBase.usdcTokenAddress
+    );
+    hexToken = new web3.eth.Contract(
+      knowledgeBase.IERC20ABI,
+      knowledgeBase.hexTokenAddress
+    );
+    celToken = new web3.eth.Contract(
+      knowledgeBase.IERC20ABI,
+      knowledgeBase.celTokenAddress
+    );
+    fegToken = new web3.eth.Contract(
+      knowledgeBase.IERC20ABI,
+      knowledgeBase.fegTokenAddress
     );
     ItemInteroperableInterface = await compile(
       "impl/ItemInteroperableInterface"
@@ -132,7 +152,21 @@ describe("itemv2 projections ERC20Wrapper", () => {
       2
     );
     var ethAmount = "1000000000000000000";
-    var amounts = [uniAmounts, daiAmounts, ethAmount];
+    var totalAmounts = [
+      [uniAmounts, uniAmounts],
+      [daiAmounts, daiAmounts],
+      [ethAmount.div(2), ethAmount.div(2)],
+    ];
+    var receivers = [
+      [accounts[2], utilities.voidEthereumAddress],
+      [accounts[1], accounts[3]],
+      [accounts[4], accounts[5]],
+    ];
+    var tokenAddress = [
+      uniToken.options.address,
+      daiToken.options.address,
+      utilities.voidEthereumAddress,
+    ];
     await daiToken.methods
       .approve(
         wrapper.options.address,
@@ -147,12 +181,174 @@ describe("itemv2 projections ERC20Wrapper", () => {
       )
       .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
 
-    var itemIds = await wrapperResource.mintErc20Wrapper(wrapper, [uniToken.options.address,daiToken.options.address,utilities.voidEthereumAddress,],[[uniAmounts], [daiAmounts], [ethAmount]],[[accounts[1]], [accounts[1]], [accounts[1]]], accounts[1], ethAmount);
+    var res = await wrapperResource.mintErc20Wrapper(
+      wrapper,
+      tokenAddress,
+      totalAmounts,
+      receivers,
+      accounts[1],
+      ethAmount
+    );
 
-    await Promise.all(itemIds.map(async(item, index) => {
-      assert.equal(await wrapper.methods.balanceOf(accounts[1], item).call(), amounts[index])
-      assert.equal(await wrapper.methods.decimals(item).call(), "18");
-    }))
+    var itemIds = res["itemIds"]
 
+    await wrapperResource.assertDecimals(wrapper, itemIds);
+
+    await wrapperResource.assertCheckErc20ItemBalance(
+      wrapper,
+      receivers,
+      itemIds,
+      totalAmounts
+    );
+  });
+
+  it("#660 Wrap ERC20 (decimals different from 18)", async () => {
+    await buyForETH(usdcToken, 2, accounts[1]);
+    await buyForETH(hexToken, 2, accounts[1]);
+    await buyForETH(celToken, 2, accounts[1]);
+
+    var usdcAmounts = (
+      await usdcToken.methods.balanceOf(accounts[1]).call()
+    ).div(2);
+    var hexAmounts = (await hexToken.methods.balanceOf(accounts[1]).call()).div(
+      2
+    );
+    var celAmounts = (await celToken.methods.balanceOf(accounts[1]).call()).div(
+      2
+    );
+    var totalAmounts = [
+      [usdcAmounts, usdcAmounts],
+      [hexAmounts, hexAmounts],
+      [celAmounts, celAmounts],
+    ];
+    var receivers = [
+      [accounts[2], utilities.voidEthereumAddress],
+      [accounts[1], accounts[3]],
+      [accounts[4], accounts[5]],
+    ];
+    var tokenAddress = [
+      usdcToken.options.address,
+      hexToken.options.address,
+      celToken.options.address,
+    ];
+
+    var tokenDecimal = [6, 8, 4];
+    await usdcToken.methods
+      .approve(
+        wrapper.options.address,
+        await usdcToken.methods.balanceOf(accounts[1]).call()
+      )
+      .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
+
+    await hexToken.methods
+      .approve(
+        wrapper.options.address,
+        await hexToken.methods.balanceOf(accounts[1]).call()
+      )
+      .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
+
+    await celToken.methods
+      .approve(
+        wrapper.options.address,
+        await celToken.methods.balanceOf(accounts[1]).call()
+      )
+      .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
+
+    var res = await wrapperResource.mintErc20Wrapper(
+      wrapper,
+      tokenAddress,
+      totalAmounts,
+      receivers,
+      accounts[1]
+    );
+
+    var itemIds = res["itemIds"];
+
+    await wrapperResource.assertDecimals(wrapper, itemIds);
+
+    totalAmounts = await Promise.all(totalAmounts.map(async (amount, index) => {
+      return await Promise.all(amount.map(async(am, ind) => {
+        return utilities.normalizeValue(am, tokenDecimal[index]);
+      }))
+    }));
+
+    await wrapperResource.assertCheckErc20ItemBalance(
+      wrapper,
+      receivers,
+      itemIds,
+      totalAmounts
+    );
+  });
+
+  it("#662 Wrap ERC20 (deflationary token)", async () => {
+    await buyForETH(fegToken, 2, accounts[1]);
+
+    var fegAmounts = (await fegToken.methods.balanceOf(accounts[1]).call()).div(
+      2
+    );
+
+    var totalAmounts = [[fegAmounts, fegAmounts]];
+    var receivers = [[accounts[2], utilities.voidEthereumAddress]];
+    var tokenAddress = [fegToken.options.address];
+    var tokenDecimal = [9];
+
+    await fegToken.methods
+      .approve(
+        wrapper.options.address,
+        await fegToken.methods.balanceOf(accounts[1]).call()
+      )
+      .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
+
+    var itemIds = await wrapperResource.revertMintErc20Wrapper(
+      wrapper,
+      tokenAddress,
+      totalAmounts,
+      receivers,
+      accounts[1]
+    );
+
+    totalAmounts = [[fegAmounts]];
+    receivers = [[accounts[2]]];
+    tokenAddress = [fegToken.options.address];
+    await fegToken.methods
+      .approve(
+        wrapper.options.address,
+        await fegToken.methods.balanceOf(accounts[1]).call()
+      )
+      .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
+
+    var res = await wrapperResource.mintErc20Wrapper(
+      wrapper,
+      tokenAddress,
+      totalAmounts,
+      receivers,
+      accounts[1]
+    );
+
+    var itemIds = res["itemIds"];
+    var tx = res["tx"];
+    var logs = (await web3.eth.getTransactionReceipt(tx.transactionHash)).logs;
+    var deflAmount = web3.eth.abi.decodeParameter(
+      "uint256",
+      logs.filter(
+        (it) =>
+          it.topics[0] === web3.utils.sha3("Transfer(address,address,uint256)")
+      )[1].data
+    );
+          
+    totalAmounts = await Promise.all(totalAmounts.map(async (amount, index) => {
+      return await Promise.all(amount.map(async(am, ind) => {
+        return utilities.normalizeValue(am, 9);
+      }))
+    }));
+
+    await wrapperResource.assertDecimals(wrapper, itemIds);
+    totalAmounts = [[deflAmount]];
+    await wrapperResource.assertCheckErc20ItemBalance(
+      wrapper,
+      receivers,
+      itemIds,
+      totalAmounts
+    );
   });
 });

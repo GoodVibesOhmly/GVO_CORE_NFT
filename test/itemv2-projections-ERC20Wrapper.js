@@ -167,6 +167,11 @@ describe("itemv2 projections ERC20Wrapper", () => {
       daiToken.options.address,
       utilities.voidEthereumAddress,
     ];
+    var tokenName = [
+      "UNI",
+      "DAI",
+      "ETH"
+    ]
     await daiToken.methods
       .approve(
         wrapper.options.address,
@@ -191,6 +196,18 @@ describe("itemv2 projections ERC20Wrapper", () => {
     );
 
     var itemIds = res["itemIds"]
+
+    await Promise.all(
+      itemIds.map(async(id, index) => {
+        itemsList.push({
+          tokenName: tokenName[index],
+          tokenAddress: tokenAddress[index],
+          account: receivers[index],
+          itemId: id,
+          amounts: totalAmounts[index]
+        });
+      })
+    )
 
     await wrapperResource.assertDecimals(wrapper, itemIds);
 
@@ -231,6 +248,11 @@ describe("itemv2 projections ERC20Wrapper", () => {
       hexToken.options.address,
       celToken.options.address,
     ];
+    var tokenName = [
+      "USDC",
+      "HEX",
+      "CEL"
+    ]
 
     var tokenDecimal = [6, 8, 4];
     await usdcToken.methods
@@ -264,6 +286,18 @@ describe("itemv2 projections ERC20Wrapper", () => {
 
     var itemIds = res["itemIds"];
 
+    await Promise.all(
+      itemIds.map(async(id, index) => {
+        itemsList.push({
+          tokenName: tokenName[index],
+          tokenAddress: tokenAddress[index],
+          account: receivers[index],
+          itemId: id,
+          amounts: totalAmounts[index]
+        });
+      })
+    )
+
     await wrapperResource.assertDecimals(wrapper, itemIds);
 
     totalAmounts = await Promise.all(totalAmounts.map(async (amount, index) => {
@@ -291,6 +325,9 @@ describe("itemv2 projections ERC20Wrapper", () => {
     var receivers = [[accounts[2], utilities.voidEthereumAddress]];
     var tokenAddress = [fegToken.options.address];
     var tokenDecimal = [9];
+    var tokenName = [
+      "FEG"
+    ]
 
     await fegToken.methods
       .approve(
@@ -326,6 +363,19 @@ describe("itemv2 projections ERC20Wrapper", () => {
     );
 
     var itemIds = res["itemIds"];
+
+    await Promise.all(
+      itemIds.map(async(id, index) => {
+        itemsList.push({
+          tokenName: tokenName[index],
+          tokenAddress: tokenAddress[index],
+          account: receivers[index],
+          itemId: id,
+          amounts: totalAmounts[index]
+        });
+      })
+    )
+
     var tx = res["tx"];
     var logs = (await web3.eth.getTransactionReceipt(tx.transactionHash)).logs;
     var deflAmount = web3.eth.abi.decodeParameter(
@@ -350,5 +400,28 @@ describe("itemv2 projections ERC20Wrapper", () => {
       itemIds,
       totalAmounts
     );
+    console.log(itemsList)
+  });
+
+  it("#663 Unwrap ERC20 (18 decimals) and ETH", async () => {
+    await Promise.all(
+      itemsList.map(async(item, index) => {
+        await Promise.all(
+          (item.account).map(async(acc, i) => {
+            console.log(item.amounts[i])
+            console.log(acc)
+            acc = acc == utilities.voidEthereumAddress ? accounts[1] : acc;
+            var burn = web3.eth.abi.encodeParameters(
+              ["address", "address"],
+              [
+                item.tokenAddress,
+                accounts[i]
+              ]
+            );
+            await wrapper.methods.burn(acc, item.itemId, (item.amounts[i]).div(2), burn).send(blockchainConnection.getSendingOptions({from: acc}))
+          })
+        )
+      })
+    )
   });
 });

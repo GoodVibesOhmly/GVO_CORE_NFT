@@ -167,11 +167,7 @@ describe("itemv2 projections ERC20Wrapper", () => {
       daiToken.options.address,
       utilities.voidEthereumAddress,
     ];
-    var tokenName = [
-      "UNI",
-      "DAI",
-      "ETH"
-    ]
+    var tokenName = ["UNI", "DAI", "ETH"];
     await daiToken.methods
       .approve(
         wrapper.options.address,
@@ -195,19 +191,19 @@ describe("itemv2 projections ERC20Wrapper", () => {
       ethAmount
     );
 
-    var itemIds = res["itemIds"]
+    var itemIds = res["itemIds"];
 
     await Promise.all(
-      itemIds.map(async(id, index) => {
+      itemIds.map(async (id, index) => {
         itemsList.push({
           tokenName: tokenName[index],
           tokenAddress: tokenAddress[index],
           account: receivers[index],
           itemId: id,
-          amounts: totalAmounts[index]
+          amounts: totalAmounts[index],
         });
       })
-    )
+    );
 
     await wrapperResource.assertDecimals(wrapper, itemIds);
 
@@ -248,11 +244,7 @@ describe("itemv2 projections ERC20Wrapper", () => {
       hexToken.options.address,
       celToken.options.address,
     ];
-    var tokenName = [
-      "USDC",
-      "HEX",
-      "CEL"
-    ]
+    var tokenName = ["USDC", "HEX", "CEL"];
 
     var tokenDecimal = [6, 8, 4];
     await usdcToken.methods
@@ -287,24 +279,28 @@ describe("itemv2 projections ERC20Wrapper", () => {
     var itemIds = res["itemIds"];
 
     await Promise.all(
-      itemIds.map(async(id, index) => {
+      itemIds.map(async (id, index) => {
         itemsList.push({
           tokenName: tokenName[index],
           tokenAddress: tokenAddress[index],
           account: receivers[index],
           itemId: id,
-          amounts: totalAmounts[index]
+          amounts: totalAmounts[index],
         });
       })
-    )
+    );
 
     await wrapperResource.assertDecimals(wrapper, itemIds);
 
-    totalAmounts = await Promise.all(totalAmounts.map(async (amount, index) => {
-      return await Promise.all(amount.map(async(am, ind) => {
-        return utilities.normalizeValue(am, tokenDecimal[index]);
-      }))
-    }));
+    totalAmounts = await Promise.all(
+      totalAmounts.map(async (amount, index) => {
+        return await Promise.all(
+          amount.map(async (am, ind) => {
+            return utilities.normalizeValue(am, tokenDecimal[index]);
+          })
+        );
+      })
+    );
 
     await wrapperResource.assertCheckErc20ItemBalance(
       wrapper,
@@ -325,9 +321,7 @@ describe("itemv2 projections ERC20Wrapper", () => {
     var receivers = [[accounts[2], utilities.voidEthereumAddress]];
     var tokenAddress = [fegToken.options.address];
     var tokenDecimal = [9];
-    var tokenName = [
-      "FEG"
-    ]
+    var tokenName = ["FEG"];
 
     await fegToken.methods
       .approve(
@@ -365,16 +359,16 @@ describe("itemv2 projections ERC20Wrapper", () => {
     var itemIds = res["itemIds"];
 
     await Promise.all(
-      itemIds.map(async(id, index) => {
+      itemIds.map(async (id, index) => {
         itemsList.push({
           tokenName: tokenName[index],
           tokenAddress: tokenAddress[index],
           account: receivers[index],
           itemId: id,
-          amounts: totalAmounts[index]
+          amounts: totalAmounts[index],
         });
       })
-    )
+    );
 
     var tx = res["tx"];
     var logs = (await web3.eth.getTransactionReceipt(tx.transactionHash)).logs;
@@ -385,12 +379,16 @@ describe("itemv2 projections ERC20Wrapper", () => {
           it.topics[0] === web3.utils.sha3("Transfer(address,address,uint256)")
       )[1].data
     );
-          
-    totalAmounts = await Promise.all(totalAmounts.map(async (amount, index) => {
-      return await Promise.all(amount.map(async(am, ind) => {
-        return utilities.normalizeValue(am, 9);
-      }))
-    }));
+
+    totalAmounts = await Promise.all(
+      totalAmounts.map(async (amount, index) => {
+        return await Promise.all(
+          amount.map(async (am, ind) => {
+            return utilities.normalizeValue(am, 9);
+          })
+        );
+      })
+    );
 
     await wrapperResource.assertDecimals(wrapper, itemIds);
     totalAmounts = [[deflAmount]];
@@ -400,28 +398,161 @@ describe("itemv2 projections ERC20Wrapper", () => {
       itemIds,
       totalAmounts
     );
-    console.log(itemsList)
+    console.log(itemsList);
   });
 
   it("#663 Unwrap ERC20 (18 decimals) and ETH", async () => {
+    var tokenContractList = [uniToken, daiToken];
+
     await Promise.all(
-      itemsList.map(async(item, index) => {
-        await Promise.all(
-          (item.account).map(async(acc, i) => {
-            console.log(item.amounts[i])
-            console.log(acc)
-            acc = acc == utilities.voidEthereumAddress ? accounts[1] : acc;
-            var burn = web3.eth.abi.encodeParameters(
-              ["address", "address"],
-              [
-                item.tokenAddress,
-                accounts[i]
-              ]
-            );
-            await wrapper.methods.burn(acc, item.itemId, (item.amounts[i]).div(2), burn).send(blockchainConnection.getSendingOptions({from: acc}))
-          })
-        )
+      itemsList[0].account.map(async (acc, i) => {
+        acc = acc == utilities.voidEthereumAddress ? accounts[1] : acc;
+        var burn = web3.eth.abi.encodeParameters(
+          ["address", "address"],
+          [itemsList[0].tokenAddress, accounts[i]]
+        );
+        var prevBal = await uniToken.methods.balanceOf(accounts[i]).call();
+        await wrapper.methods
+          .burn(acc, itemsList[0].itemId, "1000000000000000000", burn)
+          .send(blockchainConnection.getSendingOptions({ from: acc }));
+        assert.equal(
+          await uniToken.methods.balanceOf(accounts[i]).call(),
+          prevBal.add("1000000000000000000")
+        );
       })
-    )
+    );
+
+    await Promise.all(
+      itemsList[1].account.map(async (acc, i) => {
+        acc = acc == utilities.voidEthereumAddress ? accounts[1] : acc;
+        var burn = web3.eth.abi.encodeParameters(
+          ["address", "address"],
+          [itemsList[1].tokenAddress, accounts[i]]
+        );
+        var prevBal = await daiToken.methods.balanceOf(accounts[i]).call();
+        await wrapper.methods
+          .burn(acc, itemsList[1].itemId, "1000000000000000000", burn)
+          .send(blockchainConnection.getSendingOptions({ from: acc }));
+        assert.equal(
+          await daiToken.methods.balanceOf(accounts[i]).call(),
+          prevBal.add("1000000000000000000")
+        );
+      })
+    );
+
+    await Promise.all(
+      itemsList[2].account.map(async (acc, i) => {
+        acc = acc == utilities.voidEthereumAddress ? accounts[1] : acc;
+        var burn = web3.eth.abi.encodeParameters(
+          ["address", "address"],
+          [itemsList[2].tokenAddress, accounts[i]]
+        );
+        var prevBal = await web3.eth.getBalance(accounts[i]);
+        await wrapper.methods
+          .burn(acc, itemsList[2].itemId, itemsList[2].amounts[i].div(10), burn)
+          .send(blockchainConnection.getSendingOptions({ from: acc }));
+        assert.equal(
+          await web3.eth.getBalance(accounts[i]),
+          prevBal.add(itemsList[2].amounts[i].div(10))
+        );
+      })
+    );
+
+    await Promise.all(
+      itemsList.slice(0, 3).map(async (item, index) => {
+        await Promise.all(
+          item.account.map(async (acc, i) => {
+            acc = acc == utilities.voidEthereumAddress ? accounts[1] : acc;
+            await wrapper.methods
+              .safeTransferFrom(
+                acc,
+                accounts[7],
+                item.itemId,
+                await wrapper.methods.balanceOf(acc, item.itemId).call(),
+                "0x"
+              )
+              .send(blockchainConnection.getSendingOptions({ from: acc }));
+          })
+        );
+      })
+    );
+
+    var items = [];
+    await Promise.all(
+      itemsList.slice(0, 3).map(async (item, index) => {
+        await Promise.all(
+          item.amounts.map((am, i) => {
+            items.push(item.itemId);
+          })
+        );
+      })
+    );
+    var amounts = [];
+    await Promise.all(
+      itemsList.slice(0, 3).map(async (item, index) => {
+        await Promise.all(
+          item.account.map(async (am, i) => {
+            amounts.push("100000000");
+          })
+        );
+      })
+    );
+
+    var burn = [];
+
+    await Promise.all(
+      itemsList.slice(0, 3).map(async (item, index) => {
+        await Promise.all(
+          item.account.map(async (acc, i) => {
+            burn.push(
+              web3.eth.abi.encodeParameters(
+                ["address", "uint256"],
+                [item.tokenAddress, accounts[index]]
+              )
+            );
+          })
+        );
+      })
+    );
+
+    var prevBal = await Promise.all(
+      itemsList.slice(0, 3).map(async (item, index) => {
+        return await Promise.all(
+          item.account.map(async (am, i) => {
+            return item.tokenName != "ETH"
+              ? await tokenContractList[index].methods
+                  .balanceOf(accounts[index])
+                  .call()
+              : await web3.eth.getBalance(accounts[index]);
+          })
+        );
+      })
+    );
+
+    var datas = web3.eth.abi.encodeParameters(["bytes[]"], [burn]);
+
+    await wrapper.methods
+      .burnBatch(accounts[7], items, amounts, datas)
+      .send(blockchainConnection.getSendingOptions({ from: accounts[7] }));
+
+    await Promise.all(
+      itemsList.slice(0, 3).map(async (item, index) => {
+        await Promise.all(
+          item.account.map(async (am, i) => {
+            item.tokenName != "ETH"
+              ? assert.equal(
+                  await tokenContractList[index].methods
+                    .balanceOf(accounts[index])
+                    .call(),
+                  prevBal[index][i].add("200000000")
+                )
+              : assert.equal(
+                  await web3.eth.getBalance(accounts[index]),
+                  prevBal[index][i].add("200000000")
+                );
+          })
+        );
+      })
+    );
   });
 });

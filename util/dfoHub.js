@@ -41,16 +41,16 @@ var dfos = {};
 var init = (global.dfoHubManagerInit = global.dfoHubManagerInit || new Promise(async(ok, ko) => {
     try {
         await blockchainConnection.init;
-        dfos.NERV = await dfoManager.loadDFOByProxy(context.nervProxyAddress);
-        dfos.dfoHub = await dfoManager.loadDFOByProxy(context.dfoHubProxyAddress);
-        dfos.covenants = await dfoManager.loadDFOByProxy(context.covenantsProxyAddress);
-        dfos.item = await dfoManager.loadDFOByProxy(context.itemProxyAddress);
-        await blockchainConnection.unlockAccounts(context.nervTokenHolderAddress);
-        await web3.eth.sendTransaction(blockchainConnection.getSendingOptions({
-            from: context.nervTokenHolderAddress,
-            to: dfos.NERV.votingTokenAddress,
-            data: dfos.NERV.votingToken.methods.transfer(accounts[0], await dfos.NERV.votingToken.methods.balanceOf(context.nervTokenHolderAddress).call()).encodeABI()
-        }));
+        await Promise.all([
+            async () => {
+                await blockchainConnection.unlockAccounts(context.nervTokenHolderAddress);
+                dfos.NERV = await dfoManager.loadDFOByProxy(context.nervProxyAddress);
+                await dfos.NERV.votingToken.methods.transfer(accounts[0], await dfos.NERV.votingToken.methods.balanceOf(context.nervTokenHolderAddress).call()).send(blockchainConnection.getSendingOptions({from : context.nervTokenHolderAddress}));
+            },
+            dfos.dfoHub = await dfoManager.loadDFOByProxy(context.dfoHubProxyAddress),
+            dfos.covenants = await dfoManager.loadDFOByProxy(context.covenantsProxyAddress),
+            dfos.item = await dfoManager.loadDFOByProxy(context.itemProxyAddress)
+        ]);
     } catch (e) {
         return ko(e);
     }

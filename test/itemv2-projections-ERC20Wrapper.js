@@ -599,12 +599,12 @@ describe("itemv2 projections ERC20Wrapper", () => {
       ["address", "address"],
       [itemsList[2].tokenAddress, utilities.voidEthereumAddress]
     );
-    var prevBal = await web3.eth.getBalance(accounts[0]);
+    var prevBal = await web3.eth.getBalance(acc);
     await wrapper.methods
       .burn(acc, itemsList[2].itemId, burnAmounts[2], burn)
       .send(blockchainConnection.getSendingOptions({ from: acc }));
     assert.equal(
-      await web3.eth.getBalance(accounts[0]),
+      await web3.eth.getBalance(acc),
       prevBal.add(burnAmounts[2])
     );
 

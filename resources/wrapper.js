@@ -43,6 +43,9 @@ async function assertDecimals(wrapper, itemIds){
 }
 
 async function assertCheckErc20ItemBalance(wrapper, receivers, itemIds, totalAmounts){
+  if (!Array.isArray(itemIds)) {
+    itemIds = [itemIds];
+  }
     await Promise.all(receivers.map(async(rec, ind) => {
         await Promise.all(rec.map(async(r, i) => {
             assert.equal(await wrapper.methods.balanceOf(r == utilities.voidEthereumAddress ? accounts[1] : r, itemIds[ind]).call(), totalAmounts[ind][i]);

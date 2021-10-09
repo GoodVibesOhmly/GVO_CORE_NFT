@@ -793,6 +793,7 @@ describe("itemv2 projections ERC20Wrapper", () => {
     var tokenContractList = [usdcToken, hexToken, celToken];
     var tokenDecDiff = [1e12, 1e10, 1e14];
     var catchCallAmount = [1e11, 1e9, 1e13]
+    var amount = [1e12, 1e10, 1e14]
     // USDC
     var acc =
       itemsList[3].account[0] == utilities.voidEthereumAddress
@@ -807,15 +808,65 @@ describe("itemv2 projections ERC20Wrapper", () => {
       .totalSupply(itemsList[3].itemId)
       .call();
     await wrapper.methods
-      .burn(acc, itemsList[3].itemId, "100000000000000000", burn)
+      .burn(acc, itemsList[3].itemId, amount[0], burn)
       .send(blockchainConnection.getSendingOptions({ from: acc }));
     assert.equal(
-      prevSupply.sub("100000000000000000"),
+      prevSupply.sub(amount[0]),
       await wrapper.methods.totalSupply(itemsList[3].itemId).call()
     );
     assert.equal(
       await usdcToken.methods.balanceOf(accounts[6]).call(),
-      prevBal.add("100000000000000000".div(tokenDecDiff[0]))
+      prevBal.add((amount[0]).div(tokenDecDiff[0]))
+    );
+
+    // HEX
+    var acc =
+      itemsList[4].account[0] == utilities.voidEthereumAddress
+        ? accounts[1]
+        : itemsList[4].account[0];
+    var burn = web3.eth.abi.encodeParameters(
+      ["address", "address"],
+      [itemsList[4].tokenAddress, accounts[6]]
+    );
+    var prevBal = await hexToken.methods.balanceOf(accounts[6]).call();
+    var prevSupply = await wrapper.methods
+      .totalSupply(itemsList[4].itemId)
+      .call();
+    await wrapper.methods
+      .burn(acc, itemsList[4].itemId, amount[1], burn)
+      .send(blockchainConnection.getSendingOptions({ from: acc }));
+    assert.equal(
+      prevSupply.sub(amount[1]),
+      await wrapper.methods.totalSupply(itemsList[4].itemId).call()
+    );
+    assert.equal(
+      await hexToken.methods.balanceOf(accounts[6]).call(),
+      prevBal.add((amount[1]).div(tokenDecDiff[1]))
+    );
+
+    // CEL
+    var acc =
+      itemsList[5].account[0] == utilities.voidEthereumAddress
+        ? accounts[1]
+        : itemsList[5].account[0];
+    var burn = web3.eth.abi.encodeParameters(
+      ["address", "address"],
+      [itemsList[5].tokenAddress, accounts[6]]
+    );
+    var prevBal = await celToken.methods.balanceOf(accounts[6]).call();
+    var prevSupply = await wrapper.methods
+      .totalSupply(itemsList[5].itemId)
+      .call();
+    await wrapper.methods
+      .burn(acc, itemsList[5].itemId, amount[2], burn)
+      .send(blockchainConnection.getSendingOptions({ from: acc }));
+    assert.equal(
+      prevSupply.sub(amount[2]),
+      await wrapper.methods.totalSupply(itemsList[5].itemId).call()
+    );
+    assert.equal(
+      await celToken.methods.balanceOf(accounts[6]).call(),
+      prevBal.add((amount[2]).div(tokenDecDiff[2]))
     );
 
     // USDC catchCall
@@ -1242,6 +1293,11 @@ describe("itemv2 projections ERC20Wrapper", () => {
     var itemIds = res["itemIds"];
 
     await wrapperResource.assertDecimals(wrapper, itemIds);
+
+    console.log(wrapper)
+    console.log(receivers)
+    console.log(itemIds)
+    console.log(totalAmounts)
 
     await wrapperResource.assertCheckErc20ItemBalance(
       wrapper,

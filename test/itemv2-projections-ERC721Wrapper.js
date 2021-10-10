@@ -11,31 +11,13 @@ describe("itemv2 projections ERC721Wrapper", () => {
   var itemInteroperableInterface;
   var itemInteroperableInterfaceAddress;
   var itemsList = [];
+  var approvedHost = [];
 
-  async function buyForETH(token, amount, from) {
-    var uniswapV2Router = new web3.eth.Contract(
-      knowledgeBase.uniswapV2RouterABI,
-      knowledgeBase.uniswapV2RouterAddress
-    );
-    var wethToken = new web3.eth.Contract(
-      knowledgeBase.IERC20ABI,
-      knowledgeBase.wethTokenAddress
-    );
-    var path = [wethToken.options.address, token.options.address];
-    var value = utilities.toDecimals(amount.toString(), "18");
-    await uniswapV2Router.methods
-      .swapExactETHForTokens(
-        "1",
-        path,
-        (from && (from.from || from)) || accounts[0],
-        parseInt(new Date().getTime() / 1000 + 1000)
-      )
-      .send(
-        blockchainConnection.getSendingOptions({
-          from: (from && (from.from || from)) || accounts[0],
-          value,
-        })
-      );
+  async function approveHost(holder) {
+    if(!approvedHost.includes(holder)){
+      await blockchainConnection.unlockAccounts(holder);
+      approvedHost.push(holder);
+    }
   }
 
   async function asInteroperableInterface(itemId) {
@@ -642,7 +624,8 @@ describe("itemv2 projections ERC721Wrapper", () => {
     -Wrap the 721, the minted amount must be 0,6.
     */
     tokenHolder = "0x721931508df2764fd4f70c53da646cb8aed16ace";
-    await blockchainConnection.unlockAccounts(tokenHolder);
+    // await blockchainConnection.unlockAccounts(tokenHolder);
+    await approveHost(tokenHolder);
     var tokenAddress = "0x57a204aa1042f6e66dd7730813f4024114d74f37";
 
     var tokenList = ["889"];
@@ -759,10 +742,11 @@ describe("itemv2 projections ERC721Wrapper", () => {
     must fail: you cannot unwrap the original token.
     */
     tokenHolder = "0x721931508df2764fd4f70c53da646cb8aed16ace";
-    await blockchainConnection.unlockAccounts(tokenHolder);
+    // await blockchainConnection.unlockAccounts(tokenHolder);
+    await approveHost(tokenHolder);
     var tokenAddress = "0x57a204aa1042f6e66dd7730813f4024114d74f37";
 
-    var tokenList = ["889"];
+    var tokenList = ["848"];
     var receivers = [accounts[1]];
 
     var mainToken = new web3.eth.Contract(
@@ -863,10 +847,10 @@ describe("itemv2 projections ERC721Wrapper", () => {
     -Wrap the 721, the minted amount must be 0,51.
     */
     tokenHolder = "0x721931508df2764fd4f70c53da646cb8aed16ace";
-    await blockchainConnection.unlockAccounts(tokenHolder);
+    await approveHost(tokenHolder);    
     var tokenAddress = "0x57a204aa1042f6e66dd7730813f4024114d74f37";
 
-    var tokenList = ["889"];
+    var tokenList = ["832"];
     var receivers = [accounts[1]];
 
     var mainToken = new web3.eth.Contract(
@@ -988,10 +972,10 @@ describe("itemv2 projections ERC721Wrapper", () => {
     must fail: you cannot unwrap the original token.
     */
     tokenHolder = "0x721931508df2764fd4f70c53da646cb8aed16ace";
-    await blockchainConnection.unlockAccounts(tokenHolder);
+    await approveHost(tokenHolder);    
     var tokenAddress = "0x57a204aa1042f6e66dd7730813f4024114d74f37";
 
-    var tokenList = ["889"];
+    var tokenList = ["818"];
     var receivers = [accounts[1]];
 
     var mainToken = new web3.eth.Contract(
@@ -1111,10 +1095,10 @@ describe("itemv2 projections ERC721Wrapper", () => {
     */
 
     tokenHolder = "0x721931508df2764fd4f70c53da646cb8aed16ace";
-    await blockchainConnection.unlockAccounts(tokenHolder);
+    await approveHost(tokenHolder);    
     var tokenAddress = "0x57a204aa1042f6e66dd7730813f4024114d74f37";
 
-    var tokenList = ["889"];
+    var tokenList = ["237"];
     var receivers = [accounts[1]];
     var sendValue = ["100000000000000000", "100000000000000000", "150000000000000000", "50000000000000000"]
 
@@ -1238,10 +1222,10 @@ describe("itemv2 projections ERC721Wrapper", () => {
     -Wrap the 721, the minted amount must be 1.
     */
     tokenHolder = "0x721931508df2764fd4f70c53da646cb8aed16ace";
-    await blockchainConnection.unlockAccounts(tokenHolder);
+    await approveHost(tokenHolder);    
     var tokenAddress = "0x57a204aa1042f6e66dd7730813f4024114d74f37";
 
-    var tokenList = ["889"];
+    var tokenList = ["232"];
     var receivers = [accounts[1]];
 
     var mainToken = new web3.eth.Contract(
@@ -1350,10 +1334,10 @@ describe("itemv2 projections ERC721Wrapper", () => {
     -must fail: you cannot unwrap the original token.
     */
     tokenHolder = "0x721931508df2764fd4f70c53da646cb8aed16ace";
-    await blockchainConnection.unlockAccounts(tokenHolder);
+    await approveHost(tokenHolder);    
     var tokenAddress = "0x57a204aa1042f6e66dd7730813f4024114d74f37";
 
-    var tokenList = ["889"];
+    var tokenList = ["135"];
     var receivers = [accounts[1]];
 
     var mainToken = new web3.eth.Contract(
@@ -1441,10 +1425,10 @@ describe("itemv2 projections ERC721Wrapper", () => {
     -Wrap the 721, the minted amount must be 0,7.
     */
     tokenHolder = "0x721931508df2764fd4f70c53da646cb8aed16ace";
-    await blockchainConnection.unlockAccounts(tokenHolder);
+    await approveHost(tokenHolder);    
     var tokenAddress = "0x57a204aa1042f6e66dd7730813f4024114d74f37";
 
-    var tokenList = ["889"];
+    var tokenList = ["255"];
     var receivers = [accounts[1]];
 
     var mainToken = new web3.eth.Contract(
@@ -1557,10 +1541,10 @@ describe("itemv2 projections ERC721Wrapper", () => {
     -Wrap the 721, the minted amount must be 0,6.
     */
     tokenHolder = "0x721931508df2764fd4f70c53da646cb8aed16ace";
-    await blockchainConnection.unlockAccounts(tokenHolder);
+    await approveHost(tokenHolder);    
     var tokenAddress = "0x57a204aa1042f6e66dd7730813f4024114d74f37";
 
-    var tokenList = ["889"];
+    var tokenList = ["1005"];
     var receivers = [accounts[1]];
 
     var mainToken = new web3.eth.Contract(

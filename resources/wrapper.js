@@ -81,31 +81,6 @@ async function mintItems721(tokenList, receivers, from, wrapper, nftTokenAddress
   var tx = await wrapper.methods.mintItems(itemList).send(blockchainConnection.getSendingOptions({from: from}))
 
   return tx;
-
-  // [
-  //   [utilities.voidEthereumAddress, "Item1", "I1", "uriItem1"],
-  //   collectionId,
-  //   0,
-  //   [accounts[1]],
-  //   [10000],
-  // ]
-  // var deployParam = abi.encode(
-  //   [
-  //     "bytes32",
-  //     "tuple(address,string,string,string)",
-  //     "tuple(tuple(address,string,string,string),bytes32,uint256,address[],uint256[])[]",
-  //     "bytes",
-  //   ],
-  //   [collectionId, header, item, utilities.voidBytes32]
-  // );
-  // collectionId = web3.eth.abi.encodeParameter("address", nftTokenAddress)
-
-  // var deployParam = abi.encode(
-  //   [
-  //     "tuple(tuple(address,string,string,string),bytes32,uint256,address[],uint256[])[]",
-  //   ],
-  //   [item]
-  // );
 }
 
 module.exports = {

@@ -6,6 +6,7 @@ pragma abicoder v2;
 import "./IERC20Wrapper.sol";
 import "../ItemProjection.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/draft-IERC20Permit.sol";
 import { Uint256Utilities, TransferUtilities } from "@ethereansos/swissknife/contracts/lib/GeneralUtilities.sol";
 
 contract ERC20Wrapper is IERC20Wrapper, ItemProjection {
@@ -17,34 +18,32 @@ contract ERC20Wrapper is IERC20Wrapper, ItemProjection {
     mapping(address => uint256) public override itemIdOf;
     mapping(address => uint256) private _tokenDecimals;
 
+    address[] private _tokenAddresses;
+    mapping(address => uint256) private _originalAmount;
+    mapping(address => address[]) private _accounts;
+    mapping(address => uint256[]) private _originalAmounts;
+
     constructor(bytes memory lazyInitData) ItemProjection(lazyInitData) {
     }
 
-    function mintItems(CreateItem[] calldata) virtual override(Item, ItemProjection) external returns(uint256[] memory) {
-        revert("You need to call proper mint function");
+    function mintItems(CreateItem[] calldata createItemsInput) virtual override(Item, ItemProjection) external returns(uint256[] memory) {
+        return mintItemsWithPermit(createItemsInput, new bytes[](0));
     }
 
-    function mint(address[] calldata tokenAddresses, uint256[][] calldata amounts, address[][] calldata receivers) override payable external returns(uint256[] memory itemIds) {
-        require(tokenAddresses.length == amounts.length && amounts.length == receivers.length, "length");
-        uint256[] memory loadedItemIds = new uint256[](tokenAddresses.length);
-        uint256 ethAmount = 0;
-        string memory uri = plainUri();
-        CreateItem[] memory createItems = new CreateItem[](tokenAddresses.length);
-        for(uint256 i = 0; i < tokenAddresses.length; i++) {
-            loadedItemIds[i] = itemIdOf[tokenAddresses[i]];
-            uint256 partialEthAmount = 0;
-            (createItems[i], partialEthAmount) = _buildCreateItem(tokenAddresses[i], amounts[i], receivers[i], loadedItemIds[i], uri);
-            ethAmount += partialEthAmount;
-        }
-        require(msg.value >= ethAmount, "Invalid ETH Value");
-        if(msg.value > ethAmount) {
-            address(0).safeTransfer(msg.sender, msg.value - ethAmount);
-        }
+    function mintItemsWithPermit(CreateItem[] calldata createItemsInput, bytes[] memory permitSignatures) public override payable returns(uint256[] memory itemIds) {
+        _prepareTempVars(createItemsInput, permitSignatures);
+        (CreateItem[] memory createItems, uint256[] memory loadedItemIds) = _buildCreateItems();
         itemIds = IItemMainInterface(mainInterface).mintItems(createItems);
         for(uint256 i = 0; i < itemIds.length; i++) {
             if(loadedItemIds[i] == 0) {
-                emit Token(tokenAddresses[i], loadedItemIds[i] = itemIdOf[tokenAddresses[i]] = itemIds[i]);
+                address tokenAddress = _tokenAddresses[i];
+                emit Token(tokenAddress, itemIdOf[tokenAddress] = itemIds[i]);
             }
+            delete _tokenAddresses[i];
+        }
+        itemIds = new uint256[](createItemsInput.length);
+        for(uint256 i = 0; i < createItemsInput.length; i++) {
+            itemIds[i] = itemIdOf[address(uint160(uint256(createItemsInput[i].collectionId)))];
         }
     }
 
@@ -78,29 +77,7 @@ contract ERC20Wrapper is IERC20Wrapper, ItemProjection {
         tokenAddress.safeTransfer(receiver, tokenAmount);
     }
 
-    function _buildCreateItem(address tokenAddress, uint256[] memory amounts, address[] memory receivers, uint256 itemId, string memory uri) private returns(CreateItem memory createItem, uint256 partialEthAmount) {
-        uint256 totalAmount = 0;
-        address[] memory realReceivers = new address[](amounts.length);
-        for(uint256 i = 0; i < amounts.length; i++) {
-            totalAmount += amounts[i];
-            if(tokenAddress == address(0)) {
-                partialEthAmount += amounts[i];
-            }
-            realReceivers[i] = (realReceivers[i] = i < receivers.length ? receivers[i] : msg.sender) != address(0) ? realReceivers[i] : msg.sender;
-        }
-        if(tokenAddress != address(0)) {
-            uint256 previousBalance = IERC20(tokenAddress).balanceOf(address(this));
-            tokenAddress.safeTransferFrom(msg.sender, address(this), totalAmount);
-            uint256 realAmount = IERC20(tokenAddress).balanceOf(address(this)) - previousBalance;
-            if(realAmount != totalAmount) {
-                require(amounts.length == 1, "Only single transfers allowed for this token");
-                amounts[0] = realAmount;
-            }
-        }
-        createItem = _buildContreteCreateItem(tokenAddress, amounts, realReceivers, itemId, uri);
-    }
-
-    function _buildContreteCreateItem(address tokenAddress, uint256[] memory amounts, address[] memory receivers, uint256 itemId, string memory uri) private returns(CreateItem memory) {
+    function _buildCreateItem(address tokenAddress, uint256[] memory amounts, address[] memory receivers, uint256 itemId, string memory uri) private returns(CreateItem memory) {
         string memory name = itemId != 0 ? "" : string(abi.encodePacked(tokenAddress == address(0) ? "Ethereum" : _stringValue(tokenAddress, "name()", "NAME()"), " item"));
         string memory symbol = itemId != 0 ? "" : string(abi.encodePacked("i", tokenAddress == address(0) ? "ETH" : _stringValue(tokenAddress, "symbol()", "SYMBOL()")));
         uint256 tokenDecimals = (_tokenDecimals[tokenAddress] = itemId != 0 ? _tokenDecimals[tokenAddress] : tokenAddress == address(0) ? 18 : IERC20Metadata(tokenAddress).decimals());
@@ -108,6 +85,61 @@ contract ERC20Wrapper is IERC20Wrapper, ItemProjection {
             amounts[i] = (amounts[i] * (10**(18 - tokenDecimals)));
         }
         return CreateItem(Header(address(0), name, symbol, uri), collectionId, itemId, receivers, amounts);
+    }
+
+    function _prepareTempVars(CreateItem[] calldata createItemsInput, bytes[] memory permitSignatures) private {
+        for(uint256 i = 0; i < createItemsInput.length; i++) {
+            address tokenAddress = address(uint160(uint256(createItemsInput[i].collectionId)));
+            uint256 originalAmount = 0;
+            address[] memory accounts = createItemsInput[i].accounts.length == 0 ? msg.sender.asSingletonArray() : createItemsInput[i].accounts;
+            uint256[] memory amounts = createItemsInput[i].amounts;
+            require(accounts.length == amounts.length, "length");
+            for(uint256 z = 0; z < amounts.length; z++) {
+                require(amounts[z] > 0, "zero amount");
+                require(accounts[z] != address(0), "zero address");
+                _originalAmounts[tokenAddress].push(amounts[z]);
+                _accounts[tokenAddress].push(accounts[z]);
+                originalAmount += amounts[z];
+            }
+            if((_originalAmount[tokenAddress] += originalAmount) == originalAmount) {
+                _tokenAddresses.push(tokenAddress);
+            }
+            _tryPermit(tokenAddress, originalAmount, i < permitSignatures.length ? permitSignatures[i] : bytes(""));
+        }
+    }
+
+    function _tryPermit(address erc20TokenAddress, uint256 amount, bytes memory permitSignature) private {
+        if(erc20TokenAddress == address(0) || permitSignature.length == 0) {
+            return;
+        }
+        (uint8 v, bytes32 r, bytes32 s, uint256 deadline) = abi.decode(permitSignature, (uint8, bytes32, bytes32, uint256));
+        return IERC20Permit(erc20TokenAddress).permit(msg.sender, address(this), amount, deadline, v, r, s);
+    }
+
+    function _buildCreateItems() private returns(CreateItem[] memory createItems, uint256[] memory loadedItemIds) {
+        createItems = new CreateItem[](_tokenAddresses.length);
+        loadedItemIds = new uint256[](_tokenAddresses.length);
+        string memory uri = plainUri();
+        for(uint256 i = 0; i < _tokenAddresses.length; i++) {
+            address tokenAddress = _tokenAddresses[i];
+            uint256 originalAmount = _originalAmount[tokenAddress];
+            uint256[] memory amounts = _originalAmounts[tokenAddress]; 
+            if(tokenAddress == address(0)) {
+                require(originalAmount == msg.value, "ETH");
+            } else {
+                uint256 previousBalance = IERC20(tokenAddress).balanceOf(address(this));
+                tokenAddress.safeTransferFrom(msg.sender, address(this), originalAmount);
+                uint256 realAmount = IERC20(tokenAddress).balanceOf(address(this)) - previousBalance;
+                if(realAmount != originalAmount) {
+                    require(amounts.length == 1, "Only single transfers allowed for this token");
+                    amounts[0] = realAmount;
+                }
+            }
+            createItems[i] = _buildCreateItem(tokenAddress, amounts, _accounts[tokenAddress], loadedItemIds[i] = itemIdOf[tokenAddress], uri);
+            delete _originalAmount[tokenAddress];
+            delete _accounts[tokenAddress];
+            delete _originalAmounts[tokenAddress];
+        }
     }
 
     function _stringValue(address erc20TokenAddress, string memory firstTry, string memory secondTry) private view returns(string memory) {

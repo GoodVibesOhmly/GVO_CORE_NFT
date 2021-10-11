@@ -25,17 +25,17 @@ contract ERC721Wrapper is IERC721Wrapper, ItemProjection, IERC721Receiver {
 
     function mintItems(CreateItem[] calldata createItemsInput) virtual override(Item, ItemProjection) external returns(uint256[] memory itemIds) {
         CreateItem[] memory createItems = new CreateItem[](createItemsInput.length);
-        uint256[] memory preloadedTokenIds = new uint256[](createItemsInput.length);
+        uint256[] memory loadedItemIds = new uint256[](createItemsInput.length);
         string memory uri = plainUri();
         for(uint256  i = 0; i < createItemsInput.length; i++) {
             address tokenAddress = address(uint160(uint256(createItemsInput[i].collectionId)));
             uint256 tokenId = createItemsInput[i].id;
             IERC721(tokenAddress).transferFrom(msg.sender, address(this), tokenId);
-            createItems[i] = _buildCreateItem(tokenAddress, createItemsInput[i].accounts, createItemsInput[i].amounts, preloadedTokenIds[i] = itemIdOf(tokenAddress, tokenId), uri);
+            createItems[i] = _buildCreateItem(tokenAddress, createItemsInput[i].accounts, createItemsInput[i].amounts, loadedItemIds[i] = itemIdOf(tokenAddress, tokenId), uri);
         }
         itemIds = IItemMainInterface(mainInterface).mintItems(createItems);
         for(uint256 i = 0; i < createItemsInput.length; i++) {
-            if(preloadedTokenIds[i] == 0) {
+            if(loadedItemIds[i] == 0) {
                 address tokenAddress = address(uint160(uint256(createItemsInput[i].collectionId)));
                 uint256 tokenId = createItemsInput[i].id;
                 emit Token(tokenAddress, tokenId, _itemIdOf[_toItemKey(tokenAddress, tokenId)] = itemIds[i]);

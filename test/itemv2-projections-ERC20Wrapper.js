@@ -194,7 +194,16 @@ describe("itemv2 projections ERC20Wrapper", () => {
       )
       .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
 
-    var res = await wrapperResource.mintErc20Wrapper(
+    var res = await wrapperResource.revertMintErc20(
+      wrapper,
+      tokenAddress,
+      totalAmounts,
+      receivers,
+      accounts[1],
+      ethAmount
+    );
+
+    var res = await wrapperResource.mintErc20(
       wrapper,
       tokenAddress,
       totalAmounts,
@@ -280,7 +289,7 @@ describe("itemv2 projections ERC20Wrapper", () => {
       )
       .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
 
-    var res = await wrapperResource.mintErc20Wrapper(
+    var res = await wrapperResource.mintErc20(
       wrapper,
       tokenAddress,
       totalAmounts,
@@ -340,13 +349,13 @@ describe("itemv2 projections ERC20Wrapper", () => {
       )
       .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
 
-    var res = await wrapperResource.mintErc20Wrapper(
+    var res = await wrapperResource.mintErc20(
       wrapper,
       tokenAddress,
       totalAmounts,
       receivers,
       accounts[1],
-      prev
+      prev.div(2)
     );
 
     var osItemId = res["itemIds"];
@@ -422,7 +431,7 @@ describe("itemv2 projections ERC20Wrapper", () => {
       )
       .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
 
-    var res = await wrapperResource.mintErc20Wrapper(
+    var res = await wrapperResource.mintErc20(
       wrapper,
       tokenAddress,
       totalAmounts,
@@ -475,13 +484,14 @@ describe("itemv2 projections ERC20Wrapper", () => {
       )
       .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
 
-    var itemIds = await wrapperResource.revertMintErc20Wrapper(
+    await wrapperResource.revertMintErc20Wrapper(
       wrapper,
       tokenAddress,
       totalAmounts,
       receivers,
-      accounts[1]
-    );
+      accounts[1],
+      fegAmounts
+    )
 
     totalAmounts = [[fegAmounts]];
     receivers = [[accounts[2]]];
@@ -493,7 +503,7 @@ describe("itemv2 projections ERC20Wrapper", () => {
       )
       .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
 
-    var res = await wrapperResource.mintErc20Wrapper(
+    var res = await wrapperResource.mintErc20(
       wrapper,
       tokenAddress,
       totalAmounts,
@@ -1251,7 +1261,7 @@ describe("itemv2 projections ERC20Wrapper", () => {
       )
       .send(blockchainConnection.getSendingOptions({ from: accounts[11] }));
 
-    var res = await wrapperResource.mintErc20Wrapper(
+    var res = await wrapperResource.mintErc20(
       wrapper,
       tokenAddress,
       totalAmounts,
@@ -1327,7 +1337,7 @@ describe("itemv2 projections ERC20Wrapper", () => {
       )
       .send(blockchainConnection.getSendingOptions({ from: accounts[11] }));
 
-    var res = await wrapperResource.mintErc20Wrapper(
+    var res = await wrapperResource.mintErc20(
       wrapper,
       tokenAddress,
       totalAmounts,

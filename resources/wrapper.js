@@ -1,3 +1,6 @@
+const blockchainConnection = require("../util/blockchainConnection");
+const utilities = require("../util/utilities");
+
 async function mintErc20Wrapper(wrapper, token, tokenAmount, receiver, fromAccount, ethAmount = 0){
     var tx = await wrapper.methods
       .mint(
@@ -53,9 +56,62 @@ async function assertCheckErc20ItemBalance(wrapper, receivers, itemIds, totalAmo
     }));
 }
 
+async function mintItems721(tokenList, receivers, from, wrapper, nftTokenAddress) {
+  var itemList = []
+
+  await Promise.all(
+    receivers.map(async(address, index) => 
+      itemList.push(
+        {
+          header: {
+            host: utilities.voidEthereumAddress,
+            name: "",
+            symbol: "",
+            uri: "",
+          },
+          collectionId: web3.eth.abi.encodeParameter("address", nftTokenAddress),
+          id: tokenList[index],
+          accounts: [address == utilities.voidEthereumAddress ? from : address],
+          amounts: ["1000000000000000000"],
+        })
+    )
+  )
+  console.log(itemList)
+
+  var tx = await wrapper.methods.mintItems(itemList).send(blockchainConnection.getSendingOptions({from: from}))
+
+  return tx;
+
+  // [
+  //   [utilities.voidEthereumAddress, "Item1", "I1", "uriItem1"],
+  //   collectionId,
+  //   0,
+  //   [accounts[1]],
+  //   [10000],
+  // ]
+  // var deployParam = abi.encode(
+  //   [
+  //     "bytes32",
+  //     "tuple(address,string,string,string)",
+  //     "tuple(tuple(address,string,string,string),bytes32,uint256,address[],uint256[])[]",
+  //     "bytes",
+  //   ],
+  //   [collectionId, header, item, utilities.voidBytes32]
+  // );
+  // collectionId = web3.eth.abi.encodeParameter("address", nftTokenAddress)
+
+  // var deployParam = abi.encode(
+  //   [
+  //     "tuple(tuple(address,string,string,string),bytes32,uint256,address[],uint256[])[]",
+  //   ],
+  //   [item]
+  // );
+}
+
 module.exports = {
     mintErc20Wrapper,
     assertDecimals,
     assertCheckErc20ItemBalance,
     revertMintErc20Wrapper,
+    mintItems721
   };

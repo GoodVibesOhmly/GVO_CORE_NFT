@@ -2,6 +2,7 @@ var utilities = require("../util/utilities");
 var itemsv2 = require("../resources/itemsv2");
 var itemProjection = require("../resources/itemProjection");
 const blockchainConnection = require("../util/blockchainConnection");
+var wrapperResource = require("../resources/wrapper");
 describe("itemv2 projections ERC721Wrapper", () => {
   var tokenHolder = "0xcfB586d08633fC36953be8083B63a7d96D50265B";
   var wrapper;
@@ -279,15 +280,17 @@ describe("itemv2 projections ERC721Wrapper", () => {
       })
     );
 
-    var tx = await wrapper.methods
-      .mint(
-        Array(tokenList.length).fill(
-          knowledgeBase.cardTokenAddress
-        ),
-        tokenList,
-        receivers
-      )
-      .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
+    // var tx = await wrapper.methods
+    //   .mint(
+    //     Array(tokenList.length).fill(
+    //       knowledgeBase.cardTokenAddress
+    //     ),
+    //     tokenList,
+    //     receivers
+    //   )
+    //   .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
+
+    var tx = await wrapperResource.mintItems721(tokenList, receivers, accounts[1], wrapper, mainToken.options.address)
 
       await Promise.all(
         receivers.map(async (address, index) => {
@@ -647,9 +650,11 @@ describe("itemv2 projections ERC721Wrapper", () => {
       })
     );
 
-    var tx = await wrapper.methods
-      .mint(Array(tokenList.length).fill(tokenAddress), tokenList, receivers)
-      .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
+    // var tx = await wrapper.methods
+    //   .mint(Array(tokenList.length).fill(tokenAddress), tokenList, receivers)
+    //   .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
+    
+    var tx = await wrapperResource.mintItems721(tokenList, receivers, accounts[1], wrapper, mainToken.options.address)
       
     var logs = (await web3.eth.getTransactionReceipt(tx.transactionHash)).logs;
 
@@ -707,15 +712,17 @@ describe("itemv2 projections ERC721Wrapper", () => {
       .approve(wrapper.options.address, tokenList[0])
       .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
 
-    var tx = await wrapper.methods
-      .mint(
-        Array(tokenList.length).fill(
-          "0x57a204aa1042f6e66dd7730813f4024114d74f37"
-        ),
-        tokenList,
-        receivers
-      )
-      .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
+    // var tx = await wrapper.methods
+    //   .mint(
+    //     Array(tokenList.length).fill(
+    //       "0x57a204aa1042f6e66dd7730813f4024114d74f37"
+    //     ),
+    //     tokenList,
+    //     receivers
+    //   )
+    //   .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
+
+      var tx = await wrapperResource.mintItems721(tokenList, receivers, accounts[1], wrapper, mainToken.options.address)
       
     assert.equal(await mainToken.methods.balanceOf(accounts[1]).call(), "0");
 
@@ -767,9 +774,10 @@ describe("itemv2 projections ERC721Wrapper", () => {
 
     assert.equal(await mainToken.methods.balanceOf(accounts[1]).call(), "1");
 
-    var tx = await wrapper.methods
-      .mint(Array(tokenList.length).fill(tokenAddress), tokenList, receivers)
-      .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
+    // var tx = await wrapper.methods
+    //   .mint(Array(tokenList.length).fill(tokenAddress), tokenList, receivers)
+    //   .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
+    var tx = await wrapperResource.mintItems721(tokenList, receivers, accounts[1], wrapper, mainToken.options.address)
 
     var logs = (await web3.eth.getTransactionReceipt(tx.transactionHash)).logs;
 
@@ -871,9 +879,11 @@ describe("itemv2 projections ERC721Wrapper", () => {
 
     assert.equal(await mainToken.methods.balanceOf(accounts[1]).call(), "1");
 
-    var tx = await wrapper.methods
-      .mint(Array(tokenList.length).fill(tokenAddress), tokenList, receivers)
-      .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
+    // var tx = await wrapper.methods
+    //   .mint(Array(tokenList.length).fill(tokenAddress), tokenList, receivers)
+    //   .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
+      var tx = await wrapperResource.mintItems721(tokenList, receivers, accounts[1], wrapper, mainToken.options.address)
+
 
     var logs = (await web3.eth.getTransactionReceipt(tx.transactionHash)).logs;
 
@@ -933,15 +943,18 @@ describe("itemv2 projections ERC721Wrapper", () => {
       .approve(wrapper.options.address, tokenList[0])
       .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
 
-    var tx = await wrapper.methods
-      .mint(
-        Array(tokenList.length).fill(
-          "0x57a204aa1042f6e66dd7730813f4024114d74f37"
-        ),
-        tokenList,
-        receivers
-      )
-      .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
+    // var tx = await wrapper.methods
+    //   .mint(
+    //     Array(tokenList.length).fill(
+    //       "0x57a204aa1042f6e66dd7730813f4024114d74f37"
+    //     ),
+    //     tokenList,
+    //     receivers
+    //   )
+    //   .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
+
+    var tx = await wrapperResource.mintItems721(tokenList, receivers, accounts[1], wrapper, mainToken.options.address)
+
 
     assert.equal(
       await wrapper.methods.balanceOf(accounts[1], itemIds[0]).call(),
@@ -996,9 +1009,11 @@ describe("itemv2 projections ERC721Wrapper", () => {
 
     assert.equal(await mainToken.methods.balanceOf(accounts[1]).call(), "1");
 
-    var tx = await wrapper.methods
-      .mint(Array(tokenList.length).fill(tokenAddress), tokenList, receivers)
-      .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
+    // var tx = await wrapper.methods
+    //   .mint(Array(tokenList.length).fill(tokenAddress), tokenList, receivers)
+    //   .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
+    var tx = await wrapperResource.mintItems721(tokenList, receivers, accounts[1], wrapper, mainToken.options.address)
+
 
     var logs = (await web3.eth.getTransactionReceipt(tx.transactionHash)).logs;
 
@@ -1120,9 +1135,12 @@ describe("itemv2 projections ERC721Wrapper", () => {
 
     assert.equal(await mainToken.methods.balanceOf(accounts[1]).call(), "1");
 
-    var tx = await wrapper.methods
-      .mint(Array(tokenList.length).fill(tokenAddress), tokenList, receivers)
-      .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
+    // var tx = await wrapper.methods
+    //   .mint(Array(tokenList.length).fill(tokenAddress), tokenList, receivers)
+    //   .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
+
+    var tx = await wrapperResource.mintItems721(tokenList, receivers, accounts[1], wrapper, mainToken.options.address)
+
 
     var logs = (await web3.eth.getTransactionReceipt(tx.transactionHash)).logs;
 
@@ -1186,15 +1204,18 @@ describe("itemv2 projections ERC721Wrapper", () => {
       .approve(wrapper.options.address, tokenList[0])
       .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
 
-    var tx = await wrapper.methods
-      .mint(
-        Array(tokenList.length).fill(
-          "0x57a204aa1042f6e66dd7730813f4024114d74f37"
-        ),
-        tokenList,
-        receivers
-      )
-      .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
+    // var tx = await wrapper.methods
+    //   .mint(
+    //     Array(tokenList.length).fill(
+    //       "0x57a204aa1042f6e66dd7730813f4024114d74f37"
+    //     ),
+    //     tokenList,
+    //     receivers
+    //   )
+    //   .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
+
+    var tx = await wrapperResource.mintItems721(tokenList, receivers, accounts[1], wrapper, mainToken.options.address)
+
 
     assert.equal(
       await wrapper.methods.balanceOf(accounts[1], itemIds[0]).call(),
@@ -1246,9 +1267,12 @@ describe("itemv2 projections ERC721Wrapper", () => {
 
     assert.equal(await mainToken.methods.balanceOf(accounts[1]).call(), "1");
 
-    var tx = await wrapper.methods
-      .mint(Array(tokenList.length).fill(tokenAddress), tokenList, receivers)
-      .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
+    // var tx = await wrapper.methods
+    //   .mint(Array(tokenList.length).fill(tokenAddress), tokenList, receivers)
+    //   .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
+
+    var tx = await wrapperResource.mintItems721(tokenList, receivers, accounts[1], wrapper, mainToken.options.address)
+
 
     var logs = (await web3.eth.getTransactionReceipt(tx.transactionHash)).logs;
 
@@ -1299,15 +1323,17 @@ describe("itemv2 projections ERC721Wrapper", () => {
 
     assert.equal(await mainToken.methods.balanceOf(accounts[1]).call(), "1");
 
-    var tx = await wrapper.methods
-      .mint(
-        Array(tokenList.length).fill(
-          "0x57a204aa1042f6e66dd7730813f4024114d74f37"
-        ),
-        tokenList,
-        receivers
-      )
-      .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
+    // var tx = await wrapper.methods
+    //   .mint(
+    //     Array(tokenList.length).fill(
+    //       "0x57a204aa1042f6e66dd7730813f4024114d74f37"
+    //     ),
+    //     tokenList,
+    //     receivers
+    //   )
+    //   .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
+    var tx = await wrapperResource.mintItems721(tokenList, receivers, accounts[1], wrapper, mainToken.options.address)
+
 
     assert.equal(
       await wrapper.methods.balanceOf(accounts[1], itemIds[0]).call(),
@@ -1358,9 +1384,12 @@ describe("itemv2 projections ERC721Wrapper", () => {
 
     assert.equal(await mainToken.methods.balanceOf(accounts[1]).call(), "1");
 
-    var tx = await wrapper.methods
-      .mint(Array(tokenList.length).fill(tokenAddress), tokenList, receivers)
-      .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
+    // var tx = await wrapper.methods
+    //   .mint(Array(tokenList.length).fill(tokenAddress), tokenList, receivers)
+    //   .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
+
+    var tx = await wrapperResource.mintItems721(tokenList, receivers, accounts[1], wrapper, mainToken.options.address)
+
 
     var logs = (await web3.eth.getTransactionReceipt(tx.transactionHash)).logs;
 
@@ -1449,9 +1478,12 @@ describe("itemv2 projections ERC721Wrapper", () => {
 
     assert.equal(await mainToken.methods.balanceOf(accounts[1]).call(), "1");
 
-    var tx = await wrapper.methods
-      .mint(Array(tokenList.length).fill(tokenAddress), tokenList, receivers)
-      .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
+    // var tx = await wrapper.methods
+    //   .mint(Array(tokenList.length).fill(tokenAddress), tokenList, receivers)
+    //   .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
+
+    var tx = await wrapperResource.mintItems721(tokenList, receivers, accounts[1], wrapper, mainToken.options.address)
+
 
     var logs = (await web3.eth.getTransactionReceipt(tx.transactionHash)).logs;
 
@@ -1504,15 +1536,18 @@ describe("itemv2 projections ERC721Wrapper", () => {
 
     assert.equal(await mainToken.methods.balanceOf(accounts[1]).call(), "1");
 
-    var tx = await wrapper.methods
-      .mint(
-        Array(tokenList.length).fill(
-          "0x57a204aa1042f6e66dd7730813f4024114d74f37"
-        ),
-        tokenList,
-        receivers
-      )
-      .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
+    // var tx = await wrapper.methods
+    //   .mint(
+    //     Array(tokenList.length).fill(
+    //       "0x57a204aa1042f6e66dd7730813f4024114d74f37"
+    //     ),
+    //     tokenList,
+    //     receivers
+    //   )
+    //   .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
+
+    var tx = await wrapperResource.mintItems721(tokenList, receivers, accounts[1], wrapper, mainToken.options.address)
+
 
     assert.equal(
       await wrapper.methods.balanceOf(accounts[1], itemIds[0]).call(),
@@ -1565,9 +1600,12 @@ describe("itemv2 projections ERC721Wrapper", () => {
 
     assert.equal(await mainToken.methods.balanceOf(accounts[1]).call(), "1");
 
-    var tx = await wrapper.methods
-      .mint(Array(tokenList.length).fill(tokenAddress), tokenList, receivers)
-      .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
+    // var tx = await wrapper.methods
+    //   .mint(Array(tokenList.length).fill(tokenAddress), tokenList, receivers)
+    //   .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
+
+    var tx = await wrapperResource.mintItems721(tokenList, receivers, accounts[1], wrapper, mainToken.options.address)
+
 
     var logs = (await web3.eth.getTransactionReceipt(tx.transactionHash)).logs;
 
@@ -1631,15 +1669,18 @@ describe("itemv2 projections ERC721Wrapper", () => {
     assert.equal(await mainToken.methods.balanceOf(accounts[2]).call(), "1");
     assert.equal(await mainToken.methods.balanceOf(accounts[1]).call(), "0");
 
-    var tx = await wrapper.methods
-      .mint(
-        Array(tokenList.length).fill(
-          "0x57a204aa1042f6e66dd7730813f4024114d74f37"
-        ),
-        tokenList,
-        [accounts[2]]
-      )
-      .send(blockchainConnection.getSendingOptions({ from: accounts[2] }));
+    // var tx = await wrapper.methods
+    //   .mint(
+    //     Array(tokenList.length).fill(
+    //       "0x57a204aa1042f6e66dd7730813f4024114d74f37"
+    //     ),
+    //     tokenList,
+    //     [accounts[2]]
+    //   )
+    //   .send(blockchainConnection.getSendingOptions({ from: accounts[2] }));
+
+    var tx = await wrapperResource.mintItems721(tokenList, receivers, accounts[1], wrapper, mainToken.options.address)
+
 
     assert.equal(
       await wrapper.methods.balanceOf(accounts[2], itemIds[0]).call(),

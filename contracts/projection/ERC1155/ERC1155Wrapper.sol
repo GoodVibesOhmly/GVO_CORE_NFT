@@ -52,15 +52,32 @@ contract ERC1155Wrapper is IERC1155Wrapper, ItemProjection, IERC1155Receiver {
         uint256[] calldata amounts,
         bytes calldata data
     ) override external returns (bytes4) {
-        bytes[] memory dataArray = abi.decode(data, (bytes[]));
-        for(uint256  i = 0 ; i < tokenIds.length; i++) {
-            (uint256[] memory values, address[] memory receivers) = abi.decode(dataArray[i], (uint256[], address[]));
-            uint256 itemId = itemIdOf(msg.sender, tokenIds[i]);
-            (CreateItem[] memory createItems, uint256 tokenDecimals) = _buildCreateItems(from, msg.sender, tokenIds[i], amounts[i], values, receivers, itemId);
-            _trySaveCreatedItemAndEmitTokenEvent(itemId, tokenIds[i], createItems, tokenDecimals);
-        }
-        return this.onERC1155BatchReceived.selector;
+        // bytes[] memory dataArray = abi.decode(data, (bytes[]));
+        // for(uint256  i = 0 ; i < tokenIds.length; i++) {
+        //     (uint256[] memory values, address[] memory receivers) = abi.decode(dataArray[i], (uint256[], address[]));
+        //     uint256 itemId = itemIdOf(msg.sender, tokenIds[i]);
+        //     (CreateItem[] memory createItems, uint256 tokenDecimals) = _buildCreateItems(from, msg.sender, tokenIds[i], amounts[i], values, receivers, itemId);
+        //     _trySaveCreatedItemAndEmitTokenEvent(itemId, tokenIds[i], createItems, tokenDecimals);
+        // }
+        // return this.onERC1155BatchReceived.selector;
     }
+
+    // function onERC1155BatchReceived(
+    //     address,
+    //     address from,
+    //     uint256[] calldata tokenIds,
+    //     uint256[] calldata amounts,
+    //     bytes calldata data
+    // ) override external returns (bytes4) {
+    //     bytes[] memory dataArray = abi.decode(data, (bytes[]));
+    //     for(uint256  i = 0 ; i < tokenIds.length; i++) {
+    //         (uint256[] memory values, address[] memory receivers) = abi.decode(dataArray[i], (uint256[], address[]));
+    //         uint256 itemId = itemIdOf(msg.sender, tokenIds[i]);
+    //         (CreateItem[] memory createItems, uint256 tokenDecimals) = _buildCreateItems(from, msg.sender, tokenIds[i], amounts[i], values, receivers, itemId);
+    //         _trySaveCreatedItemAndEmitTokenEvent(itemId, tokenIds[i], createItems, tokenDecimals);
+    //     }
+    //     return this.onERC1155BatchReceived.selector;
+    // }
 
     function _trySaveCreatedItemAndEmitTokenEvent(uint256 itemId, uint256 tokenId, CreateItem[] memory createItems, uint256 tokenDecimals) internal{
         uint256 createdItemId = IItemMainInterface(mainInterface).mintItems(createItems)[0];
@@ -71,19 +88,19 @@ contract ERC1155Wrapper is IERC1155Wrapper, ItemProjection, IERC1155Receiver {
         emit Token(msg.sender, tokenId, itemId);
     }
 
-    function burn(address account, uint256 itemId, uint256 amount, bytes memory data) override(Item, ItemProjection) public {
-        IItemMainInterface(mainInterface).mintTransferOrBurn(false, abi.encode(msg.sender, account, address(0), itemId, _unwrap(account, itemId, amount, data)));
-        emit TransferSingle(msg.sender, account, address(0), itemId, amount);
-    }
+    // function burn(address account, uint256 itemId, uint256 amount, bytes memory data) override(Item, ItemProjection) public {
+    //     IItemMainInterface(mainInterface).mintTransferOrBurn(false, abi.encode(msg.sender, account, address(0), itemId, _unwrap(account, itemId, amount, data)));
+    //     emit TransferSingle(msg.sender, account, address(0), itemId, amount);
+    // }
 
-    function burnBatch(address account, uint256[] calldata itemIds, uint256[] calldata amounts, bytes memory data) override(Item, ItemProjection) public {
-        uint256[] memory interoperableInterfaceAmounts = new uint256[](amounts.length);
-        bytes[] memory datas = abi.decode(data, (bytes[]));
-        for(uint256 i = 0; i < itemIds.length; i++) {
-            IItemMainInterface(mainInterface).mintTransferOrBurn(false, abi.encode(abi.encode(msg.sender, account, address(0), itemIds[i], interoperableInterfaceAmounts[i] = _unwrap(account, itemIds[i], amounts[i], datas[i])).asSingletonArray()));
-        }
-        emit TransferBatch(msg.sender, account, address(0), itemIds, interoperableInterfaceAmounts);
-    }
+    // function burnBatch(address account, uint256[] calldata itemIds, uint256[] calldata amounts, bytes memory data) override(Item, ItemProjection) public {
+    //     uint256[] memory interoperableInterfaceAmounts = new uint256[](amounts.length);
+    //     bytes[] memory datas = abi.decode(data, (bytes[]));
+    //     for(uint256 i = 0; i < itemIds.length; i++) {
+    //         IItemMainInterface(mainInterface).mintTransferOrBurn(false, abi.encode(abi.encode(msg.sender, account, address(0), itemIds[i], interoperableInterfaceAmounts[i] = _unwrap(account, itemIds[i], amounts[i], datas[i])).asSingletonArray()));
+    //     }
+    //     emit TransferBatch(msg.sender, account, address(0), itemIds, interoperableInterfaceAmounts);
+    // }
 
     function _buildCreateItems(address from, address tokenAddress, uint256 tokenId, uint256 amount, uint256[] memory values, address[] memory receivers, uint256 itemId) private view returns(CreateItem[] memory createItems, uint256 tokenDecimals) {
         uint256 totalAmount = 0;

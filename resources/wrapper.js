@@ -56,7 +56,7 @@ async function assertCheckErc20ItemBalance(wrapper, receivers, itemIds, totalAmo
     }));
 }
 
-async function mintItems721(tokenList, receivers, from, wrapper, nftTokenAddress) {
+async function mintItems721(tokenList, receivers, from, wrapper, nftTokenAddress, amount = "1000000000000000000") {
   var itemList = []
 
   await Promise.all(
@@ -72,7 +72,7 @@ async function mintItems721(tokenList, receivers, from, wrapper, nftTokenAddress
           collectionId: web3.eth.abi.encodeParameter("address", nftTokenAddress),
           id: tokenList[index],
           accounts: [address == utilities.voidEthereumAddress ? from : address],
-          amounts: ["1000000000000000000"],
+          amounts: [amount],
         })
     )
   )

@@ -38,9 +38,8 @@ contract ERC1155Wrapper is IERC1155Wrapper, ItemProjection, IERC1155Receiver {
         uint256 amount,
         bytes calldata data
     ) override external returns (bytes4) {
-        (uint256[] memory values, address[] memory receivers) = abi.decode(data, (uint256[], address[]));
         uint256 itemId = itemIdOf(msg.sender, tokenId);
-        (CreateItem[] memory createItems, uint256 tokenDecimals) = _buildCreateItems(from, msg.sender, tokenId, amount, values, receivers, itemId);
+        (CreateItem[] memory createItems, uint256 tokenDecimals) = _buildCreateItems(from, msg.sender, tokenId, amount, data, itemId);
         _trySaveCreatedItemAndEmitTokenEvent(itemId, tokenId, createItems, tokenDecimals);
         return this.onERC1155Received.selector;
     }
@@ -50,13 +49,13 @@ contract ERC1155Wrapper is IERC1155Wrapper, ItemProjection, IERC1155Receiver {
         address from,
         uint256[] calldata tokenIds,
         uint256[] calldata amounts,
-        bytes calldata data
+        bytes memory data
     ) override external returns (bytes4) {
         bytes[] memory dataArray = abi.decode(data, (bytes[]));
         for(uint256  i = 0 ; i < tokenIds.length; i++) {
-            (uint256[] memory values, address[] memory receivers) = abi.decode(dataArray[i], (uint256[], address[]));
-            uint256 itemId = itemIdOf(msg.sender, tokenIds[i]);
-            (CreateItem[] memory createItems, uint256 tokenDecimals) = _buildCreateItems(from, msg.sender, tokenIds[i], amounts[i], values, receivers, itemId);
+            uint256 tokenId = tokenIds[i];
+            uint256 itemId = itemIdOf(msg.sender, tokenId);
+            (CreateItem[] memory createItems, uint256 tokenDecimals) = _buildCreateItems(from, msg.sender, tokenId, amounts[i], dataArray[i], itemId);
             _trySaveCreatedItemAndEmitTokenEvent(itemId, tokenIds[i], createItems, tokenDecimals);
         }
         return this.onERC1155BatchReceived.selector;
@@ -80,12 +79,14 @@ contract ERC1155Wrapper is IERC1155Wrapper, ItemProjection, IERC1155Receiver {
         uint256[] memory interoperableInterfaceAmounts = new uint256[](amounts.length);
         bytes[] memory datas = abi.decode(data, (bytes[]));
         for(uint256 i = 0; i < itemIds.length; i++) {
-            IItemMainInterface(mainInterface).mintTransferOrBurn(false, abi.encode(abi.encode(msg.sender, account, address(0), itemIds[i], interoperableInterfaceAmounts[i] = _unwrap(account, itemIds[i], amounts[i], datas[i])).asSingletonArray()));
+            interoperableInterfaceAmounts[i] = _unwrap(account, itemIds[i], amounts[i], datas[i]);
+            IItemMainInterface(mainInterface).mintTransferOrBurn(false, abi.encode(abi.encode(msg.sender, account, address(0), itemIds[i], interoperableInterfaceAmounts[i]).asSingletonArray()));
         }
         emit TransferBatch(msg.sender, account, address(0), itemIds, interoperableInterfaceAmounts);
     }
 
-    function _buildCreateItems(address from, address tokenAddress, uint256 tokenId, uint256 amount, uint256[] memory values, address[] memory receivers, uint256 itemId) private view returns(CreateItem[] memory createItems, uint256 tokenDecimals) {
+    function _buildCreateItems(address from, address tokenAddress, uint256 tokenId, uint256 amount, bytes memory data, uint256 itemId) private view returns(CreateItem[] memory createItems, uint256 tokenDecimals) {
+        (uint256[] memory values, address[] memory receivers) = abi.decode(data, (uint256[], address[]));
         uint256 totalAmount = 0;
         tokenDecimals = itemId != 0 ? _tokenDecimals[itemId] : _safeDecimals(tokenAddress, tokenId);
         address[] memory realReceivers = new address[](values.length);

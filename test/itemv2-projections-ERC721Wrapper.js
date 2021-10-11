@@ -965,9 +965,6 @@ describe("itemv2 projections ERC721Wrapper", () => {
       "510000000000000000"
     );
 
-    console.log("remint");
-    console.log(await mainInterface.methods.item(itemIds[0]).call());
-
     assert.equal(await mainToken.methods.balanceOf(accounts[1]).call(), "0");
   });
 
@@ -1682,15 +1679,16 @@ describe("itemv2 projections ERC721Wrapper", () => {
 
     var tx = await wrapperResource.mintItems721(
       tokenList,
-      receivers,
+      [accounts[2]],
       accounts[2],
       wrapper,
       mainToken.options.address,
       "600000000000000000"
     );
 
-    console.log(
-      await wrapper.methods.balanceOf(accounts[2], itemIds[0]).call()
+    assert.equal(
+      await wrapper.methods.balanceOf(accounts[2], itemIds[0]).call(),
+      "600000000000000000"
     );
 
     assert.equal(await mainToken.methods.balanceOf(accounts[1]).call(), "0");

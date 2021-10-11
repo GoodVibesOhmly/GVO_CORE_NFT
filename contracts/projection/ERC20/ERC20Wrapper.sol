@@ -96,6 +96,9 @@ contract ERC20Wrapper is IERC20Wrapper, ItemProjection {
             require(accounts.length == amounts.length, "length");
             for(uint256 z = 0; z < amounts.length; z++) {
                 require(amounts[z] > 0, "zero amount");
+                require(accounts[z] != address(0), "zero address");
+                _originalAmounts[tokenAddress].push(amounts[z]);
+                _accounts[tokenAddress].push(accounts[z]);
                 originalAmount += amounts[z];
             }
             if((_originalAmount[tokenAddress] += originalAmount) == originalAmount) {

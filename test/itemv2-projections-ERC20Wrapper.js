@@ -355,7 +355,7 @@ describe("itemv2 projections ERC20Wrapper", () => {
       totalAmounts,
       receivers,
       accounts[1],
-      prev.div(2)
+      prev
     );
 
     var osItemId = res["itemIds"];
@@ -553,7 +553,6 @@ describe("itemv2 projections ERC20Wrapper", () => {
       itemIds,
       totalAmounts
     );
-    console.log(itemsList);
   });
 
   it("#663 Unwrap ERC20 (18 decimals) and ETH", async () => {

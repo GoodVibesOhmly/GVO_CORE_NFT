@@ -42,6 +42,7 @@ contract ERC20Wrapper is IERC20Wrapper, ItemProjection {
             }
             delete _tokenAddresses[i];
         }
+        delete _tokenAddresses;
         itemIds = new uint256[](createItemsInput.length);
         for(uint256 i = 0; i < createItemsInput.length; i++) {
             itemIds[i] = itemIdOf[address(uint160(uint256(createItemsInput[i].collectionId)))];

@@ -38,7 +38,8 @@ contract ERC721Wrapper is IERC721Wrapper, ItemProjection, IERC721Receiver {
             if(loadedItemIds[i] == 0) {
                 address tokenAddress = address(uint160(uint256(createItemsInput[i].collectionId)));
                 uint256 tokenId = createItemsInput[i].id;
-                emit Token(tokenAddress, tokenId, _itemIdOf[_toItemKey(tokenAddress, tokenId)] = itemIds[i]);
+                _itemIdOf[_toItemKey(tokenAddress, tokenId)] = itemIds[i];
+                emit Token(tokenAddress, tokenId, itemIds[i]);
             }
         }
     }
@@ -59,7 +60,8 @@ contract ERC721Wrapper is IERC721Wrapper, ItemProjection, IERC721Receiver {
         createItems[0] = _buildCreateItem(msg.sender, itemReceiver.asSingletonArray(), new uint256[](0), itemId, plainUri());
         uint256 createdItemId = IItemMainInterface(mainInterface).mintItems(createItems)[0];
         if(itemId == 0) {
-            emit Token(msg.sender, tokenId, _itemIdOf[_toItemKey(msg.sender, tokenId)] = createdItemId);
+            _itemIdOf[_toItemKey(msg.sender, tokenId)] = createdItemId;
+            emit Token(msg.sender, tokenId, createdItemId);
         }
         return this.onERC721Received.selector;
     }

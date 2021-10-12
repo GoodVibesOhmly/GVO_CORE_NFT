@@ -37,7 +37,8 @@ contract ERC20Wrapper is IERC20Wrapper, ItemProjection {
         for(uint256 i = 0; i < itemIds.length; i++) {
             if(loadedItemIds[i] == 0) {
                 address tokenAddress = _tokenAddresses[i];
-                emit Token(tokenAddress, itemIdOf[tokenAddress] = itemIds[i]);
+                itemIdOf[tokenAddress] = itemIds[i];
+                emit Token(tokenAddress, itemIds[i]);
             }
             delete _tokenAddresses[i];
         }

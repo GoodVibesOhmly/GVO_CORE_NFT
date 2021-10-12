@@ -57,14 +57,12 @@ async function mintErc20(
       .mintItems(itemList)
       .send(blockchainConnection.getSendingOptions({ from: fromAccount }));
   } else {
-    tx = await wrapper.methods
-      .mintItemsWithPermit(itemList, ["0x"])
-      .send(
-        blockchainConnection.getSendingOptions({
-          from: fromAccount,
-          value: ethAmount,
-        })
-      );
+    tx = await wrapper.methods.mintItemsWithPermit(itemList, ["0x"]).send(
+      blockchainConnection.getSendingOptions({
+        from: fromAccount,
+        value: ethAmount,
+      })
+    );
   }
 
   var logs = (await web3.eth.getTransactionReceipt(tx.transactionHash)).logs;
@@ -105,10 +103,13 @@ async function revertMintErc20(
   );
 
   if (ethAmount != 0) {
-    await catchCall(wrapper.methods
-      .mintItems(itemList)
-      .send(blockchainConnection.getSendingOptions({ from: fromAccount })), "ETH");
-  } 
+    await catchCall(
+      wrapper.methods
+        .mintItems(itemList)
+        .send(blockchainConnection.getSendingOptions({ from: fromAccount })),
+      "ETH"
+    );
+  }
 }
 
 async function revertMintErc20Wrapper(
@@ -141,10 +142,13 @@ async function revertMintErc20Wrapper(
   );
 
   if (ethAmount != 0) {
-    await catchCall(wrapper.methods
-      .mintItems(itemList)
-      .send(blockchainConnection.getSendingOptions({ from: fromAccount })), "Only single transfers allowed for this token");
-  } 
+    await catchCall(
+      wrapper.methods
+        .mintItems(itemList)
+        .send(blockchainConnection.getSendingOptions({ from: fromAccount })),
+      "Only single transfers allowed for this token"
+    );
+  }
 }
 
 async function assertDecimals(wrapper, itemIds) {
@@ -217,10 +221,19 @@ async function mintItems721(
   return tx;
 }
 
-async function mintItems1155(tokenInstance, from, to, id, amount, data){
+async function mintItems1155(
+  tokenInstance,
+  from,
+  to,
+  id,
+  amount,
+  data,
+  event = true
+) {
   var tx = await tokenInstance.methods
-      .safeTransferFrom(from, to, id, amount, data)
-      .send(blockchainConnection.getSendingOptions({ from: from}));
+    .safeTransferFrom(from, to, id, amount, data)
+    .send(blockchainConnection.getSendingOptions({ from: from }));
+  if (event == true) {
     var logs = (await web3.eth.getTransactionReceipt(tx.transactionHash)).logs;
     var tokenId = web3.eth.abi.decodeParameter(
       "uint256",
@@ -229,7 +242,8 @@ async function mintItems1155(tokenInstance, from, to, id, amount, data){
           it.topics[0] === web3.utils.sha3("Token(address,uint256,uint256)")
       )[0].topics[3]
     );
-  return tokenId;
+    return tokenId;
+  }
 }
 
 module.exports = {

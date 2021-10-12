@@ -150,9 +150,12 @@ describe("itemv2 projections ERC1155Wrapper", () => {
           collectionId: await zeroDecimals.methods.collectionId().call(),
           id: 0,
           accounts: [accounts[1]],
-          amounts: ["10000000000000000"],
+          amounts: ["1"],
         }
       ];
+
+      console.log("collection")
+      console.log(await zeroDecimals.methods.collectionId().call())
 
       var tx = await zeroDecimals.methods.mintItems(CreateItem3)
         .send(blockchainConnection.getSendingOptions({ from: accounts[1] }))
@@ -244,7 +247,7 @@ describe("itemv2 projections ERC1155Wrapper", () => {
       var encodeMint4 = web3.eth.abi.encodeParameters(
         ["uint256[]", "address[]"],
         [
-          ["8000000000000000000", "200000000000000000"],
+          ["1000000000000000000", "200000000000000000"],
           [accounts[1], accounts[2]]
         ]
       );
@@ -253,10 +256,14 @@ describe("itemv2 projections ERC1155Wrapper", () => {
       .safeTransferFrom(accounts[1], wrapper.options.address, item1erc1155Id, 1, wrongEncodeMint)
       .send(blockchainConnection.getSendingOptions({ from: accounts[1] })), "ERC1155: transfer to non ERC1155Receiver implementer");
 
+      assert.equal(await zeroDecimals.methods.decimals(item3erc1155Id[0]).call(), '0')
+      assert.equal(await mainInterface.methods.balanceOf(accounts[1], item3erc1155Id[0]).call(), '1')
+      assert.equal(await token1.methods.balanceOf(accounts[1], item1erc1155Id).call(), '2');
+
 
     itemId1 =  await wrapperResource.mintItems1155(token1, accounts[1], wrapper.options.address, item1erc1155Id, 2, encodeMint1);
     itemId2 =  await wrapperResource.mintItems1155(token2, accounts[1], wrapper.options.address, item2erc1155Id, prevResult2Holder1.div(2), encodeMint2);
-    itemId3 =  await wrapperResource.mintItems1155(token2, accounts[1], wrapper.options.address, item2erc1155Id, prevResult2Holder1.div(2), encodeMint3);
-    itemId4 =  await wrapperResource.mintItems1155(zeroDecimals, accounts[1], wrapper.options.address, item3erc1155Id[0], 1, encodeMint4);
+    await wrapperResource.mintItems1155(token2, accounts[1], wrapper.options.address, item2erc1155Id, prevResult2Holder1.div(2), encodeMint3, false);
+    itemId3 =  await wrapperResource.mintItems1155(zeroDecimals, accounts[1], wrapper.options.address, item3erc1155Id[0], 1, encodeMint4);
     });
 })

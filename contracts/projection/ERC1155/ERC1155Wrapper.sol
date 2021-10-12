@@ -83,7 +83,7 @@ contract ERC1155Wrapper is IERC1155Wrapper, ItemProjection, IERC1155Receiver {
         }
     }
 
-    function _trySaveCreatedItemAndEmitTokenEvent(uint256 itemId, uint256 createdItemId, uint256 tokenId, CreateItem memory createItem, uint256 tokenDecimals) internal{
+    function _trySaveCreatedItemAndEmitTokenEvent(uint256 itemId, uint256 createdItemId, uint256 tokenId, CreateItem memory createItem, uint256 tokenDecimals) internal {
         if(createdItemId == 0) {
             CreateItem[] memory createItems = new CreateItem[](1);
             createItems[0] = createItem;
@@ -92,8 +92,9 @@ contract ERC1155Wrapper is IERC1155Wrapper, ItemProjection, IERC1155Receiver {
         if(itemId != 0) {
             return;
         }
-        _tokenDecimals[itemId = _itemIdOf[_toItemKey(msg.sender, tokenId)] = createdItemId] = tokenDecimals;
-        emit Token(msg.sender, tokenId, itemId);
+        _itemIdOf[_toItemKey(msg.sender, tokenId)] = createdItemId;
+        _tokenDecimals[createdItemId] = tokenDecimals;
+        emit Token(msg.sender, tokenId, createdItemId);
     }
 
     function burn(address account, uint256 itemId, uint256 amount, bytes memory data) override(Item, ItemProjection) public {

@@ -1,6 +1,7 @@
 var utilities = require("../util/utilities");
 var itemsv2 = require("../resources/itemsv2");
 var itemProjection = require("../resources/itemProjection");
+var wrapperResource = require("../resources/wrapper");
 const blockchainConnection = require("../util/blockchainConnection");
 describe("itemv2 projections ERC1155Wrapper", () => {
     var tokenHolder = "0xcfB586d08633fC36953be8083B63a7d96D50265B";
@@ -16,6 +17,7 @@ describe("itemv2 projections ERC1155Wrapper", () => {
     var item5erc1155Address = "0xd07dc4262bcdbf85190c01c996b4c06a461d2430";
     var item1erc1155Id = "10";
     var item2erc1155Id = "1448357374059271822963346111639752691725470234835";
+    var item3erc1155Id;
     var item4erc1155Id = "10";
     var item5erc1155Id = "17";
     var item1Holder1 = "0x072300626D4325197c65FAc4b0a19062d88A48E2";
@@ -28,6 +30,10 @@ describe("itemv2 projections ERC1155Wrapper", () => {
     var token2;
     var token4;
     var token5;
+    var itemId1;
+    var itemId2;
+    var itemId3;
+    var itemId4;
     
     var itemsList = [];
     var approvedHost = [];
@@ -96,8 +102,17 @@ describe("itemv2 projections ERC1155Wrapper", () => {
       wrapper = await new web3.eth.Contract(ERC1155Wrapper.abi)
         .deploy({ data: ERC1155Wrapper.bin, arguments: ["0x"] })
         .send(blockchainConnection.getSendingOptions());
+
+      var ZeroDecimals = await compile("../resources/ERC1155ZeroDecimals");
+      zeroDecimals = await new web3.eth.Contract(ZeroDecimals.abi)
+        .deploy({ data: ZeroDecimals.bin, arguments: ["0x"] })
+        .send(blockchainConnection.getSendingOptions());
   
       await wrapper.methods
+        .lazyInit(deployParam)
+        .send(blockchainConnection.getSendingOptions());
+
+      await zeroDecimals.methods
         .lazyInit(deployParam)
         .send(blockchainConnection.getSendingOptions());
   
@@ -123,6 +138,26 @@ describe("itemv2 projections ERC1155Wrapper", () => {
         knowledgeBase.IERC1155ABI,
         item5erc1155Address
       );
+
+      var CreateItem3 = [
+        {
+          header: {
+            host: accounts[1],
+            name: "Item1",
+            symbol: "I1",
+            uri: "uriItem1",
+          },
+          collectionId: await zeroDecimals.methods.collectionId().call(),
+          id: 0,
+          accounts: [accounts[1]],
+          amounts: ["10000000000000000"],
+        }
+      ];
+
+      var tx = await zeroDecimals.methods.mintItems(CreateItem3)
+        .send(blockchainConnection.getSendingOptions({ from: accounts[1] }))
+
+      item3erc1155Id = await itemProjection.getItemIdFromLog(tx);
     });
 
     it("#669 Wrap ERC1155 using the onERC1155Received", async () => {
@@ -145,7 +180,6 @@ describe("itemv2 projections ERC1155Wrapper", () => {
     var prevResult1Holder1 = await token1.methods.balanceOf(item1Holder1, item1erc1155Id).call();
     var prevResult1Holder2 = await token1.methods.balanceOf(item1Holder2, item1erc1155Id).call();
     var prevResult2Holder1 = await token2.methods.balanceOf(item2Holder1, item2erc1155Id).call();
-        // await blockchainConnection.unlockAccounts(tokenHolder);
     await approveHost(item1Holder1);    
     await approveHost(item1Holder2);    
     await approveHost(item2Holder1);
@@ -183,135 +217,46 @@ describe("itemv2 projections ERC1155Wrapper", () => {
         ]
       );
 
-
-    console.log(await token1.methods.balanceOf(accounts[1], item1erc1155Id).call())
-
       var encodeMint1 = web3.eth.abi.encodeParameters(
         ["uint256[]", "address[]"],
         [
-          ["1", "0.6", "0.4"],
+          ["1000000000000000000", "600000000000000000", "400000000000000000"],
           [accounts[1], accounts[2], accounts[4]]
         ]
       );
 
+      var encodeMint2 = web3.eth.abi.encodeParameters(
+        ["uint256[]", "address[]"],
+        [
+          [prevResult2Holder1.div(10).mul(1), prevResult2Holder1.div(10).mul(2), prevResult2Holder1.div(10).mul(1)],
+          [accounts[1], accounts[2], accounts[5]]
+        ]
+      );
+
+      var encodeMint3 = web3.eth.abi.encodeParameters(
+        ["uint256[]", "address[]"],
+        [
+          [prevResult2Holder1.div(10).mul(3), prevResult2Holder1.div(10).mul(1), prevResult2Holder1.div(10).mul(2)],
+          [accounts[1], accounts[2], accounts[6]]
+        ]
+      );
+
+      var encodeMint4 = web3.eth.abi.encodeParameters(
+        ["uint256[]", "address[]"],
+        [
+          ["8000000000000000000", "200000000000000000"],
+          [accounts[1], accounts[2]]
+        ]
+      );
 
     await catchCall(token1.methods
       .safeTransferFrom(accounts[1], wrapper.options.address, item1erc1155Id, 1, wrongEncodeMint)
       .send(blockchainConnection.getSendingOptions({ from: accounts[1] })), "ERC1155: transfer to non ERC1155Receiver implementer");
 
-    await token1.methods
-      .safeTransferFrom(accounts[1], wrapper.options.address, item1erc1155Id, "2", encodeMint1)
-      .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
 
-
-
-
-
-
-
-
-
-
-
-
-    // var prevWrapperAmount = await mainToken.methods
-    //   .balanceOf(wrapper.options.address)
-    //   .call();
-
-    // var tx = await mainToken.methods
-    //   .safeTransferFrom(accounts[1], wrapper.options.address, token721Id)
-    //   .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
-
-    // assert.equal(
-    //   await mainToken.methods.balanceOf(wrapper.options.address).call(),
-    //   prevWrapperAmount.add(1)
-    // );
-    // assert.equal(await mainToken.methods.balanceOf(accounts[1]).call(), "0");
-
-    // var logs = (await web3.eth.getTransactionReceipt(tx.transactionHash)).logs;
-    // var tokenId = web3.eth.abi.decodeParameter(
-    //   "uint256",
-    //   logs.filter(
-    //     (it) =>
-    //       it.topics[0] === web3.utils.sha3("Token(address,uint256,uint256)")
-    //   )[0].topics[3]
-    // );
-
-    // itemsList.push({
-    //   tokenName: "ens",
-    //   tokenAddress: knowledgeBase.ensTokenAddress,
-    //   account: accounts[1],
-    //   tokenId: token721Id,
-    //   itemId: tokenId,
-    // });
-
-    // console.log("ens");
-    // console.log(await mainInterface.methods.item(tokenId).call());
-
-    // assert.equal(
-    //   await wrapper.methods.balanceOf(accounts[1], tokenId).call(),
-    //   "1000000000000000000"
-    // );
-    // assert.equal(await wrapper.methods.decimals(tokenId).call(), "18");
-
-    // var mainToken1 = new web3.eth.Contract(
-    //   knowledgeBase.IERC721ABI,
-    //   knowledgeBase.uniV3PositionTokenAddress
-    // );
-    // var prevResult1 = await mainToken1.methods.balanceOf(tokenHolder).call();
-
-    // await mainToken1.methods
-    //   .safeTransferFrom(tokenHolder, accounts[1], token721Id1)
-    //   .send(blockchainConnection.getSendingOptions({ from: tokenHolder }));
-
-    // assert.equal(
-    //   await mainToken1.methods.balanceOf(tokenHolder).call(),
-    //   prevResult1.sub(1)
-    // );
-    // assert.equal(await mainToken1.methods.balanceOf(accounts[1]).call(), "1");
-
-    // var prevWrapperAmount1 = await mainToken1.methods
-    //   .balanceOf(wrapper.options.address)
-    //   .call();
-
-    //   var data = web3.eth.abi.encodeParameters(
-    //     ["address"],
-    //     [accounts[2]]
-    //   );
-    // var tx1 = await mainToken1.methods
-    //   .safeTransferFrom(accounts[1], wrapper.options.address, token721Id1, data)
-    //   .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
-
-    // assert.equal(
-    //   await mainToken1.methods.balanceOf(wrapper.options.address).call(),
-    //   prevWrapperAmount1.add(1)
-    // );
-    // assert.equal(await mainToken1.methods.balanceOf(accounts[1]).call(), "0");
-
-    // var logs = (await web3.eth.getTransactionReceipt(tx1.transactionHash)).logs;
-    // var tokenId = web3.eth.abi.decodeParameter(
-    //   "uint256",
-    //   logs.filter(
-    //     (it) =>
-    //       it.topics[0] === web3.utils.sha3("Token(address,uint256,uint256)")
-    //   )[0].topics[3]
-    // );
-
-    // itemsList.push({
-    //   tokenName: "uniV3Position",
-    //   tokenAddress: knowledgeBase.uniV3PositionTokenAddress,
-    //   account: accounts[2],
-    //   tokenId: token721Id1,
-    //   itemId: tokenId,
-    // });
-
-    // console.log("univ3");
-    // console.log(await mainInterface.methods.item(tokenId).call());
-
-    // assert.equal(
-    //   await wrapper.methods.balanceOf(accounts[2], tokenId).call(),
-    //   "1000000000000000000"
-    // );
-    // assert.equal(await wrapper.methods.decimals(tokenId).call(), "18");
+    itemId1 =  await wrapperResource.mintItems1155(token1, accounts[1], wrapper.options.address, item1erc1155Id, 2, encodeMint1);
+    itemId2 =  await wrapperResource.mintItems1155(token2, accounts[1], wrapper.options.address, item2erc1155Id, prevResult2Holder1.div(2), encodeMint2);
+    itemId3 =  await wrapperResource.mintItems1155(token2, accounts[1], wrapper.options.address, item2erc1155Id, prevResult2Holder1.div(2), encodeMint3);
+    itemId4 =  await wrapperResource.mintItems1155(zeroDecimals, accounts[1], wrapper.options.address, item3erc1155Id[0], 1, encodeMint4);
     });
 })

@@ -1,6 +1,7 @@
 var itemsv2 = require("../resources/itemsv2");
 var itemProjection = require("../resources/itemProjection");
 var wrapperResource = require("../resources/wrapper");
+const blockchainConnection = require("../util/blockchainConnection");
 describe("itemv2 projections ERC1155Wrapper", () => {
   var tokenHolder = "0xcfB586d08633fC36953be8083B63a7d96D50265B";
   var wrapper;
@@ -33,6 +34,8 @@ describe("itemv2 projections ERC1155Wrapper", () => {
   var itemId2;
   var itemId3;
   var itemId4;
+  var itemId5;
+  var itemId6;
 
   var itemsList = [];
   var approvedHost = [];
@@ -557,7 +560,6 @@ describe("itemv2 projections ERC1155Wrapper", () => {
     );
 
     var prevId4Acc2Bal = await wrapper.methods.balanceOf(accounts[3], itemId4).call()
-    console.log(prevId4Acc2Bal)
 
     await wrapper.methods
       .safeBatchTransferFrom(
@@ -635,20 +637,18 @@ describe("itemv2 projections ERC1155Wrapper", () => {
       [
         zeroDecimals.options.address,
         item3erc1155Id[0],
-        utilities.voidEthereumAddress,
+        accounts[2],
         "0x",
       ]
     );
 
-    console.log(await wrapper.methods.balanceOf(accounts[1], itemId1).call())
-
     await wrapper.methods
-      .burn(accounts[1], itemId3, "800000000000000000", burn3) //TODO: check if value is ok (1000000000000000000 insufficient balance for transfer or 1)
-      .send(blockchainConnection.getSendingOptions({ from: accounts[2] }));
+      .burn(accounts[1], itemId3, "800000000000000000", burn3) 
+      .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
 
     var prevSupply1 = await wrapper.methods.totalSupply(itemId1).call();
     await wrapper.methods
-      .burn(accounts[1], itemId1, "1000000000000000000", burn) //TODO: check if value is ok (1000000000000000000 insufficient balance for transfer or 1)
+      .burn(accounts[1], itemId1, "1000000000000000000", burn) 
       .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
 
     var prevSupply2 = await wrapper.methods.totalSupply(itemId2).call();
@@ -665,6 +665,7 @@ describe("itemv2 projections ERC1155Wrapper", () => {
       await token1.methods.balanceOf(accounts[5], item1erc1155Id).call(),
       "1"
     );
+
     assert.equal(
       await token2.methods.balanceOf(accounts[1], item2erc1155Id).call(),
       amountBurn2
@@ -679,4 +680,50 @@ describe("itemv2 projections ERC1155Wrapper", () => {
       prevSupply2.sub(amountBurn2)
     );
   });
+
+
+  it("#672 Unwrap batch using burnBatch", async () => {
+
+    console.log(await wrapper.methods.balanceOf(accounts[3], itemId2).call())
+    console.log(await wrapper.methods.balanceOf(accounts[3], itemId4).call())
+    console.log(await wrapper.methods.balanceOf(accounts[3], itemId5).call())
+    console.log(await wrapper.methods.balanceOf(accounts[3], itemId6).call())
+    var prevAmount2 = await wrapper.methods.balanceOf(accounts[3], itemId2).call();
+    var amounts = [prevAmount2, "2200000000000000000", "2000000000000000000", "800000000000000000"];
+    var itemId = [itemId2, itemId4, itemId5, itemId6]
+    var tokenAddress = [item2erc1155Address, item4erc1155Address, item5erc1155Address, zeroDecimals.options.address]
+    var tokenId = [item2erc1155Id, item4erc1155Id, item5erc1155Id, item6erc1155Id[0]]
+    var receiver = [accounts[9], accounts[9], accounts[9], accounts[9]]
+    var tokenContract = [token2, token4, token5, zeroDecimals]
+
+    var burn = [];
+
+    console.log(tokenAddress)
+    console.log(tokenId)
+    console.log(receiver)
+    console.log(amounts)
+    console.log(itemId)
+
+    await Promise.all(
+      tokenAddress.map(async (item, index) => {
+        burn.push(
+          web3.eth.abi.encodeParameters(
+            ["address", "uint256", "address", "bytes"],
+            [tokenAddress[index], tokenId[index], receiver[index], "0x"]
+          )
+        );
+      })
+    );
+
+    var datas = web3.eth.abi.encodeParameters(["bytes[]"], [burn]);
+
+    await wrapper.methods.burnBatch(accounts[3], itemId, amounts, datas).send(blockchainConnection.getSendingOptions({from: accounts[3]}));
+
+    var expectedBalance = [prevAmount2, 2, 2, 1]
+    await Promise.all(
+      tokenContract.map(async (contract, index) => {
+        assert.equal(await contract.methods.balanceOf(accounts[9], tokenId[index]).call(), expectedBalance[index])
+      })
+    );
+  })
 });

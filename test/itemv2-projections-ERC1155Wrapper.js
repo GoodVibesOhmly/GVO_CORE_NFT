@@ -287,7 +287,7 @@ describe("itemv2 projections ERC1155Wrapper", () => {
       await mainInterface.methods
         .balanceOf(accounts[1], item3erc1155Id[0])
         .call(),
-      "1"
+      "1000000000000000000"
     );
     assert.equal(
       await token1.methods.balanceOf(accounts[1], item1erc1155Id).call(),
@@ -345,7 +345,7 @@ describe("itemv2 projections ERC1155Wrapper", () => {
       await wrapper.methods.balanceOf(accounts[1], itemId1).call(),
       "2000000000000000000"
     );
-    // assert.equal(await wrapper.methods.balanceOf(accounts[1], itemId3).call(), "1000000000000000000")
+    assert.equal(await wrapper.methods.balanceOf(accounts[1], itemId3).call(), "1000000000000000000")
 
     await wrapper.methods
       .safeTransferFrom(
@@ -365,7 +365,7 @@ describe("itemv2 projections ERC1155Wrapper", () => {
         "0x"
       )
       .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
-    // await wrapper.methods.safeTransferFrom(accounts[1], accounts[2], itemId3, "200000000000000000", "0x").send(blockchainConnection.getSendingOptions({from: accounts[1]}))
+    await wrapper.methods.safeTransferFrom(accounts[1], accounts[2], itemId3, "200000000000000000", "0x").send(blockchainConnection.getSendingOptions({from: accounts[1]}))
 
     assert.equal(
       await wrapper.methods.balanceOf(accounts[1], itemId1).call(),
@@ -397,9 +397,9 @@ describe("itemv2 projections ERC1155Wrapper", () => {
       prevResult2Holder1.div(10).mul(2)
     );
 
-    // assert.equal(await wrapper.methods.balanceOf(accounts[1], itemId2).call(), prevResult2Holder1.div(10).mul(3))
-    // assert.equal(await wrapper.methods.balanceOf(accounts[2], itemId2).call(), prevResult2Holder1.div(10).mul(1))
-    // assert.equal(await wrapper.methods.balanceOf(accounts[6], itemId2).call(), prevResult2Holder1.div(10).mul(2))
+    assert.equal(await wrapper.methods.balanceOf(accounts[1], itemId2).call(), prevResult2Holder1.div(10).mul(3))
+    assert.equal(await wrapper.methods.balanceOf(accounts[2], itemId2).call(), prevResult2Holder1.div(10).mul(1))
+    assert.equal(await wrapper.methods.balanceOf(accounts[6], itemId2).call(), prevResult2Holder1.div(10).mul(2))
 
     assert.equal(
       await wrapper.methods.totalSupply(itemId1).call(),
@@ -418,7 +418,7 @@ describe("itemv2 projections ERC1155Wrapper", () => {
             .add(prevResult2Holder1.div(10).mul(2))
         )
     );
-    // assert.equal(await wrapper.methods.totalSupply(itemId3).call(), "1000000000000000000")
+    assert.equal(await wrapper.methods.totalSupply(itemId3).call(), "1000000000000000000")
   });
 
   it("#670 Wrap ERC1155 using the onERC1155BatchReceived", async () => {

@@ -206,7 +206,8 @@ contract ERC1155Wrapper is IERC1155Wrapper, ItemProjection, IERC1155Receiver {
         (address tokenAddress, uint256 tokenId, address receiver, bytes memory payload) = abi.decode(data, (address, uint256, address, bytes));
         receiver = receiver != address(0) ? receiver : from;
         require(itemIdOf(tokenAddress, tokenId) == itemId, "Wrong ERC1155");
-        uint256 tokenAmount = toMainInterfaceAmount(amount, itemId);
+        uint256 converter = 10**(18 - _tokenDecimals[itemId]);
+        uint256 tokenAmount = amount / converter;
         interoperableAmount = toInteroperableInterfaceAmount(tokenAmount, itemId, from);
         require(interoperableAmount > 0, "Wrong conversion");
         uint256 balanceOf = IItemMainInterface(mainInterface).balanceOf(from, itemId);

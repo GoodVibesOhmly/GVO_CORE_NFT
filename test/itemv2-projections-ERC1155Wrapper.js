@@ -223,8 +223,8 @@ describe("itemv2 projections ERC1155Wrapper", () => {
       var encodeMint1 = web3.eth.abi.encodeParameters(
         ["uint256[]", "address[]"],
         [
-          ["1000000000000000000", "600000000000000000", "400000000000000000"],
-          [accounts[1], accounts[2], accounts[4]]
+          ["2"],
+          [accounts[1]]
         ]
       );
 
@@ -247,8 +247,8 @@ describe("itemv2 projections ERC1155Wrapper", () => {
       var encodeMint4 = web3.eth.abi.encodeParameters(
         ["uint256[]", "address[]"],
         [
-          ["1000000000000000000", "200000000000000000"],
-          [accounts[1], accounts[2]]
+          [1],
+          [accounts[1]]
         ]
       );
 
@@ -256,14 +256,53 @@ describe("itemv2 projections ERC1155Wrapper", () => {
       .safeTransferFrom(accounts[1], wrapper.options.address, item1erc1155Id, 1, wrongEncodeMint)
       .send(blockchainConnection.getSendingOptions({ from: accounts[1] })), "ERC1155: transfer to non ERC1155Receiver implementer");
 
-      assert.equal(await zeroDecimals.methods.decimals(item3erc1155Id[0]).call(), '0')
-      assert.equal(await mainInterface.methods.balanceOf(accounts[1], item3erc1155Id[0]).call(), '1')
-      assert.equal(await token1.methods.balanceOf(accounts[1], item1erc1155Id).call(), '2');
+    assert.equal(await zeroDecimals.methods.decimals(item3erc1155Id[0]).call(), '0')
+    assert.equal(await mainInterface.methods.balanceOf(accounts[1], item3erc1155Id[0]).call(), '1')
+    assert.equal(await token1.methods.balanceOf(accounts[1], item1erc1155Id).call(), '2');
 
 
     itemId1 =  await wrapperResource.mintItems1155(token1, accounts[1], wrapper.options.address, item1erc1155Id, 2, encodeMint1);
-    itemId2 =  await wrapperResource.mintItems1155(token2, accounts[1], wrapper.options.address, item2erc1155Id, prevResult2Holder1.div(2), encodeMint2);
-    await wrapperResource.mintItems1155(token2, accounts[1], wrapper.options.address, item2erc1155Id, prevResult2Holder1.div(2), encodeMint3, false);
-    itemId3 =  await wrapperResource.mintItems1155(zeroDecimals, accounts[1], wrapper.options.address, item3erc1155Id[0], 1, encodeMint4);
+    itemId2 =  await wrapperResource.mintItems1155(token2, accounts[1], wrapper.options.address, item2erc1155Id, prevResult2Holder1.div(10).mul(1).add(prevResult2Holder1.div(10).mul(2)).add(prevResult2Holder1.div(10).mul(1)), encodeMint2);
+    await wrapperResource.mintItems1155(token2, accounts[1], wrapper.options.address, item2erc1155Id, prevResult2Holder1.div(10).mul(3).add(prevResult2Holder1.div(10).mul(1)).add(prevResult2Holder1.div(10).mul(2)), encodeMint3, false);
+    itemId3 =  await wrapperResource.mintItems1155(mainInterface, accounts[1], wrapper.options.address, item3erc1155Id[0], 1, encodeMint4);
+    assert.equal(await token1.methods.balanceOf(wrapper.options.address, item1erc1155Id).call(), '2')
+    assert.equal(await wrapper.methods.balanceOf(accounts[1], itemId1).call(), "2000000000000000000")
+    assert.equal(await wrapper.methods.balanceOf(accounts[1], itemId3).call(), "1000000000000000000")
+
+    await wrapper.methods.safeTransferFrom(accounts[1], accounts[2], itemId1, "600000000000000000", "0x").send(blockchainConnection.getSendingOptions({from: accounts[1]}))
+    await wrapper.methods.safeTransferFrom(accounts[1], accounts[4], itemId1, "400000000000000000", "0x").send(blockchainConnection.getSendingOptions({from: accounts[1]}))
+    await wrapper.methods.safeTransferFrom(accounts[1], accounts[2], itemId3, "200000000000000000", "0x").send(blockchainConnection.getSendingOptions({from: accounts[1]}))
+    // await wrapper.methods.safeBatchTransferFrom(accounts[1], accounts[2], [itemId1, itemId3], ["600000000000000000", "200000000000000000"], "0x").send(blockchainConnection.getSendingOptions({from: accounts[1]}))
+    // await wrapper.methods.safeBatchTransferFrom(accounts[3], accounts[4], [itemId1], ["400000000000000000"], "0x").send(blockchainConnection.getSendingOptions({from: accounts[3]}))
+
+    assert.equal(await wrapper.methods.balanceOf(accounts[1], itemId1).call(), "1000000000000000000")
+    assert.equal(await wrapper.methods.balanceOf(accounts[2], itemId1).call(), "600000000000000000")
+    assert.equal(await wrapper.methods.balanceOf(accounts[4], itemId1).call(), "400000000000000000")
+
+    assert.equal(await wrapper.methods.balanceOf(accounts[1], itemId2).call(), prevResult2Holder1.div(10).mul(1))
+    assert.equal(await wrapper.methods.balanceOf(accounts[2], itemId2).call(), prevResult2Holder1.div(10).mul(2))
+    assert.equal(await wrapper.methods.balanceOf(accounts[5], itemId2).call(), prevResult2Holder1.div(10).mul(1))
+
+    assert.equal(await wrapper.methods.balanceOf(accounts[1], itemId2).call(), prevResult2Holder1.div(10).mul(3))
+    assert.equal(await wrapper.methods.balanceOf(accounts[2], itemId2).call(), prevResult2Holder1.div(10).mul(1))
+    assert.equal(await wrapper.methods.balanceOf(accounts[6], itemId2).call(), prevResult2Holder1.div(10).mul(2))
+
+    assert.equal(await wrapper.methods.totalSupply(itemId1).call(), "2000000000000000000")
+    assert.equal(await wrapper.methods.totalSupply(itemId2).call(), prevResult2Holder1)
+    assert.equal(await wrapper.methods.totalSupply(itemId3).call(), "1000000000000000000")
     });
+
+  it("#671 Unwrap single using Burn", async () => {
+    var burn = web3.eth.abi.encodeParameters(
+      ["address", "uint256", "address", "bytes"],
+      [token1.options.address, item1erc1155Id, accounts[5], "0x"]
+    );
+
+    console.log(await wrapper.methods.balanceOf(accounts[1], itemId1).call())
+    console.log(itemId1)
+    // approve contratto
+    await wrapper.methods
+    .burn(accounts[1], itemId1, "1000000000000000000", burn)
+    .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
+  })
 })

@@ -277,8 +277,6 @@ describe("itemv2 projections ERC1155Wrapper", () => {
       "ERC1155: transfer to non ERC1155Receiver implementer"
     );
 
-
-
     assert.equal(
       await zeroDecimals.methods.decimals(item3erc1155Id[0]).call(),
       "0"
@@ -328,7 +326,7 @@ describe("itemv2 projections ERC1155Wrapper", () => {
       false
     );
     itemId3 = await wrapperResource.mintItems1155(
-      mainInterface,
+      zeroDecimals,
       accounts[1],
       wrapper.options.address,
       item3erc1155Id[0],
@@ -397,8 +395,9 @@ describe("itemv2 projections ERC1155Wrapper", () => {
       prevResult2Holder1.div(10).mul(2)
     );
 
-    assert.equal(await wrapper.methods.balanceOf(accounts[1], itemId2).call(), prevResult2Holder1.div(10).mul(3))
-    assert.equal(await wrapper.methods.balanceOf(accounts[2], itemId2).call(), prevResult2Holder1.div(10).mul(1))
+    assert.equal(await wrapper.methods.balanceOf(accounts[1], itemId2).call(), prevResult2Holder1.div(10).mul(4))
+    assert.equal(await wrapper.methods.balanceOf(accounts[2], itemId2).call(), prevResult2Holder1.div(10).mul(3))
+    assert.equal(await wrapper.methods.balanceOf(accounts[5], itemId2).call(), prevResult2Holder1.div(10).mul(1))
     assert.equal(await wrapper.methods.balanceOf(accounts[6], itemId2).call(), prevResult2Holder1.div(10).mul(2))
 
     assert.equal(
@@ -463,16 +462,6 @@ describe("itemv2 projections ERC1155Wrapper", () => {
     await token5.methods
       .safeTransferFrom(item5Holder1, accounts[2], item5erc1155Id, "3", "0x")
       .send(blockchainConnection.getSendingOptions({ from: item5Holder1 }));
-  
-
-    // assert.equal(
-    //     await token2.methods.balanceOf(item2Holder1, item2erc1155Id).call(),
-    //     prevResult2Holder1.div(2)
-    // );
-
-    prevResult2Holder1 = prevResult2Holder1.div(2)
-
-    console.log(prevResult4Holder1)
 
     assert.equal(
       await token4.methods.balanceOf(item4Holder1, item1erc1155Id).call(),
@@ -487,15 +476,13 @@ describe("itemv2 projections ERC1155Wrapper", () => {
       prevResult5Holder1.sub(3)
     );
 
-
-
-    var encodeMint6 = web3.eth.abi.encodeParameters(
+    var encodeMint2 = web3.eth.abi.encodeParameters(
       ["uint256[]", "address[]"],
       [
         [
-          prevResult2Holder1.div(10).mul(1),
-          prevResult2Holder1.div(10).mul(2),
-          prevResult2Holder1.div(10).mul(1),
+          prevResult2Holder1.div(3),
+          prevResult2Holder1.div(3),
+          prevResult2Holder1.div(3),
         ],
         [accounts[3], accounts[1], accounts[2]],
       ]
@@ -518,15 +505,14 @@ describe("itemv2 projections ERC1155Wrapper", () => {
 
     await wrapperResource.mintItems1155(
       token2,
-      accounts[1],
+      accounts[2],
       wrapper.options.address,
       item2erc1155Id,
       prevResult2Holder1
-        .div(10)
-        .mul(3)
-        .add(prevResult2Holder1.div(10).mul(1))
-        .add(prevResult2Holder1.div(10).mul(2)),
-        encodeMint6,
+        .div(3)
+        .add(prevResult2Holder1.div(3))
+        .add(prevResult2Holder1.div(3)),
+        encodeMint2,
       false
     );
 
@@ -539,7 +525,7 @@ describe("itemv2 projections ERC1155Wrapper", () => {
       encodeMint4
     );
     itemId5 = await wrapperResource.mintItems1155(
-      token2,
+      token5,
       accounts[2],
       wrapper.options.address,
       item5erc1155Id,
@@ -547,15 +533,69 @@ describe("itemv2 projections ERC1155Wrapper", () => {
       encodeMint5
     );
     itemId6 = await wrapperResource.mintItems1155(
-      mainInterface,
+      zeroDecimals,
       accounts[1],
       wrapper.options.address,
       item6erc1155Id[0],
       1,
-      encodeMint4
+      encodeMint6
     );
 
+    var prevId4Acc2Bal = await wrapper.methods.balanceOf(accounts[3], itemId4).call()
+    console.log(prevId4Acc2Bal)
 
+    await wrapper.methods
+      .safeBatchTransferFrom(
+        accounts[3],
+        accounts[2],
+        [itemId4, itemId5],
+        ["400000000000000000", "700000000000000000"],
+        "0x"
+      )
+      .send(blockchainConnection.getSendingOptions({ from: accounts[3] }));
+
+    await wrapper.methods
+      .safeBatchTransferFrom(
+        accounts[3],
+        accounts[4],
+        [itemId4],
+        ["400000000000000000"],
+        "0x"
+      )
+      .send(blockchainConnection.getSendingOptions({ from: accounts[3] }));
+
+    await wrapper.methods
+      .safeBatchTransferFrom(
+        accounts[3],
+        accounts[6],
+        [itemId5],
+        ["300000000000000000"],
+        "0x"
+      )
+      .send(blockchainConnection.getSendingOptions({ from: accounts[3] }));
+
+    await wrapper.methods
+      .safeBatchTransferFrom(
+        accounts[3],
+        accounts[7],
+        [itemId6],
+        ["200000000000000000"],
+        "0x"
+      )
+      .send(blockchainConnection.getSendingOptions({ from: accounts[3] }));
+
+      assert.equal(await wrapper.methods.balanceOf(accounts[2], itemId4).call(), "400000000000000000")
+      assert.equal(await wrapper.methods.balanceOf(accounts[4], itemId4).call(), "400000000000000000")
+
+      assert.equal(await wrapper.methods.balanceOf(accounts[2], itemId5).call(), "700000000000000000")
+      assert.equal(await wrapper.methods.balanceOf(accounts[6], itemId5).call(), "300000000000000000")
+
+      assert.equal(await wrapper.methods.balanceOf(accounts[7], itemId6).call(), "200000000000000000")
+      assert.equal(await wrapper.methods.balanceOf(accounts[3], itemId6).call(), "800000000000000000")
+
+      assert.equal(await wrapper.methods.totalSupply(itemId4).call(), "3000000000000000000")
+      assert.equal(await wrapper.methods.totalSupply(itemId5).call(), "3000000000000000000")
+      assert.equal(await wrapper.methods.totalSupply(itemId6).call(), "1000000000000000000")
 
   });
 
@@ -577,7 +617,7 @@ describe("itemv2 projections ERC1155Wrapper", () => {
 
     var prevSupply1 = await wrapper.methods.totalSupply(itemId1).call();
     await wrapper.methods
-      .burn(accounts[1], itemId1, "1", burn) //TODO: check if value is ok (1000000000000000 or 1)
+      .burn(accounts[1], itemId1, "1", burn) //TODO: check if value is ok (1000000000000000 insufficient balance for transfer or 1)
       .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
 
     var prevSupply2 = await wrapper.methods.totalSupply(itemId2).call();
@@ -591,11 +631,11 @@ describe("itemv2 projections ERC1155Wrapper", () => {
       .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
 
     assert.equal(
-      await token1.methods.balanceOf(accounts[1], item1erc1155Id).call(),
-      amountBurn2
+      await token1.methods.balanceOf(accounts[5], item1erc1155Id).call(),
+      "1"
     );
     assert.equal(
-      await token1.methods.balanceOf(accounts[5], "1").call(),
+      await token2.methods.balanceOf(accounts[1], item2erc1155Id).call(),
       amountBurn2
     );
 
@@ -604,7 +644,7 @@ describe("itemv2 projections ERC1155Wrapper", () => {
       prevSupply1.sub(1)
     );
     assert.equal(
-      await wrapper.methods.totalSupply(itemId1).call(),
+      await wrapper.methods.totalSupply(itemId2).call(),
       prevSupply2.sub(amountBurn2)
     );
   });

@@ -55,7 +55,15 @@ abstract contract ItemProjection is IItemProjection, LazyInitCapableElement {
         return IItemMainInterface(mainInterface).setItemsMetadata(itemIds, values);
     }
 
-    function mintItems(CreateItem[] calldata items) authorizedOnly virtual override external returns(uint256[] memory itemIds) {
+    function mintItems(CreateItem[] memory items) authorizedOnly virtual override external returns(uint256[] memory itemIds) {
+        uint256 multiplier = 10 ** (18 - decimals(0));
+        for(uint256 i = 0; i < items.length; i++) {
+            uint256[] memory amounts = items[i].amounts;
+            for(uint256 z = 0; z < items.length; z++) {
+                amounts[z] = amounts[z] * multiplier;
+            }
+            items[i].amounts = amounts;
+        }
         return IItemMainInterface(mainInterface).mintItems(items);
     }
 

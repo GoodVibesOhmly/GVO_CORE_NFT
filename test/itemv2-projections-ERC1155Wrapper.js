@@ -1,8 +1,6 @@
-var utilities = require("../util/utilities");
 var itemsv2 = require("../resources/itemsv2");
 var itemProjection = require("../resources/itemProjection");
 var wrapperResource = require("../resources/wrapper");
-const blockchainConnection = require("../util/blockchainConnection");
 describe("itemv2 projections ERC1155Wrapper", () => {
     var tokenHolder = "0xcfB586d08633fC36953be8083B63a7d96D50265B";
     var wrapper;
@@ -257,7 +255,7 @@ describe("itemv2 projections ERC1155Wrapper", () => {
       .send(blockchainConnection.getSendingOptions({ from: accounts[1] })), "ERC1155: transfer to non ERC1155Receiver implementer");
 
       assert.equal(await zeroDecimals.methods.decimals(item3erc1155Id[0]).call(), '0')
-      assert.equal(await mainInterface.methods.balanceOf(accounts[1], item3erc1155Id[0]).call(), '1')
+      assert.equal(await mainInterface.methods.balanceOf(accounts[1], item3erc1155Id[0]).call(), utilities.numberToString(1e18))
       assert.equal(await token1.methods.balanceOf(accounts[1], item1erc1155Id).call(), '2');
 
 

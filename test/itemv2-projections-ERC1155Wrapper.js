@@ -1,8 +1,6 @@
-var utilities = require("../util/utilities");
 var itemsv2 = require("../resources/itemsv2");
 var itemProjection = require("../resources/itemProjection");
 var wrapperResource = require("../resources/wrapper");
-const blockchainConnection = require("../util/blockchainConnection");
 describe("itemv2 projections ERC1155Wrapper", () => {
   var tokenHolder = "0xcfB586d08633fC36953be8083B63a7d96D50265B";
   var wrapper;

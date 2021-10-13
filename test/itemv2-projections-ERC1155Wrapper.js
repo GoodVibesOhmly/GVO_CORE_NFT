@@ -300,6 +300,7 @@ describe("itemv2 projections ERC1155Wrapper", () => {
       2,
       encodeMint1
     );
+
     itemId2 = await wrapperResource.mintItems1155(
       token2,
       accounts[1],
@@ -312,6 +313,7 @@ describe("itemv2 projections ERC1155Wrapper", () => {
         .add(prevResult2Holder1.div(10).mul(1)),
       encodeMint2
     );
+
     await wrapperResource.mintItems1155(
       token2,
       accounts[1],
@@ -325,6 +327,7 @@ describe("itemv2 projections ERC1155Wrapper", () => {
       encodeMint3,
       false
     );
+
     itemId3 = await wrapperResource.mintItems1155(
       zeroDecimals,
       accounts[1],
@@ -333,16 +336,19 @@ describe("itemv2 projections ERC1155Wrapper", () => {
       1,
       encodeMint4
     );
+
     assert.equal(
       await token1.methods
         .balanceOf(wrapper.options.address, item1erc1155Id)
         .call(),
       "2"
     );
+
     assert.equal(
       await wrapper.methods.balanceOf(accounts[1], itemId1).call(),
       "2000000000000000000"
     );
+    
     assert.equal(await wrapper.methods.balanceOf(accounts[1], itemId3).call(), "1000000000000000000")
 
     await wrapper.methods
@@ -373,7 +379,6 @@ describe("itemv2 projections ERC1155Wrapper", () => {
         "0x"
       )
       .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
-    await wrapper.methods.safeTransferFrom(accounts[1], accounts[2], itemId3, "200000000000000000", "0x").send(blockchainConnection.getSendingOptions({from: accounts[1]}))
 
     assert.equal(
       await wrapper.methods.balanceOf(accounts[1], itemId1).call(),
@@ -625,11 +630,25 @@ describe("itemv2 projections ERC1155Wrapper", () => {
       ]
     );
 
+    var burn3 = web3.eth.abi.encodeParameters(
+      ["address", "uint256", "address", "bytes"],
+      [
+        zeroDecimals.options.address,
+        item3erc1155Id[0],
+        utilities.voidEthereumAddress,
+        "0x",
+      ]
+    );
+
     console.log(await wrapper.methods.balanceOf(accounts[1], itemId1).call())
+
+    await wrapper.methods
+      .burn(accounts[1], itemId3, "800000000000000000", burn3) //TODO: check if value is ok (1000000000000000000 insufficient balance for transfer or 1)
+      .send(blockchainConnection.getSendingOptions({ from: accounts[2] }));
 
     var prevSupply1 = await wrapper.methods.totalSupply(itemId1).call();
     await wrapper.methods
-      .burn(accounts[1], itemId1, "1000000000000000000", burn) //TODO: check if value is ok (1000000000000000 insufficient balance for transfer or 1)
+      .burn(accounts[1], itemId1, "1000000000000000000", burn) //TODO: check if value is ok (1000000000000000000 insufficient balance for transfer or 1)
       .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
 
     var prevSupply2 = await wrapper.methods.totalSupply(itemId2).call();

@@ -208,7 +208,7 @@ contract ERC1155Wrapper is IERC1155Wrapper, ItemProjection, IERC1155Receiver {
         require(itemIdOf(tokenAddress, tokenId) == itemId, "Wrong ERC1155");
         uint256 converter = 10**(18 - _tokenDecimals[itemId]);
         uint256 tokenAmount = amount / converter;
-        interoperableAmount = toInteroperableInterfaceAmount(tokenAmount, itemId, from);
+        interoperableAmount = amount;
         require(interoperableAmount > 0, "Wrong conversion");
         uint256 balanceOf = IItemMainInterface(mainInterface).balanceOf(from, itemId);
         require(balanceOf > 0 && balanceOf >= interoperableAmount, "Insufficient amount");

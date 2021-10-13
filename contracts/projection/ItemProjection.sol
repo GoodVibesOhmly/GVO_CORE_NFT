@@ -93,7 +93,7 @@ abstract contract ItemProjection is IItemProjection, LazyInitCapableElement {
         return header.symbol;
     }
 
-    function decimals(uint256) override public view returns(uint256) {
+    function decimals(uint256) override public virtual view returns(uint256) {
         return 18;
     }
 

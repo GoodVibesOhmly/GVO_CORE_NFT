@@ -57,7 +57,7 @@ contract ERC1155Wrapper is IERC1155Wrapper, ItemProjection, IERC1155Receiver {
         bytes memory data
     ) override external returns (bytes4) {
         bytes[] memory dataArray = abi.decode(data, (bytes[]));
-        for(uint256  i = 0 ; i < tokenIds.length; i++) {
+        for(uint256 i = 0 ; i < tokenIds.length; i++) {
             _prepareTempVars(from, tokenIds[i], amounts[i], dataArray[i]);
         }
         (CreateItem[] memory createItems, uint256[] memory loadedItemIds, uint256[] memory tokenDecimals) = _buildCreateItems(from, msg.sender);
@@ -66,6 +66,7 @@ contract ERC1155Wrapper is IERC1155Wrapper, ItemProjection, IERC1155Receiver {
             _trySaveCreatedItemAndEmitTokenEvent(loadedItemIds[i], itemIds[i], _tokenIds[i], createItems[i], tokenDecimals[i]);
             delete _tokenIds[i];
         }
+        delete _tokenIds;
         return this.onERC1155BatchReceived.selector;
     }
 
@@ -211,6 +212,6 @@ contract ERC1155Wrapper is IERC1155Wrapper, ItemProjection, IERC1155Receiver {
         uint256 balanceOf = IItemMainInterface(mainInterface).balanceOf(from, itemId);
         require(balanceOf > 0 && balanceOf >= interoperableAmount, "Insufficient amount");
         require(_tokenDecimals[itemId] == 18 || IItemMainInterface(mainInterface).totalSupply(itemId) > 1e18 || interoperableAmount >= (51*1e16), "Insufficient balance");
-        IERC1155(tokenAddress).safeTransferFrom(msg.sender, receiver, tokenId, tokenAmount, payload);
+        IERC1155(tokenAddress).safeTransferFrom(address(this), receiver, tokenId, tokenAmount, payload);
     }
 }

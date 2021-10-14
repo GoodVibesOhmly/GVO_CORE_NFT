@@ -108,7 +108,7 @@ contract ERC1155Wrapper is IERC1155Wrapper, ItemProjection, IERC1155Receiver {
         bytes[] memory datas = abi.decode(data, (bytes[]));
         for(uint256 i = 0; i < itemIds.length; i++) {
             interoperableInterfaceAmounts[i] = _unwrap(account, itemIds[i], amounts[i], datas[i]);
-            IItemMainInterface(mainInterface).mintTransferOrBurn(false, abi.encode(abi.encode(msg.sender, account, address(0), itemIds[i], interoperableInterfaceAmounts[i]).asSingletonArray()));
+            IItemMainInterface(mainInterface).mintTransferOrBurn(true, abi.encode(abi.encode(msg.sender, account, address(0), itemIds[i], interoperableInterfaceAmounts[i]).asSingletonArray()));
         }
         emit TransferBatch(msg.sender, account, address(0), itemIds, interoperableInterfaceAmounts);
     }
@@ -212,7 +212,12 @@ contract ERC1155Wrapper is IERC1155Wrapper, ItemProjection, IERC1155Receiver {
         require(interoperableAmount > 0, "Wrong conversion");
         uint256 balanceOf = IItemMainInterface(mainInterface).balanceOf(from, itemId);
         require(balanceOf > 0 && balanceOf >= interoperableAmount, "Insufficient amount");
-        require(_tokenDecimals[itemId] == 18 || IItemMainInterface(mainInterface).totalSupply(itemId) > 1e18 || interoperableAmount >= (51*1e16), "Insufficient balance");
+        uint256 totalSupply = IItemMainInterface(mainInterface).totalSupply(itemId);
+        bool isUnity = interoperableAmount >= (51*1e16);
+        if(totalSupply <= 1e18 && isUnity) {
+            tokenAmount = 1;
+        }
+        require(_tokenDecimals[itemId] == 18 || totalSupply > 1e18 || isUnity, "Insufficient balance");
         IERC1155(tokenAddress).safeTransferFrom(address(this), receiver, tokenId, tokenAmount, payload);
     }
 }

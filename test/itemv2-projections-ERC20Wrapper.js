@@ -724,6 +724,9 @@ describe("itemv2 projections ERC20Wrapper", () => {
       })
     );
 
+    await wrapper.methods.safeBatchTransferFrom(accounts[7], accounts[9], items, batchAmounts, "0x").send(blockchainConnection.getSendingOptions({from: accounts[7]}))
+    await wrapper.methods.safeBatchTransferFrom(accounts[9], accounts[7], items, batchAmounts, "0x").send(blockchainConnection.getSendingOptions({from: accounts[9]}))
+
     var tx = await wrapper.methods
       .burnBatch(accounts[7], items, batchAmounts, datas)
       .send(blockchainConnection.getSendingOptions({ from: accounts[7] }));

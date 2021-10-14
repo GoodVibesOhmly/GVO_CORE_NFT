@@ -228,12 +228,12 @@ async function mintItems1155(
   id,
   amount,
   data,
-  event = true
+  itemId
 ) {
   var tx = await tokenInstance.methods
     .safeTransferFrom(from, to, id, amount, data)
     .send(blockchainConnection.getSendingOptions({ from: from }));
-  if (event == true) {
+  if (itemId == null) {
     var logs = (await web3.eth.getTransactionReceipt(tx.transactionHash)).logs;
     var tokenId = web3.eth.abi.decodeParameter(
       "uint256",
@@ -244,6 +244,7 @@ async function mintItems1155(
     );
     return tokenId;
   }
+  return itemId;
 }
 
 module.exports = {

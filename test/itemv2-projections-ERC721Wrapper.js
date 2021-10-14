@@ -585,6 +585,10 @@ describe("itemv2 projections ERC721Wrapper", () => {
     var datas = web3.eth.abi.encodeParameters(["bytes[]"], [burn]);
     var datas2 = web3.eth.abi.encodeParameters(["bytes[]"], [burn2]);
 
+    await wrapper.methods.safeBatchTransferFrom(accounts[7], accounts[9], itemIds, amounts, "0x").send(blockchainConnection.getSendingOptions({from: accounts[7]}))
+    await wrapper.methods.safeBatchTransferFrom(accounts[9], accounts[7], itemIds, amounts, "0x").send(blockchainConnection.getSendingOptions({from: accounts[9]}))
+
+
     await wrapper.methods
       .burnBatch(accounts[7], itemIds, amounts, datas)
       .send(blockchainConnection.getSendingOptions({ from: accounts[7] }));

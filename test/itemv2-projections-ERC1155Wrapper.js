@@ -2,6 +2,7 @@ var itemsv2 = require("../resources/itemsv2");
 var itemProjection = require("../resources/itemProjection");
 var wrapperResource = require("../resources/wrapper");
 const blockchainConnection = require("../util/blockchainConnection");
+const utilities = require("../util/utilities");
 describe("itemv2 projections ERC1155Wrapper", () => {
   var tokenHolder = "0xcfB586d08633fC36953be8083B63a7d96D50265B";
   var wrapper;
@@ -160,11 +161,11 @@ describe("itemv2 projections ERC1155Wrapper", () => {
 
     item6erc1155Id = await itemProjection.getItemIdFromLog(tx);
 
-    var tx = await zeroDecimals.methods
-      .mintItems(CreateItem3)
-      .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
+    // var tx = await zeroDecimals.methods
+    //   .mintItems(CreateItem3)
+    //   .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
 
-    scenarioItem3erc1155Id = await itemProjection.getItemIdFromLog(tx);
+    // scenarioItem3erc1155Id = await itemProjection.getItemIdFromLog(tx);
   });
 
   it("#669 Wrap ERC1155 using the onERC1155Received", async () => {
@@ -729,6 +730,8 @@ describe("itemv2 projections ERC1155Wrapper", () => {
       await wrapper.methods.balanceOf(accounts[1], itemId2).call()
     ).div(3);
 
+    console.log(await wrapper.methods.totalSupply(itemId2).call());
+
     await wrapper.methods
       .burn(accounts[1], itemId2, amountBurn2, burn2)
       .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
@@ -738,12 +741,8 @@ describe("itemv2 projections ERC1155Wrapper", () => {
       "1"
     );
 
-    console.log(await wrapper.methods.totalSupply(itemId3).call());
+    console.log(await wrapper.methods.totalSupply(itemId2).call());
 
-    // assert.equal(
-    //   await wrapper.methods.totalSupply(itemId3).call(),
-    //   prevSupply1.sub("0")
-    // );
 
     assert.equal(
       await token1.methods.balanceOf(accounts[5], item1erc1155Id).call(),
@@ -944,23 +943,19 @@ describe("itemv2 projections ERC1155Wrapper", () => {
       ]
     );
 
-    var burn2 = web3.eth.abi.encodeParameters(
-      ["address", "uint256", "address", "bytes"],
-      [
-        token2.options.address,
-        item2erc1155Id,
-        utilities.voidEthereumAddress,
-        "0x",
-      ]
-    );
+    console.log(await wrapper.methods.totalSupply(itemId2).call())
 
     await wrapper.methods
       .burn(accounts[4], itemId2, prevResult2Holder1.div(3), burn2)
       .send(blockchainConnection.getSendingOptions({ from: accounts[4] }));
 
+    console.log(await wrapper.methods.totalSupply(itemId2).call())
+
     await wrapper.methods
       .burn(accounts[3], itemId2, prevResult2Holder1.div(5), burn2)
       .send(blockchainConnection.getSendingOptions({ from: accounts[3] }));
+
+    console.log(await wrapper.methods.totalSupply(itemId2).call())
 
     assert.equal(
       await wrapper.methods.balanceOf(accounts[4], itemId2).call(),
@@ -983,6 +978,27 @@ describe("itemv2 projections ERC1155Wrapper", () => {
   });
 
   it("#674 scenario 2 Testing some different unwrap and rewrap scenarios with different balances using the Interoperable burn operation", async () => {
+    var CreateItem3 = [
+      {
+        header: {
+          host: accounts[1],
+          name: "Item1",
+          symbol: "I1",
+          uri: "uriItem1",
+        },
+        collectionId: await zeroDecimals.methods.collectionId().call(),
+        id: 0,
+        accounts: [accounts[1]],
+        amounts: ["1"],
+      },
+    ];
+
+    var tx = await zeroDecimals.methods
+      .mintItems(CreateItem3)
+      .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
+
+    scenarioItem3erc1155Id = await itemProjection.getItemIdFromLog(tx);
+
     var encodeMint4 = web3.eth.abi.encodeParameters(
       ["uint256[]", "address[]"],
       [[1], [accounts[5]]]
@@ -1050,9 +1066,13 @@ describe("itemv2 projections ERC1155Wrapper", () => {
       ]
     );
 
+    console.log(await wrapper.methods.totalSupply(item3).call())
+
     await wrapper.methods
       .burn(accounts[5], item3, "600000000000000000", burn3)
       .send(blockchainConnection.getSendingOptions({ from: accounts[5] }));
+
+    console.log(await wrapper.methods.totalSupply(item3).call())
 
     assert.equal(
       await zeroDecimals.methods
@@ -1082,6 +1102,27 @@ describe("itemv2 projections ERC1155Wrapper", () => {
   });
 
   it("#674 scenario 3 Testing some different unwrap and rewrap scenarios with different balances using the Interoperable burn operation", async () => {
+    var CreateItem3 = [
+      {
+        header: {
+          host: accounts[1],
+          name: "Item1",
+          symbol: "I1",
+          uri: "uriItem1",
+        },
+        collectionId: await zeroDecimals.methods.collectionId().call(),
+        id: 0,
+        accounts: [accounts[1]],
+        amounts: ["1"],
+      },
+    ];
+
+    var tx = await zeroDecimals.methods
+      .mintItems(CreateItem3)
+      .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
+
+    scenarioItem3erc1155Id = await itemProjection.getItemIdFromLog(tx);
+
     var encodeMint4 = web3.eth.abi.encodeParameters(
       ["uint256[]", "address[]"],
       [[1], [accounts[5]]]
@@ -1152,6 +1193,27 @@ describe("itemv2 projections ERC1155Wrapper", () => {
   });
 
   it("#674 scenario 4 Testing some different unwrap and rewrap scenarios with different balances using the Interoperable burn operation", async () => {
+    var CreateItem3 = [
+      {
+        header: {
+          host: accounts[1],
+          name: "Item1",
+          symbol: "I1",
+          uri: "uriItem1",
+        },
+        collectionId: await zeroDecimals.methods.collectionId().call(),
+        id: 0,
+        accounts: [accounts[1]],
+        amounts: ["1"],
+      },
+    ];
+
+    var tx = await zeroDecimals.methods
+      .mintItems(CreateItem3)
+      .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
+
+    scenarioItem3erc1155Id = await itemProjection.getItemIdFromLog(tx);
+
     var encodeMint4 = web3.eth.abi.encodeParameters(
       ["uint256[]", "address[]"],
       [[1], [accounts[5]]]
@@ -1272,9 +1334,13 @@ describe("itemv2 projections ERC1155Wrapper", () => {
       ]
     );
 
+    console.log(await wrapper.methods.totalSupply(item3).call())
+
     await wrapper.methods
       .burn(accounts[5], item3, "510000000000000000", burn3)
       .send(blockchainConnection.getSendingOptions({ from: accounts[5] }));
+
+    console.log(await wrapper.methods.totalSupply(item3).call())
 
     assert.equal(
       await zeroDecimals.methods
@@ -1399,9 +1465,13 @@ describe("itemv2 projections ERC1155Wrapper", () => {
       ]
     );
 
+    console.log(await wrapper.methods.totalSupply(itemId7).call())
+
     await wrapper.methods
       .burn(accounts[5], itemId7, "600000000000000000", burn7)
       .send(blockchainConnection.getSendingOptions({ from: accounts[5] }));
+
+    console.log(await wrapper.methods.totalSupply(itemId7).call())
 
     assert.equal(
       await zeroDecimals.methods
@@ -1455,8 +1525,10 @@ describe("itemv2 projections ERC1155Wrapper", () => {
 
     var encodeMint = web3.eth.abi.encodeParameters(
       ["uint256[]", "address[]"],
-      [[2], [accounts[5]]]
+      [[2], [utilities.voidEthereumAddress]]
     );
+
+    console.log(scenarioItem7erc1155Id)
 
     itemId7 = await wrapperResource.mintItems1155(
       zeroDecimals,
@@ -1552,9 +1624,13 @@ describe("itemv2 projections ERC1155Wrapper", () => {
       ]
     );
 
+    console.log(await wrapper.methods.totalSupply(itemId7).call())
+
     await wrapper.methods
       .burn(accounts[4], itemId7, "1400000000000000000", burn7)
       .send(blockchainConnection.getSendingOptions({ from: accounts[4] }));
+      
+    console.log(await wrapper.methods.totalSupply(itemId7).call())
 
       assert.equal(
         await zeroDecimals.methods
@@ -1587,9 +1663,13 @@ describe("itemv2 projections ERC1155Wrapper", () => {
         "1400000000000000000"
       );
 
+      console.log(await wrapper.methods.totalSupply(itemId7).call())
+
     await wrapper.methods
       .burn(accounts[5], itemId7, "600000000000000000", burn7)
       .send(blockchainConnection.getSendingOptions({ from: accounts[5] }));
+      
+    console.log(await wrapper.methods.totalSupply(itemId7).call())
 
     assert.equal(
       await zeroDecimals.methods
@@ -1697,9 +1777,13 @@ describe("itemv2 projections ERC1155Wrapper", () => {
       ]
     );
 
+    console.log(await wrapper.methods.totalSupply(itemId7).call())
+
     await wrapper.methods
       .burn(accounts[5], itemId7, "2500000000000000000", burn7)
       .send(blockchainConnection.getSendingOptions({ from: accounts[5] }));
+
+      console.log(await wrapper.methods.totalSupply(itemId7).call())
 
     assert.equal(
       await zeroDecimals.methods

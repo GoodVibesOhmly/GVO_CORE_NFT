@@ -154,7 +154,7 @@ async function assertCheckBalanceSupply(
   var expectedBalance = checkBal.map((it, i) => {
     return it["balances"].map((item, index) => {
       return item.map((element, indexEl) => {
-        return element.add(amounts[i][indexEl]);
+        return element.add(amounts[index][indexEl]);
       });
     });
   });
@@ -162,7 +162,7 @@ async function assertCheckBalanceSupply(
   var expectedSupply = checkBal.map((it, i) => {
     return it["totalSupplies"].map((item, index) => {
       return item.map((element, indexEl) => {
-        return element.add(amounts[i].reduce((total, arg) => total.add(arg), 0));
+        return i < amounts.length ? element.add(amounts[i].reduce((total, arg) => total.add(arg), 0)) : element;
       });
     });
   });
@@ -189,7 +189,7 @@ async function assertCheckBalance(checkBal, CreateItem, itemids) {
     checkBal.map(async (bal, index) => {
       return await Promise.all(
         bal["balances"].map(async (b, i) => {
-          return b[0].add(CreateItem[index]["amounts"][i]);
+          return index < CreateItem.length ? b[0].add(CreateItem[index]["amounts"][i]) : b[0];
         })
       );
     })
@@ -199,12 +199,12 @@ async function assertCheckBalance(checkBal, CreateItem, itemids) {
     checkBal.map(async (bal, index) => {
       return await Promise.all(
         bal["totalSupplies"].map(async (b, i) => {
-          return b[0].add(
+          return index < CreateItem.length ? b[0].add(
             CreateItem[index]["amounts"].reduce(
               (total, arg) => total.add(arg),
               0
             )
-          );
+          ) : b[0];
         })
       );
     })

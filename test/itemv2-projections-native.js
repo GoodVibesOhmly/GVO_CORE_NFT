@@ -2771,10 +2771,6 @@ describe("Item V2 Projections - Native", () => {
 
     await Promise.all(
       operator.map(async (op, index) => {
-        await itemProjection.assertCheckIsApprovedForAll(
-          native.methods.isApprovedForAll(burnAddress[index][0], op[0]).call(),
-          false
-        );
         await mainInterface.methods.setApprovalForAll(op[0], true).send(
           blockchainConnection.getSendingOptions({
             from: burnAddress[index][0],
@@ -3092,10 +3088,6 @@ describe("Item V2 Projections - Native", () => {
 
     await Promise.all(
       operator.map(async (op, index) => {
-        await itemProjection.assertCheckIsApprovedForAll(
-          native.methods.isApprovedForAll(burnAddress[index], op).call(),
-          false
-        );
         await mainInterface.methods
           .setApprovalForAll(op, true)
           .send(

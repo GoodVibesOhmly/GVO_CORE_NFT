@@ -151,10 +151,14 @@ async function assertCheckBalanceSupply(
     idItems = await getItemIdFromLog(transaction);
   }
 
-  var expectedBalance = checkBal.map((it, i) => {
-    return it["balances"].map((item, index) => {
-      return item.map((element, indexEl) => {
-        return element.add(amounts[index][indexEl]);
+  var expectedBalance = []
+
+  checkBal.map((it, i) => {
+    it["balances"].map((item, index) => {
+      item.map((element, indexEl) => {
+        if(element != null && typeof(element) != 'undefined' && typeof(amounts[index][indexEl]) != 'undefined'){
+            expectedBalance.push(element.add(amounts[index][indexEl]));
+        }
       });
     });
   });
@@ -162,7 +166,9 @@ async function assertCheckBalanceSupply(
   var expectedSupply = checkBal.map((it, i) => {
     return it["totalSupplies"].map((item, index) => {
       return item.map((element, indexEl) => {
-        return i < amounts.length ? element.add(amounts[i].reduce((total, arg) => total.add(arg), 0)) : element;
+        if(element != null && element !== undefined){
+          return i < amounts.length ? element.add(amounts[i].reduce((total, arg) => total.add(arg), 0)) : element;
+        }
       });
     });
   });
@@ -172,7 +178,7 @@ async function assertCheckBalanceSupply(
       await itemsv2.checkBalances(
         accounts[index],
         Array(accounts[index].length).fill(event),
-        expectedBalance[0][index],
+        expectedBalance[index],
         expectedSupply[0][index]
       );
     })

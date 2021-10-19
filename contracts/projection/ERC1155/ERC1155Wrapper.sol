@@ -138,7 +138,7 @@ contract ERC1155Wrapper is IERC1155Wrapper, ItemProjection, IERC1155Receiver {
         address[] memory realReceivers = new address[](values.length);
         for(uint256 i = 0; i < values.length; i++) {
             totalAmount += values[i];
-            values[i] = _convertAmount(i, tokenDecimals, values[i], tokenId);
+            values[i] = _convertAmount(i, tokenDecimals, values[i], itemId);
             realReceivers[i] = (realReceivers[i] = i < receivers.length ? receivers[i] : from) != address(0) ? realReceivers[i] : from;
         }
         require(totalAmount == amount, "inconsistent amount");
@@ -147,11 +147,11 @@ contract ERC1155Wrapper is IERC1155Wrapper, ItemProjection, IERC1155Receiver {
     }
 
     function _convertAmount(uint256 i, uint256 tokenDecimals, uint256 plainValue, uint256 itemId) private view returns(uint256) {
-        uint256 totalSupply = 0;
-        if(i > 0 || tokenDecimals != 0 || itemId == 0 || (itemId != 0 && (totalSupply = Item(mainInterface).totalSupply(itemId)) >= 1e18)) {
+        uint256 totalSupply = itemId == 0 ? 0 : Item(mainInterface).totalSupply(itemId);
+        if(i > 0 || tokenDecimals != 0 || itemId == 0 || (itemId != 0 && (totalSupply >= 1e18))) {
             return plainValue * (10**(18 - tokenDecimals));
         }
-        return (1e18 - totalSupply) + ((plainValue - 1)  * (10**(18 - tokenDecimals)));
+        return (1e18 - totalSupply) + ((plainValue - 1) * (10**(18 - tokenDecimals)));
     }
 
     function _tryRecoveryMetadata(address source, uint256 tokenId) private view returns(string memory name, string memory symbol) {

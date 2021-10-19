@@ -1135,11 +1135,16 @@ describe("itemv2 projections ERC1155Wrapper", () => {
     await wrapper.methods
       .burn(accounts[5], item3, "600000000000000000", burn3)
       .send(blockchainConnection.getSendingOptions({ from: accounts[5] }));
-
++
     console.log(await wrapper.methods.totalSupply(item3).call());
 
     assert.equal(
       await wrapper.methods.balanceOf(accounts[4], item3).call(),
+      "400000000000000000"
+    );
+
+    assert.equal(
+      await wrapper.methods.totalSupply(item3).call(),
       "400000000000000000"
     );
 

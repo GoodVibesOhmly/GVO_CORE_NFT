@@ -108,7 +108,7 @@ contract ERC1155Wrapper is IERC1155Wrapper, ItemProjection, IERC1155Receiver {
         bytes[] memory datas = abi.decode(data, (bytes[]));
         for(uint256 i = 0; i < itemIds.length; i++) {
             interoperableInterfaceAmounts[i] = _unwrap(account, itemIds[i], amounts[i], datas[i]);
-            IItemMainInterface(mainInterface).mintTransferOrBurn(true, abi.encode(abi.encode(msg.sender, account, address(0), itemIds[i], interoperableInterfaceAmounts[i]).asSingletonArray()));
+            IItemMainInterface(mainInterface).mintTransferOrBurn(false, abi.encode(msg.sender, account, address(0), itemIds[i], interoperableInterfaceAmounts[i]));
         }
         emit TransferBatch(msg.sender, account, address(0), itemIds, interoperableInterfaceAmounts);
     }

@@ -216,6 +216,8 @@ contract ERC1155Wrapper is IERC1155Wrapper, ItemProjection, IERC1155Receiver {
         bool isUnity = interoperableAmount >= (51*1e16);
         if(totalSupply <= 1e18 && isUnity) {
             tokenAmount = 1;
+        } else {
+            require(amount == tokenAmount * converter, "wrong amount");
         }
         require(_tokenDecimals[itemId] == 18 || totalSupply > 1e18 || isUnity, "Insufficient balance");
         IERC1155(tokenAddress).safeTransferFrom(address(this), receiver, tokenId, tokenAmount, payload);

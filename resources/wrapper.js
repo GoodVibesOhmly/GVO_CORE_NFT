@@ -247,6 +247,32 @@ async function mintItems1155(
   return itemId;
 }
 
+async function mintBatchItems1155(
+  tokenInstance,
+  from,
+  to,
+  id,
+  amount,
+  data,
+  itemId
+) {
+  var tx = await tokenInstance.methods
+    .safeBatchTransferFrom(from, to, id, amount, data)
+    .send(blockchainConnection.getSendingOptions({ from: from }));
+  if (itemId == null) {
+    var logs = (await web3.eth.getTransactionReceipt(tx.transactionHash)).logs;
+    var tokenId = web3.eth.abi.decodeParameter(
+      "uint256",
+      logs.filter(
+        (it) =>
+          it.topics[0] === web3.utils.sha3("Token(address,uint256,uint256)")
+      )[0].topics[3]
+    );
+    return tokenId;
+  }
+  return itemId;
+}
+
 module.exports = {
   mintErc20Wrapper,
   assertDecimals,
@@ -256,4 +282,5 @@ module.exports = {
   mintErc20,
   revertMintErc20,
   mintItems1155,
+  mintBatchItems1155,
 };

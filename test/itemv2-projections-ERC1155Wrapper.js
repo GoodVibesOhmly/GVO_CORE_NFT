@@ -1909,6 +1909,372 @@ describe("itemv2 projections ERC1155Wrapper", () => {
     );
   });
 
+  it("#674 scenario 8", async () => {
+    var CreateItem7 = [
+      {
+        header: {
+          host: accounts[1],
+          name: "Item1",
+          symbol: "I1",
+          uri: "uriItem1",
+        },
+        collectionId: await zeroDecimals.methods.collectionId().call(),
+        id: 0,
+        accounts: [accounts[5]],
+        amounts: ["1"],
+      },
+    ];
+
+    var tx = await zeroDecimals.methods
+      .mintItems(CreateItem7)
+      .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
+
+    var scenarioItem7erc1155Id = await itemProjection.getItemIdFromLog(tx);
+
+    var encodeMint = web3.eth.abi.encodeParameters(
+      ["uint256[]", "address[]"],
+      [[1], [utilities.voidEthereumAddress]]
+    );
+
+    var itemId7 = await wrapperResource.mintItems1155(
+      zeroDecimals,
+      accounts[5],
+      wrapper.options.address,
+      scenarioItem7erc1155Id[0],
+      1,
+      encodeMint,
+      itemId7
+    );
+
+    assert.equal(
+      await wrapper.methods.balanceOf(accounts[5], itemId7).call(),
+      "1000000000000000000"
+    );
+
+    assert.equal(
+      await zeroDecimals.methods
+        .balanceOf(accounts[5], scenarioItem7erc1155Id[0])
+        .call(),
+      "0"
+    );
+
+    await wrapper.methods
+      .safeTransferFrom(
+        accounts[5],
+        accounts[4],
+        itemId7,
+        "400000000000000000",
+        "0x"
+      )
+      .send(blockchainConnection.getSendingOptions({ from: accounts[5] }));
+
+    assert.equal(
+      await wrapper.methods.balanceOf(accounts[4], itemId7).call(),
+      "400000000000000000"
+    );
+    assert.equal(
+      await wrapper.methods.balanceOf(accounts[5], itemId7).call(),
+      "600000000000000000"
+    );
+
+    var burn7 = web3.eth.abi.encodeParameters(
+      ["address", "uint256", "address", "bytes"],
+      [
+        zeroDecimals.options.address,
+        scenarioItem7erc1155Id[0],
+        utilities.voidEthereumAddress,
+        "0x",
+      ]
+    );
+
+    await wrapper.methods
+      .burn(accounts[5], itemId7, "600000000000000000", burn7)
+      .send(blockchainConnection.getSendingOptions({ from: accounts[5] }));
+
+    var encodeMint = web3.eth.abi.encodeParameters(
+      ["uint256[]", "address[]"],
+      [[1], [accounts[5]]]
+    );
+
+    itemId7 = await wrapperResource.mintItems1155(
+      zeroDecimals,
+      accounts[5],
+      wrapper.options.address,
+      scenarioItem7erc1155Id[0],
+      1,
+      encodeMint,
+      itemId7
+    );
+
+
+
+    var CreateItem7 = [
+      {
+        header: {
+          host: accounts[1],
+          name: "Item1",
+          symbol: "I1",
+          uri: "uriItem1",
+        },
+        collectionId: await zeroDecimals.methods.collectionId().call(),
+        id: scenarioItem7erc1155Id[0],
+        accounts: [accounts[5]],
+        amounts: ["3"],
+      },
+    ];
+
+    var amountBatch = [1, 2];
+
+    var encodeMint = await Promise.all(
+      amountBatch.map(async (amount, index) => 
+        web3.eth.abi.encodeParameters(
+          ["uint256[]", "address[]"],
+          [[amount], [accounts[5]]]
+        )
+      ));
+
+      var datas = web3.eth.abi.encodeParameters(["bytes[]"], [encodeMint])
+
+    console.log(datas)
+
+    var tx = await zeroDecimals.methods
+      .mintItems(CreateItem7)
+      .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
+
+
+    itemId7 = await wrapperResource.mintBatchItems1155(
+        zeroDecimals,
+        accounts[5],
+        wrapper.options.address,
+        [scenarioItem7erc1155Id[0], scenarioItem7erc1155Id[0]],
+        [1, 2],
+        datas,
+        itemId7
+      );
+
+    await catchCall(wrapper.methods
+      .burn(accounts[5], itemId7, "600000000000000000", burn7)
+      .send(blockchainConnection.getSendingOptions({ from: accounts[5] })), "wrong amount");
+
+    await wrapper.methods
+      .burn(accounts[5], itemId7, "3000000000000000000", burn7)
+      .send(blockchainConnection.getSendingOptions({ from: accounts[5] }));
+
+    console.log(await wrapper.methods.totalSupply(itemId7).call());
+
+    assert.equal(
+      await zeroDecimals.methods
+        .balanceOf(accounts[5], scenarioItem7erc1155Id[0])
+        .call(),
+      "3"
+    );
+
+    var encodeMint = web3.eth.abi.encodeParameters(
+      ["uint256[]", "address[]"],
+      [[3], [accounts[5]]]
+    );
+
+    itemId7 = await wrapperResource.mintItems1155(
+      zeroDecimals,
+      accounts[5],
+      wrapper.options.address,
+      scenarioItem7erc1155Id[0],
+      3,
+      encodeMint,
+      itemId7
+    );
+
+    assert.equal(
+      await wrapper.methods.balanceOf(accounts[5], itemId7).call(),
+      "3600000000000000000"
+    );
+  });
+
+  it("#674 scenario 9", async () => {
+    var CreateItem7 = [
+      {
+        header: {
+          host: accounts[1],
+          name: "Item1",
+          symbol: "I1",
+          uri: "uriItem1",
+        },
+        collectionId: await zeroDecimals.methods.collectionId().call(),
+        id: 0,
+        accounts: [accounts[5]],
+        amounts: ["1"],
+      },
+    ];
+
+    var tx = await zeroDecimals.methods
+      .mintItems(CreateItem7)
+      .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
+
+    var scenarioItem7erc1155Id = await itemProjection.getItemIdFromLog(tx);
+
+    var encodeMint = web3.eth.abi.encodeParameters(
+      ["uint256[]", "address[]"],
+      [[1], [utilities.voidEthereumAddress]]
+    );
+
+    var itemId7 = await wrapperResource.mintItems1155(
+      zeroDecimals,
+      accounts[5],
+      wrapper.options.address,
+      scenarioItem7erc1155Id[0],
+      1,
+      encodeMint,
+      itemId7
+    );
+
+    assert.equal(
+      await wrapper.methods.balanceOf(accounts[5], itemId7).call(),
+      "1000000000000000000"
+    );
+
+    assert.equal(
+      await zeroDecimals.methods
+        .balanceOf(accounts[5], scenarioItem7erc1155Id[0])
+        .call(),
+      "0"
+    );
+
+    await wrapper.methods
+      .safeTransferFrom(
+        accounts[5],
+        accounts[4],
+        itemId7,
+        "400000000000000000",
+        "0x"
+      )
+      .send(blockchainConnection.getSendingOptions({ from: accounts[5] }));
+
+    assert.equal(
+      await wrapper.methods.balanceOf(accounts[4], itemId7).call(),
+      "400000000000000000"
+    );
+    assert.equal(
+      await wrapper.methods.balanceOf(accounts[5], itemId7).call(),
+      "600000000000000000"
+    );
+
+    var burn7 = web3.eth.abi.encodeParameters(
+      ["address", "uint256", "address", "bytes"],
+      [
+        zeroDecimals.options.address,
+        scenarioItem7erc1155Id[0],
+        utilities.voidEthereumAddress,
+        "0x",
+      ]
+    );
+
+    await wrapper.methods
+      .burn(accounts[5], itemId7, "600000000000000000", burn7)
+      .send(blockchainConnection.getSendingOptions({ from: accounts[5] }));
+
+
+      var CreateItem7 = [
+        {
+          header: {
+            host: accounts[1],
+            name: "Item1",
+            symbol: "I1",
+            uri: "uriItem1",
+          },
+          collectionId: await zeroDecimals.methods.collectionId().call(),
+          id: scenarioItem7erc1155Id[0],
+          accounts: [accounts[5]],
+          amounts: ["3"],
+        },
+      ];
+  
+      var amountBatch = [1, 2];
+  
+      var encodeMint = await Promise.all(
+        amountBatch.map(async (amount, index) => 
+          web3.eth.abi.encodeParameters(
+            ["uint256[]", "address[]"],
+            [[amount], [accounts[5]]]
+          )
+        ));
+  
+        var datas = web3.eth.abi.encodeParameters(["bytes[]"], [encodeMint])
+  
+      console.log(datas)
+  
+      var tx = await zeroDecimals.methods
+        .mintItems(CreateItem7)
+        .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
+  
+  
+      itemId7 = await wrapperResource.mintBatchItems1155(
+          zeroDecimals,
+          accounts[5],
+          wrapper.options.address,
+          [scenarioItem7erc1155Id[0], scenarioItem7erc1155Id[0]],
+          [1, 2],
+          datas,
+          itemId7
+        );
+
+    var encodeMint = web3.eth.abi.encodeParameters(
+      ["uint256[]", "address[]"],
+      [[1], [accounts[5]]]
+    );
+
+    itemId7 = await wrapperResource.mintItems1155(
+      zeroDecimals,
+      accounts[5],
+      wrapper.options.address,
+      scenarioItem7erc1155Id[0],
+      1,
+      encodeMint,
+      itemId7
+    );
+
+    assert.equal(
+      await wrapper.methods.balanceOf(accounts[5], itemId7).call(),
+      "4000000000000000000"
+    );
+
+    await catchCall(wrapper.methods
+      .burn(accounts[5], itemId7, "600000000000000000", burn7)
+      .send(blockchainConnection.getSendingOptions({ from: accounts[5] })), "wrong amount");
+
+    await wrapper.methods
+      .burn(accounts[5], itemId7, "3000000000000000000", burn7)
+      .send(blockchainConnection.getSendingOptions({ from: accounts[5] }));
+
+    console.log(await wrapper.methods.totalSupply(itemId7).call());
+
+    assert.equal(
+      await zeroDecimals.methods
+        .balanceOf(accounts[5], scenarioItem7erc1155Id[0])
+        .call(),
+      "3"
+    );
+
+    var encodeMint = web3.eth.abi.encodeParameters(
+      ["uint256[]", "address[]"],
+      [[3], [accounts[5]]]
+    );
+
+    itemId7 = await wrapperResource.mintItems1155(
+      zeroDecimals,
+      accounts[5],
+      wrapper.options.address,
+      scenarioItem7erc1155Id[0],
+      3,
+      encodeMint,
+      itemId7
+    );
+
+    assert.equal(
+      await wrapper.methods.balanceOf(accounts[5], itemId7).call(),
+      "3600000000000000000"
+    );
+  });
+
   it("#674 scenario 2 interoperable", async () => {
     var CreateItem3 = [
       {
@@ -2100,7 +2466,7 @@ describe("itemv2 projections ERC1155Wrapper", () => {
       wrapper.methods
         .burn(accounts[5], item3, "500000000000000000", burn3)
         .send(blockchainConnection.getSendingOptions({ from: accounts[5] })),
-      "Insufficient balance"
+      "wrong amount"
     );
   });
 
@@ -2160,9 +2526,13 @@ describe("itemv2 projections ERC1155Wrapper", () => {
     )
       .mul(40)
       .div(100);
+
+    amountToBurn = "1000000000000000000";
     var amount5 = (await wrapper.methods.balanceOf(accounts[5], itemId7).call())
       .mul(60)
       .div(100);
+
+    amount5 = "1000000000000000000";
 
     await erc20Contract.methods.burn(amountToBurn).send(
       blockchainConnection.getSendingOptions({
@@ -2172,7 +2542,7 @@ describe("itemv2 projections ERC1155Wrapper", () => {
 
     assert.equal(
       await wrapper.methods.balanceOf(accounts[5], itemId7).call(),
-      amount5
+      "2000000000000000000"
     );
 
     var burn7 = web3.eth.abi.encodeParameters(
@@ -2197,11 +2567,16 @@ describe("itemv2 projections ERC1155Wrapper", () => {
       await zeroDecimals.methods
         .balanceOf(accounts[5], scenarioItem7erc1155Id[0])
         .call(),
-      "2"
+      "1"
     );
     assert.equal(
       await wrapper.methods.balanceOf(accounts[5], itemId7).call(),
-      "0"
+      "1000000000000000000"
+    );
+
+    var encodeMint = web3.eth.abi.encodeParameters(
+      ["uint256[]", "address[]"],
+      [[1], [accounts[5]]]
     );
 
     itemId7 = await wrapperResource.mintItems1155(
@@ -2209,7 +2584,7 @@ describe("itemv2 projections ERC1155Wrapper", () => {
       accounts[5],
       wrapper.options.address,
       scenarioItem7erc1155Id[0],
-      2,
+      1,
       encodeMint,
       itemId7
     );
@@ -2218,11 +2593,11 @@ describe("itemv2 projections ERC1155Wrapper", () => {
 
     assert.equal(
       await wrapper.methods.balanceOf(accounts[5], itemId7).call(),
-      amount5
+      "2000000000000000000"
     );
   });
 
-  it("#674 scenario 7/2 interoperable", async () => {
+  it("#674 scenar 7/2 interoperable", async () => {
     var CreateItem7 = [
       {
         header: {
@@ -2276,23 +2651,23 @@ describe("itemv2 projections ERC1155Wrapper", () => {
     var amountToTransfer = (
       await wrapper.methods.balanceOf(accounts[5], itemId7).call()
     )
-      .mul(60)
-      .div(100);
-    var amount5 = (await wrapper.methods.balanceOf(accounts[5], itemId7).call())
       .mul(40)
       .div(100);
+
+      amountToTransfer = "1000000000000000000";
+    var amount5 = (await wrapper.methods.balanceOf(accounts[5], itemId7).call())
+      .mul(60)
+      .div(100);
+
+    amount5 = "1000000000000000000";
 
     await erc20Contract.methods
       .transferFrom(accounts[5], accounts[4], amountToTransfer)
       .send(blockchainConnection.getSendingOptions({ from: accounts[5] }));
 
     assert.equal(
-      await wrapper.methods.balanceOf(accounts[4], itemId7).call(),
-      amountToTransfer
-    );
-    assert.equal(
       await wrapper.methods.balanceOf(accounts[5], itemId7).call(),
-      amount5
+      "2000000000000000000"
     );
 
     var burn7 = web3.eth.abi.encodeParameters(
@@ -2321,7 +2696,29 @@ describe("itemv2 projections ERC1155Wrapper", () => {
     );
     assert.equal(
       await wrapper.methods.balanceOf(accounts[5], itemId7).call(),
-      "0"
+      "1000000000000000000"
+    );
+
+    var encodeMint = web3.eth.abi.encodeParameters(
+      ["uint256[]", "address[]"],
+      [[1], [accounts[5]]]
+    );
+
+    itemId7 = await wrapperResource.mintItems1155(
+      zeroDecimals,
+      accounts[5],
+      wrapper.options.address,
+      scenarioItem7erc1155Id[0],
+      1,
+      encodeMint,
+      itemId7
+    );
+
+    console.log(await wrapper.methods.totalSupply(itemId7).call());
+
+    assert.equal(
+      await wrapper.methods.balanceOf(accounts[5], itemId7).call(),
+      "2000000000000000000"
     );
   });
 });

@@ -21,7 +21,7 @@ abstract contract ItemProjection is IItemProjection, LazyInitCapableElement {
     constructor(bytes memory lazyInitData) LazyInitCapableElement(lazyInitData) {
     }
 
-    function _lazyInit(bytes memory lazyInitParams) override internal returns(bytes memory lazyInitResponse) {
+    function _lazyInit(bytes memory lazyInitParams) override virtual internal returns(bytes memory lazyInitResponse) {
         (mainInterface, lazyInitResponse) = abi.decode(lazyInitParams, (address, bytes));
         Header memory header;
         CreateItem[] memory items;

@@ -1534,6 +1534,10 @@ describe("itemv2 projections ERC20Wrapper", () => {
       await wrapper.methods.totalSupply(itemIds[0]).call()
     );
     assert.equal(
+      prevSupply.sub(prev.mul(20).div(100)),
+      await original.methods.balanceOf(wrapper.options.address).call()//TODO FIXME
+    );
+    assert.equal(
       "0",
       await erc20Contract.methods.balanceOf(accounts[3]).call()
     );

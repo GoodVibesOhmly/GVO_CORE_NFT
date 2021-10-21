@@ -2061,9 +2061,18 @@ describe("Item V2 Projections - Native", () => {
       })
     );
 
-    await native.methods
-      .mintItems(MintItem, [true])
-      .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
+    await catchCall(
+      native.methods
+       .mintItems(MintItem, [true])
+       .send(blockchainConnection.getSendingOptions({ from: accounts[1] })),
+       "finalized");
+
+    await catchCall(
+        native.methods
+         .mintItems(MintItem, [false])
+         .send(blockchainConnection.getSendingOptions({ from: accounts[1] })),
+         "finalized");
+
     await itemProjection.assertCheckBalance(checkBal, CreateItem, idItems);
   });
 
@@ -2341,8 +2350,7 @@ describe("Item V2 Projections - Native", () => {
     var checkBalTo = await itemsv2.checkBalances(toAddress, itemIds);
 
     await Promise.all(
-      itemIds.map(async (item, index) => {
-        await catchCall(
+      itemIds.map((item, index) => catchCall(
           native.methods
             .safeTransferFrom(
               fromAddress[index],
@@ -2357,8 +2365,8 @@ describe("Item V2 Projections - Native", () => {
               })
             ),
           "amount exceeds allowance"
-        );
-      })
+        )
+      )
     );
 
     await Promise.all(

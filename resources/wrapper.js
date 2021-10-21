@@ -106,8 +106,7 @@ async function revertMintErc20(
     await catchCall(
       wrapper.methods
         .mintItems(itemList)
-        .send(blockchainConnection.getSendingOptions({ from: fromAccount })),
-      "ETH"
+        .send(blockchainConnection.getSendingOptions({ from: fromAccount, value : ethAmount }))
     );
   }
 }

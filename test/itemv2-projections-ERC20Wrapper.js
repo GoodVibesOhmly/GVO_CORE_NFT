@@ -154,6 +154,16 @@ describe("itemv2 projections ERC20Wrapper", () => {
   });
 
   it("#659 Wrap ERC20 (18 decimals) and ETH", async () => {
+    /**
+    * Authorized subjects:
+    * ERC20 holder holders
+    * approved operator address
+    * Functions used in the test:
+    * mint(address[] calldata tokenAddresses, uint256[][] calldata amounts, address[][] calldata receivers)
+    * Items used: Item1, Item2, Item3.
+    *
+    * Wrap ETH, UNI and DAI using the mint function passing multiple amounts and receivers (msg.sender + other addresses) for each token.
+    */
     await buyForETH(daiToken, 2, accounts[1]);
     await buyForETH(uniToken, 2, accounts[1]);
 
@@ -237,6 +247,16 @@ describe("itemv2 projections ERC20Wrapper", () => {
   });
 
   it("#660 Wrap ERC20 (decimals different from 18)", async () => {
+    /**
+    * Authorized subjects:
+    * ERC20 holders
+    * approved operator address
+    * Functions used in the test:
+    * mint(address[] calldata tokenAddresses, uint256[][] calldata amounts, address[][] calldata receivers)
+    * Items used: Item4, Item5, Item6.
+    *
+    * Wrap USDC, HEX, CEL (celsius) using the mint function passing multiple amounts and receivers (msg.sender + other addresses) for each token.
+    */
     await buyForETH(usdcToken, 2, accounts[1]);
     await buyForETH(hexToken, 2, accounts[1]);
     await buyForETH(celToken, 2, accounts[1]);
@@ -332,6 +352,16 @@ describe("itemv2 projections ERC20Wrapper", () => {
   });
 
   it("#661 Wrap ERC20 (Item Interoperable)", async () => {
+    /**
+    * Authorized subjects:
+    * ERC20 holders
+    * approved operator address
+    * Functions used in the test:
+    * mint(address[] calldata tokenAddresses, uint256[][] calldata amounts, address[][] calldata receivers)
+    * Items used: Item1, Item7, Item8, Item9
+    *
+    * Wrap ETH and 3 Items using their Interoperable Interface using the mint function passing multiple amounts and receivers (msg.sender + other addresses) for each token.
+    */
     var prev = "2000000000000000000";
     await osToken.methods
     .transfer(accounts[1], prev)
@@ -465,6 +495,17 @@ describe("itemv2 projections ERC20Wrapper", () => {
   });
 
   it("#662 Wrap ERC20 (deflationary token)", async () => {
+    /**
+    * Authorized subjects:
+    * ERC20 holders
+    * approved operator address
+    * Functions used in the test:
+    * mint(address[] calldata tokenAddresses, uint256[][] calldata amounts, address[][] calldata receivers)
+    * Items used: Item10
+    *
+    * Must fail: Wrap FEG using the mint function passing multiple amounts and receivers (msg.sender + other addresses) for each token. revert witrh Only single transfers allowed for this token
+    * Wrap FEG using the mint function passing a single amount and receiver
+    */
     await buyForETH(fegToken, 2, accounts[1]);
 
     var fegAmounts = (await fegToken.methods.balanceOf(accounts[1]).call()).div(
@@ -556,6 +597,20 @@ describe("itemv2 projections ERC20Wrapper", () => {
   });
 
   it("#663 Unwrap ERC20 (18 decimals) and ETH", async () => {
+    /**
+    * Authorized subjects:
+    * Item holders
+    * approved operator address
+    * Functions used in the test:
+    * Burn(address account, uint256 itemId, uint256 amount, bytes memory data)
+    * burnBatch(address account, uint256[] calldata itemIds, uint256[] calldata amounts, bytes memory data)
+    * Items used: Item1, Item2, Item3
+    *
+    * Unwrap ETH using the burn function
+    * Unwrap UNI using the burn function passing a receiver different from msg.sender
+    * Unwrap DAI from an approved operator.
+    * Unwrap ETH, UNI and DAI using the burnBatch function passing a different receiver (msg.sender + other addresses) for each token.
+    */
     var tokenContractList = [uniToken, daiToken];
 
     var acc =
@@ -772,6 +827,18 @@ describe("itemv2 projections ERC20Wrapper", () => {
   });
 
   it("#664 Unwrap ERC20 (decimals different from 18)", async () => {
+    /**
+    * Authorized subjects:
+    * Item holders
+    * approved operator address
+    * Functions used in the test:
+    * Burn(address account, uint256 itemId, uint256 amount, bytes memory data)
+    * burnBatch(address account, uint256[] calldata itemIds, uint256[] calldata amounts, bytes memory data)
+    * Items used: Item4, Item5, Item6
+    *
+    * Unwrap USDC using the burn function.
+    * Unwrap USDC, HEX, CEL (celsius) using the burnBatch function passing a different receiver (msg.sender + other addresses) for each token.
+    */
     var tokenContractList = [usdcToken, hexToken, celToken];
     var tokenDecDiff = [1e12, 1e10, 1e14];
     var catchCallAmount = [1e11, 1e9, 1e13]
@@ -1055,6 +1122,17 @@ describe("itemv2 projections ERC20Wrapper", () => {
   });
 
   it("#665 Unwrap ERC20 (Item Interoperable)", async () => {
+    /**
+    * Authorized subjects:
+    * Item holders
+    * approved operator address
+    * Functions used in the test:
+    * Burn(address account, uint256 itemId, uint256 amount, bytes memory data)
+    * burnBatch(address account, uint256[] calldata itemIds, uint256[] calldata amounts, bytes memory data)
+    * Items used: Item1, Item7, Item8, Item9
+    *
+    *Unwrap ETH and 3 Items using the burnBatch function passing different receivers (msg.sender + other addresses) for each token.
+    */
     var tokenContractList = [erc20Contract, erc20Contract1, osToken];
 
     await Promise.all(
@@ -1203,6 +1281,17 @@ describe("itemv2 projections ERC20Wrapper", () => {
   });
 
   it("#666 Unwrap ERC20 (deflationary)", async () => {
+    /**
+    * Authorized subjects:
+    * Item holders
+    * approved operator address
+    * Functions used in the test:
+    * Burn(address account, uint256 itemId, uint256 amount, bytes memory data)
+    * burnBatch(address account, uint256[] calldata itemIds, uint256[] calldata amounts, bytes memory data)
+    * Items used: Item10
+    *
+    * Unwrap FEG using the burn function.
+    */
     var tokenContractList = [usdcToken, hexToken, celToken];
     var tokenDec = [6, 8, 4];
     var tokenDecDiff = [12, 10, 14];
@@ -1241,6 +1330,28 @@ describe("itemv2 projections ERC20Wrapper", () => {
   });
 
   it("#667 Testing some different unwrap scenarios with different balances using the Interoperable burn operation: Scenario1", async () => {
+    /**
+    Authorized subjects:
+    Item holders
+    Functions used in the test:
+    mint
+    safeTransferFrom
+    Burn
+    Burn Interoperable
+    Items used: Item 3, Item 5
+    Scenario1:
+    Wrap an ERC20
+    Burn Interoperable 80%
+    Unwrap 20% using the burn function
+
+    Scenario2:
+    wrap an ERC20
+    Burn Interoperable 10 % -> new tot. supply = tot.supply original - burned amount.
+    Unwrap 50% using the burn function.
+    Transfer Interoperable 20%.
+    Unwrap 20% using the burn function.
+    20% remains
+    */
     var prev = "1000000000000000000";
     const prevBalance = await osToken.methods.balanceOf(accounts[11]).call();
     await osToken.methods
@@ -1317,6 +1428,28 @@ describe("itemv2 projections ERC20Wrapper", () => {
   });
 
   it("#667 Testing some different unwrap scenarios with different balances using the Interoperable burn operation: Scenario2", async () => {
+    /**
+    Authorized subjects:
+    Item holders
+    Functions used in the test:
+    mint
+    safeTransferFrom
+    Burn
+    Burn Interoperable
+    Items used: Item 3, Item 5
+    Scenario1:
+    Wrap an ERC20
+    Burn Interoperable 80%
+    Unwrap 20% using the burn function
+
+    Scenario2:
+    wrap an ERC20
+    Burn Interoperable 10 % -> new tot. supply = tot.supply original - burned amount.
+    Unwrap 50% using the burn function.
+    Transfer Interoperable 20%.
+    Unwrap 20% using the burn function.
+    20% remains
+    */
     var prev = "1000000000000000000";
     const prevBalance = await osToken.methods.balanceOf(accounts[11]).call();
     await osToken.methods
@@ -1394,15 +1527,15 @@ describe("itemv2 projections ERC20Wrapper", () => {
     );
     prevSupply = await wrapper.methods.totalSupply(itemIds[0]).call();
     await wrapper.methods
-      .burn(accounts[11], itemIds[0], prev.mul(20).div(100), burn)
-      .send(blockchainConnection.getSendingOptions({ from: accounts[11] }));
+      .burn(accounts[3], itemIds[0], prev.mul(20).div(100), burn)
+      .send(blockchainConnection.getSendingOptions({ from: accounts[3] }));
     assert.equal(
       prevSupply.sub(prev.mul(20).div(100)),
       await wrapper.methods.totalSupply(itemIds[0]).call()
     );
     assert.equal(
       "0",
-      await erc20Contract.methods.balanceOf(accounts[11]).call()
+      await erc20Contract.methods.balanceOf(accounts[3]).call()
     );
   });
 });

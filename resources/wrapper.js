@@ -228,11 +228,38 @@ async function mintItems1155(
   id,
   amount,
   data,
-  itemId
+  itemId,
+  wrapper,
+  itemIdTo,
+  itemIdAmount
 ) {
+  if (itemId != null) {
+    var previousItemBalance = 
+      await Promise.all(
+        itemIdTo.map(async(toAddress, index) => 
+          await wrapper.methods.balanceOf(toAddress == utilities.voidEthereumAddress ? from : toAddress, itemId).call()
+        )
+      );
+    
+    var previousItemSupply = await wrapper.methods.totalSupply(itemId).call();
+  }else{
+    var previousItemBalance = 
+      await Promise.all(
+        itemIdTo.map(async(toAddress, index) => 
+          "0"
+        )
+      );
+    var previousItemSupply = "0";
+  }
+
+  var previousTokenBalance = await tokenInstance.methods.balanceOf(wrapper.options.address, id).call()
   var tx = await tokenInstance.methods
     .safeTransferFrom(from, to, id, amount, data)
     .send(blockchainConnection.getSendingOptions({ from: from }));
+  // assert.equal(
+  //   await tokenInstance.methods.balanceOf(wrapper.options.address, id).call(),
+  //   previousTokenBalance.add(amount)
+  // );
   if (itemId == null) {
     var logs = (await web3.eth.getTransactionReceipt(tx.transactionHash)).logs;
     var tokenId = web3.eth.abi.decodeParameter(
@@ -242,8 +269,21 @@ async function mintItems1155(
           it.topics[0] === web3.utils.sha3("Token(address,uint256,uint256)")
       )[0].topics[3]
     );
+    await Promise.all(
+      itemIdTo.map(async(toAddress, index) => 
+        assert.equal(await wrapper.methods.balanceOf(toAddress == utilities.voidEthereumAddress ? from : toAddress, tokenId).call(), previousItemBalance[index].add(itemIdAmount[index]))
+      )
+    );
+    assert.equal(await wrapper.methods.totalSupply(tokenId).call(), previousItemSupply.add(itemIdAmount.reduce((total, arg) => total.add(arg), 0)));
     return tokenId;
   }
+
+  await Promise.all(
+      itemIdTo.map(async(toAddress, index) => 
+        assert.equal(await wrapper.methods.balanceOf(toAddress == utilities.voidEthereumAddress ? from : toAddress, itemId).call(), previousItemBalance[index].add(itemIdAmount[index]))
+      )
+    );
+  assert.equal(await wrapper.methods.totalSupply(itemId).call(), previousItemSupply.add(itemIdAmount.reduce((total, arg) => total.add(arg), 0)));
   return itemId;
 }
 
@@ -273,6 +313,96 @@ async function mintBatchItems1155(
   return itemId;
 }
 
+async function safeTransfer1155(
+  from,
+  to,
+  itemId,
+  amount,
+  data,
+  tokenInstance
+){
+  var prevFromBalance = await tokenInstance.methods.balanceOf(from, itemId).call()
+  var prevToBalance = await tokenInstance.methods.balanceOf(to, itemId).call()
+  await tokenInstance.methods
+      .safeTransferFrom(
+        from,
+        to,
+        itemId,
+        amount,
+        data
+      )
+      .send(blockchainConnection.getSendingOptions({ from: from }));
+  assert.equal(
+    await tokenInstance.methods.balanceOf(from, itemId).call(),
+    prevFromBalance.sub(amount)
+  );
+  assert.equal(
+    await tokenInstance.methods.balanceOf(to, itemId).call(),
+    prevToBalance.add(amount)
+  );
+}
+
+async function safeBatchTransfer1155(
+  from,
+  to,
+  itemId,
+  amount,
+  data,
+  tokenInstance
+){
+  var prevFromBalance = 
+    await Promise.all(itemId.map(async(id, index) =>
+      await tokenInstance.methods.balanceOf(from, id).call())
+    )
+  var prevToBalance = 
+  await Promise.all(itemId.map(async(id, index) =>
+      await tokenInstance.methods.balanceOf(to, id).call())
+    )
+    await tokenInstance.methods
+    .safeBatchTransferFrom(
+      from,
+      to,
+      itemId,
+      amount,
+      data
+    )
+    .send(blockchainConnection.getSendingOptions({ from: from }));
+    await Promise.all(itemId.map(async(id, index) =>{
+      assert.equal(
+        await tokenInstance.methods.balanceOf(from, id).call(),
+        prevFromBalance[index].sub(amount[index])
+      )
+      assert.equal(
+        await tokenInstance.methods.balanceOf(to, id).call(),
+        prevToBalance[index].add(amount[index])
+      )
+    }))
+}
+
+async function burn1155(
+  from,
+  operator,
+  item,
+  amount,
+  data,
+  tokenInstance
+){
+  var prevSupply = await tokenInstance.methods.totalSupply(item).call();
+  var prevBalance = await tokenInstance.methods.balanceOf(from, item).call();
+  await tokenInstance.methods
+      .burn(from, item, amount, data)
+      .send(blockchainConnection.getSendingOptions({ from: operator }));
+  assert.equal(
+    await tokenInstance.methods.totalSupply(item).call(),
+    prevSupply.sub(amount)
+  )
+
+  assert.equal(
+    await tokenInstance.methods.balanceOf(from, item).call(),
+    prevBalance.sub(amount)
+  )
+}
+
 module.exports = {
   mintErc20Wrapper,
   assertDecimals,
@@ -283,4 +413,7 @@ module.exports = {
   revertMintErc20,
   mintItems1155,
   mintBatchItems1155,
+  safeTransfer1155,
+  safeBatchTransfer1155,
+  burn1155,
 };

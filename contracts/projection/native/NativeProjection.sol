@@ -44,6 +44,12 @@ contract NativeProjection is ItemProjection {
                 isFinalized[itemIds[i]] = finalized[i];
             }
         }
+        for(uint256 i = 0; i < items.length; i++) {
+            uint256 itemId = items[i].id;
+            if(itemId != 0 && finalized[i]) {
+                isFinalized[itemId] = finalized[i];
+            }
+        }
     }
 
     function mintItems(CreateItem[] calldata items) authorizedOnly virtual override external returns(uint256[] memory itemIds) {

@@ -851,17 +851,6 @@ describe("Item V2 Projections - Native", () => {
         .call()
     );
 
-    await native.methods
-      .setHeader(newCollectionHeader)
-      .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
-
-    await itemProjection.assertCheckHeader(
-      expectedNewCollection,
-      mainInterface.methods
-        .collection(await native.methods.collectionId().call())
-        .call()
-    );
-
     var CreateItem = [
       {
         header: {
@@ -890,9 +879,9 @@ describe("Item V2 Projections - Native", () => {
       })
     );
 
-    await mainInterface.methods
+    await native.methods
       .mintItems(CreateItem)
-      .send(blockchainConnection.getSendingOptions({ from: accounts[3] }));
+      .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
     await itemProjection.assertCheckBalance(checkBal, CreateItem, itemIds);
   });
   it("#623 Change the Metadata of Items", async () => {
@@ -1042,7 +1031,7 @@ describe("Item V2 Projections - Native", () => {
     await catchCall(
       native.methods
         .setItemsMetadata(itemIds, [collectionHeader])
-        .send(blockchainConnection.getSendingOptions({ from: accounts[2] })),
+        .send(blockchainConnection.getSendingOptions({ from: accounts[9] })),
       "Unauthorized"
     );
     var ExpectedResult = {
@@ -2180,6 +2169,7 @@ describe("Item V2 Projections - Native", () => {
      *
      * Create Items when initializing the Native Projection
      * The Items holders approve operators to act on their Items using the setApprovalForAll (Main Interface)
+     * The operators perform a safeBatchTransferFrom using the Native projection method transferring multiple Items at once
      * must fail: cannot call setApprovalForAll from nativeProjection
      * must fail: cannot call safeTransferFrom from unauthorized address
      */
@@ -2524,25 +2514,21 @@ describe("Item V2 Projections - Native", () => {
       })
     );
 
-    await Promise.all(
-      itemIds.map(async (item, index) => {
-        await catchCall(
-          native.methods
-            .safeBatchTransferFrom(
-              fromAddress[0],
-              toAddress[0],
-              items1,
-              transferAmount.slice(0, 2),
-              "0x"
-            )
-            .send(
-              blockchainConnection.getSendingOptions({
-                from: accounts[9],
-              })
-            ),
-          "amount exceeds allowance"
-        );
-      })
+    await catchCall(
+      native.methods
+        .safeBatchTransferFrom(
+          fromAddress[0],
+          toAddress[0],
+          items1,
+          transferAmount.slice(0, 2),
+          "0x"
+        )
+        .send(
+          blockchainConnection.getSendingOptions({
+            from: accounts[9],
+          })
+        ),
+      "amount exceeds allowance"
     );
 
     await native.methods
@@ -2585,7 +2571,8 @@ describe("Item V2 Projections - Native", () => {
 
   it("#644 Items operation: Burn", async () => {
     /**
-     * Authorized subjects:
+     * initializing the Native Projection without items to create
+     * create Items using the mintItems function
      * Item holders
      * approved operators addresses
      * Functions used in the test:
@@ -2684,7 +2671,8 @@ describe("Item V2 Projections - Native", () => {
 
   it("#645 Items operation: Burn and approved operators", async () => {
     /**
-     * Authorized subjects:
+     * initializing the Native Projection without items to create
+     * create Items using the mintItems function
      * Item holders
      * approved operators addresses
      * Functions used in the test:
@@ -2828,7 +2816,8 @@ describe("Item V2 Projections - Native", () => {
 
   it("#646 Items operation: burnBatch", async () => {
     /**
-     * Authorized subjects:
+     * initializing the Native Projection without items to create
+     * create Items using the mintItems function
      * Item holders
      * approved operators addresses
      * Functions used in the test:
@@ -2970,7 +2959,8 @@ describe("Item V2 Projections - Native", () => {
 
   it("#647 Items operation: burnBatch and approved operators", async () => {
     /**
-     * Authorized subjects:
+     * initializing the Native Projection without items to create
+     * create Items using the mintItems function
      * Item holders
      * approved operators addresses
      * Functions used in the test:

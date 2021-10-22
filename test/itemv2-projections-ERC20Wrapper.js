@@ -549,7 +549,7 @@ describe("itemv2 projections ERC20Wrapper", () => {
       )
       .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
 
-    var prevSupply = await bombToken.methods.totalSupply().call();
+    var prevSupply = await bombToken.methods.balanceOf(wrapper.options.address).call();
 
     var res = await wrapperResource.mintErc20(
       wrapper,
@@ -561,9 +561,10 @@ describe("itemv2 projections ERC20Wrapper", () => {
 
     var itemIds = res["itemIds"];
 
-    var postSupply = await bombToken.methods.totalSupply().call();
+    var postSupply = await bombToken.methods.balanceOf(wrapper.options.address).call();
 
-    var burnAmount = prevSupply.sub(postSupply);
+    var sentAmount = postSupply.sub(prevSupply);
+    var burntAmount = bombAmounts.sub(sentAmount);
 
     await Promise.all(
       itemIds.map(async (id, index) => {
@@ -579,16 +580,9 @@ describe("itemv2 projections ERC20Wrapper", () => {
 
     var tx = res["tx"];
     var logs = (await web3.eth.getTransactionReceipt(tx.transactionHash)).logs;
-    var deflAmount = web3.eth.abi.decodeParameter(
-      "uint256",
-      logs.filter(
-        (it) =>
-          it.topics[0] === web3.utils.sha3("Transfer(address,address,uint256)")
-      )[1].data
-    );
 
     await wrapperResource.assertDecimals(wrapper, itemIds);
-    totalAmounts = [[utilities.normalizeValue(bombAmounts.sub(burnAmount), tokenDecimal[0])]];
+    totalAmounts = [[utilities.normalizeValue(bombAmounts.sub(burntAmount), tokenDecimal[0])]];
     await wrapperResource.assertCheckErc20ItemBalance(
       wrapper,
       receivers,

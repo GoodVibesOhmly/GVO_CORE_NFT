@@ -193,9 +193,56 @@ describe("Item V2 Projections - Native", () => {
       )
       .map((it) => web3.eth.abi.decodeParameter("uint256", it.topics[3]));
 
-    var items = [];
+    var items = [
+      {
+        header: {
+          host: accounts[1],
+          name: "Item1",
+          symbol: "I1",
+          uri: "uriItem1",
+        },
+        collectionId,
+        id: itemIds[0],
+        accounts: [accounts[1], accounts[2], accounts[3]],
+        amounts: [
+          "10000000000000",
+          "2000000000000000",
+          "30000000000000000",
+        ],
+      },
+      {
+        header: {
+          host: accounts[1],
+          name: "Item2",
+          symbol: "I2",
+          uri: "uriItem2",
+        },
+        collectionId,
+        id: itemIds[1],
+        accounts: [accounts[4], accounts[7], accounts[9]],
+        amounts: [
+          "10000000000000000",
+          "100000000000",
+          "300000000000000",
+        ],
+      },
+    ].map(it => [Object.values(it.header), ...Object.entries(it).filter(it => it[0] !== 'header').map(it => it[1])]);
+
+    //items = abi.encode(["tuple(tuple(address,string,string,string),bytes32,uint256,address[],uint256[])[]"], [items]);
 
     var collectionHeader = [accounts[1], "Collection", "COL", "uri"];
+
+    await catchCall(
+      itemsv2.initialization(
+        collectionId,
+        collectionHeader,
+        items,
+        accounts[1],
+        "URI"
+      ), 'unauthorized'
+    );
+
+    items = [];
 
     var native = (
       await itemsv2.initialization(
@@ -837,6 +884,18 @@ describe("Item V2 Projections - Native", () => {
       "Unauthorized"
     );
 
+    await blockchainConnection.unlockAccounts(native.options.address);
+
+    await catchCall(
+      mainInterface.methods
+      .setCollectionsMetadata(
+        [await native.methods.collectionId().call()],
+        [resetCollectionHeader]
+      )
+      .send(blockchainConnection.getSendingOptions({ from: native.options.address })),
+      "Unauthorized"
+    );
+
     await mainInterface.methods
       .setCollectionsMetadata(
         [await native.methods.collectionId().call()],
@@ -944,9 +1003,17 @@ describe("Item V2 Projections - Native", () => {
       uri: "uri2",
     };
 
+    await catchCall(
+      native.methods
+      .setItemsMetadata(itemIds, [newItemHeader])
+      .send(blockchainConnection.getSendingOptions({ from: accounts[9] })),
+      "unauthorized"
+    );
+
     await native.methods
       .setItemsMetadata(itemIds, [newItemHeader])
       .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
+
     var ExpectedResult = {
       header: {
         host: utilities.voidEthereumAddress,
@@ -1144,6 +1211,21 @@ describe("Item V2 Projections - Native", () => {
       .setItemsCollection(itemIds, [collection2Id, collection2Id])
       .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
 
+    await catchCall(
+        native.methods
+          .setItemsCollection(itemIds, [collection2Id, collection2Id])
+          .send(blockchainConnection.getSendingOptions({ from: accounts[1] })),
+        "Unauthorized"
+    );
+
+    await blockchainConnection.unlockAccounts(native.options.address);
+    await catchCall(
+      mainInterface.methods
+        .setItemsCollection(itemIds, [collection2Id, collection2Id])
+        .send(blockchainConnection.getSendingOptions({ from: native.options.address })),
+      "Unauthorized"
+  );
+
     await itemProjection.assertCheckCollection(items, collection2Id);
   });
 
@@ -1251,6 +1333,21 @@ describe("Item V2 Projections - Native", () => {
     await native.methods
       .setItemsCollection([itemIds[0]], [collection2Id])
       .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
+
+    await catchCall(
+        native.methods
+          .setItemsCollection([itemIds[0]], [collection2Id])
+          .send(blockchainConnection.getSendingOptions({ from: accounts[1] })),
+        "Unauthorized"
+    );
+
+    await blockchainConnection.unlockAccounts(native.options.address);
+    await catchCall(
+      mainInterface.methods
+      .setItemsCollection([itemIds[0]], [collection2Id])
+      .send(blockchainConnection.getSendingOptions({ from: native.options.address })),
+      "Unauthorized"
+  );
 
     await itemProjection.assertCheckCollection(items, collection2Id);
 
@@ -2115,9 +2212,18 @@ describe("Item V2 Projections - Native", () => {
       })
     );
 
-    await native.methods
-      .mintItems(MintItem, [true])
-      .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
+    await catchCall(
+      native.methods
+       .mintItems(MintItem, [true])
+       .send(blockchainConnection.getSendingOptions({ from: accounts[1] })),
+       "finalized");
+
+    await catchCall(
+        native.methods
+         .mintItems(MintItem, [false])
+         .send(blockchainConnection.getSendingOptions({ from: accounts[1] })),
+         "finalized");
+
     await itemProjection.assertCheckBalance(checkBal, CreateItem, idItems);
   });
 
@@ -2395,8 +2501,7 @@ describe("Item V2 Projections - Native", () => {
     var checkBalTo = await itemsv2.checkBalances(toAddress, itemIds);
 
     await Promise.all(
-      itemIds.map(async (item, index) => {
-        await catchCall(
+      itemIds.map((item, index) => catchCall(
           native.methods
             .safeTransferFrom(
               fromAddress[index],
@@ -2411,8 +2516,8 @@ describe("Item V2 Projections - Native", () => {
               })
             ),
           "amount exceeds allowance"
-        );
-      })
+        )
+      )
     );
 
     await Promise.all(

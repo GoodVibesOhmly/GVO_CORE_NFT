@@ -51,7 +51,8 @@ async function assertTransferBalance(
   itemids,
   transferAmount,
   checkBalFrom,
-  checkBalTo
+  checkBalTo,
+  native = 0
 ) {
   var expectedBalanceFrom = await Promise.all(
     checkBalFrom["balances"].map(async (item, index) => {
@@ -74,6 +75,21 @@ async function assertTransferBalance(
 
   var expectedTotalSupplies = checkBalFrom["totalSupplies"];
 
+  await Promise.all(expectedTotalSupplies.map(async (sup, index) => 
+    assert.equal(
+      await native.methods.totalSupply(itemids[index]).call(), sup[0])
+  ))
+
+  await Promise.all(expectedBalanceTo.map(async (bal, index) => 
+    assert.equal(
+      await native.methods.balanceOf(toAddress[index], itemids[index]).call(), bal[0])
+  ))
+
+  await Promise.all(expectedBalanceFrom.map(async (bal, index) => 
+    assert.equal(
+      await native.methods.balanceOf(fromAddress[index], itemids[index]).call(), bal[0])
+  ))
+
   await itemsv2.checkBalances(
     fromAddress,
     itemids,
@@ -88,7 +104,7 @@ async function assertTransferBalance(
   );
 }
 
-async function assertBurnBalance(checkBal, burnAmount, burnAddress, idItems) {
+async function assertBurnBalance(checkBal, burnAmount, burnAddress, idItems, native) {
   var expectedBalance = await Promise.all(
     checkBal["balances"].map(async (item, index) => {
       return await Promise.all(
@@ -109,6 +125,16 @@ async function assertBurnBalance(checkBal, burnAmount, burnAddress, idItems) {
     })
   );
 
+  await Promise.all(expectedSupply.map(async (sup, index) => 
+    assert.equal(
+      await native.methods.totalSupply(idItems[index]).call(), sup[0])
+  ));
+
+  await Promise.all(expectedBalance.map(async (bal, index) => 
+    assert.equal(
+      await native.methods.balanceOf(Array.isArray(burnAddress[index]) ? burnAddress[index][0] : burnAddress[index], idItems[index]).call(), bal[0])
+  ));
+
   await Promise.all(
     idItems.map(async (item, index) => {
       await itemsv2.checkBalances(
@@ -123,7 +149,8 @@ async function assertBurnBalance(checkBal, burnAmount, burnAddress, idItems) {
 
 async function assertCheckBalanceSupply(
   funct,
-  createItem
+  createItem,
+  native
 ) {
   var MainInterface = await compile("model/IItemMainInterface");
   mainInterface = new web3.eth.Contract(

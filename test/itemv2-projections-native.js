@@ -1422,6 +1422,7 @@ describe("Item V2 Projections - Native", () => {
         .mintItems(CreateItem)
         .send(blockchainConnection.getSendingOptions({ from: accounts[1] })),
       CreateItem,
+      native
     );
   });
 
@@ -1843,6 +1844,7 @@ describe("Item V2 Projections - Native", () => {
         .mintItems(CreateItem)
         .send(blockchainConnection.getSendingOptions({ from: accounts[1] })),
       CreateItem,
+      native
     );
 
     var itemIds = await itemProjection.getItemIdFromLog(tx);
@@ -2007,6 +2009,7 @@ describe("Item V2 Projections - Native", () => {
         .mintItems(CreateItem)
         .send(blockchainConnection.getSendingOptions({ from: accounts[1] })),
       CreateItem,
+      native
     );
 
     var itemIds = await itemProjection.getItemIdFromLog(tx);
@@ -2082,6 +2085,7 @@ describe("Item V2 Projections - Native", () => {
         .mintItems(CreateItem, [false])
         .send(blockchainConnection.getSendingOptions({ from: accounts[1] })),
       CreateItem,
+      native
     );
 
     idItems = await itemProjection.getItemIdFromLog(tx);
@@ -2220,6 +2224,7 @@ describe("Item V2 Projections - Native", () => {
         .mintItems(CreateItem, [false])
         .send(blockchainConnection.getSendingOptions({ from: accounts[1] })),
       CreateItem,
+      native
     );
 
     idItems = await itemProjection.getItemIdFromLog(tx);
@@ -2433,6 +2438,7 @@ describe("Item V2 Projections - Native", () => {
         .mintItems(CreateItem4, [true])
         .send(blockchainConnection.getSendingOptions({ from: accounts[1] })),
         CreateItem4,
+        native
     );
 
     var itemId4 = await itemProjection.getItemIdFromLog(tx);
@@ -2544,7 +2550,8 @@ describe("Item V2 Projections - Native", () => {
       itemIds,
       transferAmount,
       checkBalFrom,
-      checkBalTo
+      checkBalTo,
+      native
     );
   });
 
@@ -2678,7 +2685,8 @@ describe("Item V2 Projections - Native", () => {
       itemIds,
       transferAmount,
       checkBalFrom,
-      checkBalTo
+      checkBalTo,
+      native
     );
   });
 
@@ -2793,7 +2801,8 @@ describe("Item V2 Projections - Native", () => {
       itemIds,
       transferAmount,
       checkBalFrom,
-      checkBalTo
+      checkBalTo,
+      native
     );
   });
 
@@ -2955,7 +2964,8 @@ describe("Item V2 Projections - Native", () => {
       itemIds,
       transferAmount,
       checkBalFrom,
-      checkBalTo
+      checkBalTo,
+      native
     );
   });
 
@@ -3055,7 +3065,8 @@ describe("Item V2 Projections - Native", () => {
       checkBal,
       burnAmount,
       burnAddress,
-      idItems
+      idItems,
+      native
     );
   });
 
@@ -3200,7 +3211,8 @@ describe("Item V2 Projections - Native", () => {
       checkBal,
       burnAmount,
       burnAddress,
-      idItems
+      idItems,
+      native
     );
   });
 
@@ -3343,7 +3355,8 @@ describe("Item V2 Projections - Native", () => {
       checkBal,
       burnAmount,
       burnAddress,
-      idItems
+      idItems,
+      native
     );
   });
 
@@ -3523,7 +3536,8 @@ describe("Item V2 Projections - Native", () => {
       checkBal,
       burnAmount,
       burnAddress,
-      idItems
+      idItems,
+      native
     );
   });
 
@@ -3657,7 +3671,8 @@ describe("Item V2 Projections - Native", () => {
       checkBal,
       burnAmount,
       Array(burnAmount.length).fill(burnAddress[0]),
-      mainItemId.concat(itemIds)
+      mainItemId.concat(itemIds),
+      native
     );
   });
 
@@ -3780,7 +3795,8 @@ describe("Item V2 Projections - Native", () => {
       totalItemsId,
       Array(toAccounts.length).fill(transferAmount),
       checkBalFrom,
-      checkBalTo
+      checkBalTo,
+      native
     );
   });
 });

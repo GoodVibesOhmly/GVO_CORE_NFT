@@ -564,27 +564,6 @@ describe("itemv2 projections ERC721Wrapper", () => {
       })
     );
 
-    var burn = await Promise.all(
-      itemsList.slice(3, 4).map(async (item, index) => {
-        return web3.eth.abi.encodeParameters(
-          ["address", "uint256", "address", "bytes", "bool", "bool"],
-          [item.tokenAddress, item.tokenId, accounts[index], "0x", false, false]
-        );
-      })
-    );
-
-    var burn2 = await Promise.all(
-      itemsList.slice(4).map(async (item, index) => {
-        return web3.eth.abi.encodeParameters(
-          ["address", "uint256", "address", "bytes", "bool", "bool"],
-          [item.tokenAddress, item.tokenId, accounts[index], "0x", false, false]
-        );
-      })
-    );
-
-    var datas = web3.eth.abi.encodeParameters(["bytes[]"], [burn]);
-    var datas2 = web3.eth.abi.encodeParameters(["bytes[]"], [burn2]);
-
     var itemIdsToTransfer = await Promise.all(
       itemsList.slice(3).map(async (item, index) => {
         return item.itemId;
@@ -602,6 +581,34 @@ describe("itemv2 projections ERC721Wrapper", () => {
     await wrapper.methods.safeBatchTransferFrom(accounts[7], accounts[9], itemIdsToTransfer, amountsToTransfer, "0x").send(blockchainConnection.getSendingOptions({from: accounts[7]}))
     await wrapper.methods.safeBatchTransferFrom(accounts[9], accounts[7], itemIdsToTransfer, amountsToTransfer, "0x").send(blockchainConnection.getSendingOptions({from: accounts[9]}))
 
+    var burn = await Promise.all(
+      itemsList.slice(3, 4).map(async (item, index) => {
+        return web3.eth.abi.encodeParameters(
+          ["address", "uint256", "address", "bytes", "bool", "bool"],
+          [knowledgeBase.ensTokenAddress, item.tokenId, accounts[index], "0x", false, false]
+        );
+      })
+    );
+
+    var datas = web3.eth.abi.encodeParameters(["bytes[]"], [burn]);
+
+    await catchCall(
+      wrapper.methods
+      .burnBatch(accounts[7], itemIds, amounts, datas)
+      .send(blockchainConnection.getSendingOptions({ from: accounts[7] })),
+      "Wrong ERC721"
+    );
+
+    burn = await Promise.all(
+      itemsList.slice(3, 4).map(async (item, index) => {
+        return web3.eth.abi.encodeParameters(
+          ["address", "uint256", "address", "bytes", "bool", "bool"],
+          [item.tokenAddress, item.tokenId, accounts[index], "0x", false, false]
+        );
+      })
+    );
+
+    datas = web3.eth.abi.encodeParameters(["bytes[]"], [burn]);
 
     await wrapper.methods
       .burnBatch(accounts[7], itemIds, amounts, datas)
@@ -619,6 +626,17 @@ describe("itemv2 projections ERC721Wrapper", () => {
           .send(blockchainConnection.getSendingOptions({ from: accounts[7] }));
       })
     );
+
+    var burn2 = await Promise.all(
+      itemsList.slice(4).map(async (item, index) => {
+        return web3.eth.abi.encodeParameters(
+          ["address", "uint256", "address", "bytes", "bool", "bool"],
+          [item.tokenAddress, item.tokenId, accounts[index], "0x", false, false]
+        );
+      })
+    );
+
+    var datas2 = web3.eth.abi.encodeParameters(["bytes[]"], [burn2]);
 
     await wrapper.methods
       .burnBatch(accounts[7], itemIds2, amounts2, datas2)
@@ -722,6 +740,17 @@ describe("itemv2 projections ERC721Wrapper", () => {
       ]
     );
 
+    await catchCall(
+      wrapper.methods
+      .burn(
+        accounts[1],
+        itemIds[0],
+        ("51".mul(1e17)).sub(1),
+        burn1
+      ).send(blockchainConnection.getSendingOptions({ from: accounts[1] })),
+    "insufficient balance"
+    )
+
     await wrapper.methods
       .burn(
         accounts[1],
@@ -749,8 +778,13 @@ describe("itemv2 projections ERC721Wrapper", () => {
     assert.equal(await mainToken.methods.balanceOf(accounts[1]).call(), "0");
 
     assert.equal(
-      await wrapper.methods.balanceOf(accounts[1], itemIds[0]).call(),
-      "600000000000000000"
+      await wrapper.methods.balanceOf(receivers[0], itemIds[0]).call(),
+      utilities.numberToString(6*1e17)
+    );
+
+    assert.equal(
+      await wrapper.methods.totalSupply(itemIds[0]).call(),
+      utilities.numberToString(1e18)
     );
   });
 
@@ -1213,6 +1247,30 @@ describe("itemv2 projections ERC721Wrapper", () => {
     var burn1 = web3.eth.abi.encodeParameters(
       ["address", "uint256", "address", "bytes", "bool", "bool"],
       [
+        knowledgeBase.wethTokenAddress,
+        tokenList[0],
+        utilities.voidEthereumAddress,
+        "0x",
+        false,
+        false,
+      ]
+    );
+
+    await catchCall(
+      wrapper.methods
+      .burn(
+        accounts[1],
+        itemIds[0],
+        await wrapper.methods.balanceOf(accounts[1], itemIds[0]).call(),
+        burn1
+      )
+      .send(blockchainConnection.getSendingOptions({ from: accounts[1] })),
+      "ERC721",);
+
+
+    burn1 = web3.eth.abi.encodeParameters(
+      ["address", "uint256", "address", "bytes", "bool", "bool"],
+      [
         tokenAddress,
         tokenList[0],
         utilities.voidEthereumAddress,
@@ -1231,6 +1289,15 @@ describe("itemv2 projections ERC721Wrapper", () => {
       )
       .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
 
+      assert.equal(
+        await wrapper.methods.balanceOf(accounts[1], itemIds[0]).call(),
+        "0"
+      );
+      assert.equal(
+        await wrapper.methods.totalSupply(itemIds[0]).call(),
+        "0"
+      );
+
     assert.equal(await mainToken.methods.balanceOf(accounts[1]).call(), "1");
 
     await mainToken.methods
@@ -1247,6 +1314,10 @@ describe("itemv2 projections ERC721Wrapper", () => {
 
     assert.equal(
       await wrapper.methods.balanceOf(accounts[1], itemIds[0]).call(),
+      "1000000000000000000"
+    );
+    assert.equal(
+      await wrapper.methods.totalSupply(itemIds[0]).call(),
       "1000000000000000000"
     );
     assert.equal(await mainToken.methods.balanceOf(accounts[1]).call(), "0");
@@ -1361,6 +1432,11 @@ describe("itemv2 projections ERC721Wrapper", () => {
 
     assert.equal(
       await wrapper.methods.balanceOf(accounts[1], itemIds[0]).call(),
+      "1000000000000000000"
+    );
+
+    assert.equal(
+      await wrapper.methods.totalSupply(itemIds[0]).call(),
       "1000000000000000000"
     );
 
@@ -1552,12 +1628,19 @@ describe("itemv2 projections ERC721Wrapper", () => {
       .burn(
         accounts[1],
         itemIds[0],
-        await wrapper.methods.balanceOf(accounts[1], itemIds[0]).call(),
+        (await wrapper.methods.balanceOf(accounts[1], itemIds[0]).call()).sub("1".mul(1e17)),
         burn1
       )
       .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
 
-    assert.equal(await mainToken.methods.balanceOf(accounts[1]).call(), "1");
+      assert.equal(await mainToken.methods.balanceOf(accounts[1]).call(), "1");
+
+      assert.equal(await erc20Contract.methods.balanceOf(accounts[1]).call(), "1".mul(1e17));
+
+      assert.equal(
+        await wrapper.methods.totalSupply(itemIds[0]).call(),
+        (1e18).sub("6".mul(1e17))
+      );
 
     await mainToken.methods
       .approve(wrapper.options.address, tokenList[0])
@@ -1571,12 +1654,17 @@ describe("itemv2 projections ERC721Wrapper", () => {
       accounts[1],
       wrapper,
       mainToken.options.address,
-      "700000000000000000"
+      "600000000000000000"
     );
 
     assert.equal(
       await wrapper.methods.balanceOf(accounts[1], itemIds[0]).call(),
       "700000000000000000"
+    );
+
+    assert.equal(
+      await wrapper.methods.totalSupply(itemIds[0]).call(),
+      "1000000000000000000"
     );
 
     assert.equal(await mainToken.methods.balanceOf(accounts[1]).call(), "0");
@@ -1646,9 +1734,24 @@ describe("itemv2 projections ERC721Wrapper", () => {
 
     var erc20Contract = await asInteroperableInterface(itemIds[0]);
 
+    await erc20Contract.methods.approve(accounts[3], utilities.numberToString(1e18)).send(blockchainConnection.getSendingOptions({from : accounts[1]}));
+
     await erc20Contract.methods
-      .transferFrom(accounts[1], accounts[2], "600000000000000000")
-      .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
+      .transferFrom(accounts[1], accounts[3], "600000000000000000")
+      .send(blockchainConnection.getSendingOptions({ from: accounts[3] }));
+
+      await catchCall(
+        wrapper.methods
+          .setApprovalForAll(accounts[2], true)
+          .send(blockchainConnection.getSendingOptions({ from: accounts[3] })),
+        "call directly the setApprovalForAll on the main Interface 0x915a22a152654714fceca3f4704fcf6bd314624c"
+      );
+
+    await mainInterface.methods.setApprovalForAll(accounts[2], true).send(blockchainConnection.getSendingOptions({from : accounts[3]}));
+
+    await erc20Contract.methods
+      .transferFrom(accounts[3], accounts[2], "600000000000000000")
+      .send(blockchainConnection.getSendingOptions({ from: accounts[2] }));
 
     assert.equal(
       await wrapper.methods.balanceOf(accounts[1], itemIds[0]).call(),

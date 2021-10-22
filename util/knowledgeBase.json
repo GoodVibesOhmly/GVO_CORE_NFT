@@ -23,6 +23,7 @@
     "uniTokenAddress" : "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984",
     "godsTokenAddress" : "0x6ebeaf8e8e946f0716e6533a6f2cefc83f60e8ab",
     "fegTokenAddress" : "0x389999216860ab8e0175387a0c90e5c52522c945",
+    "bombTokenAddress" : "0x1C95b093d6C236d3EF7c796fE33f9CC6b8606714",
     "cardTokenAddress": "0x0e3a2a1f2146d86a604adc220b4967a898d7fe07",
     "balTokenAddress" : "0xba100000625a3754423978a60c9317c58a424e3d",
     "chainLinkTokenAddress" : "0x514910771af9ca656af840dff83e8264ecf986ca",

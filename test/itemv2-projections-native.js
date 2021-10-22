@@ -1986,7 +1986,6 @@ describe("Item V2 Projections - Native", () => {
       "URI"
     );
     var native = res["native"];
-    // var itemIds = res["itemIds"][0];
 
     var CreateItem = [
       {
@@ -2102,6 +2101,20 @@ describe("Item V2 Projections - Native", () => {
       },
     ];
 
+    await catchCall(
+      native.methods
+        .mintItems(CreateItem2, [false])
+        .send(blockchainConnection.getSendingOptions({ from: accounts[1] })),
+        "Finalized"
+    );
+
+    await catchCall(
+      native.methods
+        .mintItems(CreateItem2, [true])
+        .send(blockchainConnection.getSendingOptions({ from: accounts[1] })),
+        "Finalized"
+    );
+
     await itemProjection.assertCheckFinalized(
       native.methods.isFinalized(idItems[0]).call(),
       true
@@ -2134,7 +2147,20 @@ describe("Item V2 Projections - Native", () => {
       uri: "uri1",
     };
 
-    var items = [];
+    var items = [
+      [
+        [
+          accounts[1],
+          "Item1",
+          "I1",
+          "uriItem1",
+        ],
+        utilities.voidBytes32,
+        0,
+        [accounts[1]],
+        ["10000000000000000"],
+      ]
+    ];
 
     var res = await itemsv2.initialization(
       collectionId,
@@ -2144,6 +2170,39 @@ describe("Item V2 Projections - Native", () => {
       "URI"
     );
     var native = res["native"];
+    var itemIds = res["itemIds"];
+
+    var CreateItem1 = [
+      {
+        header: {
+          host: accounts[1],
+          name: "Item1",
+          symbol: "I1",
+          uri: "uriItem1",
+        },
+        collectionId: await native.methods.collectionId().call(),
+        id: itemIds[0],
+        accounts: [accounts[1]],
+        amounts: ["10000000000000000"],
+      },
+    ];
+
+    await itemProjection.assertCheckFinalized(
+      native.methods.isFinalized(itemIds[0]).call(),
+      false
+    );
+    
+    await native.methods.finalize(itemIds).send(blockchainConnection.getSendingOptions({from: accounts[1]}))
+
+    await itemProjection.assertCheckFinalized(
+      native.methods.isFinalized(itemIds[0]).call(),
+      true
+    );
+
+    await catchCall(native.methods
+        .mintItems(CreateItem1)
+        .send(blockchainConnection.getSendingOptions({ from: accounts[1] })),
+    "finalized")
 
     var CreateItem = [
       {
@@ -2169,6 +2228,13 @@ describe("Item V2 Projections - Native", () => {
 
     idItems = await itemProjection.getItemIdFromLog(tx);
 
+    await native.methods.finalize(idItems).send(blockchainConnection.getSendingOptions({from: accounts[1]}))
+
+    await itemProjection.assertCheckFinalized(
+      native.methods.isFinalized(idItems[0]).call(),
+      true
+    );
+
     var MintItem = [
       {
         header: {
@@ -2184,37 +2250,9 @@ describe("Item V2 Projections - Native", () => {
       },
     ];
 
-    await itemProjection.assertCheckFinalized(
-      native.methods.isFinalized(idItems[0]).call(),
-      false
-    );
-
-    var checkBal = await Promise.all(
-      CreateItem.map(async (it, i) => {
-        return await itemsv2.checkBalances(
-          it.accounts,
-          Array(it.accounts.length).fill(idItems[i])
-        );
-      })
-    );
-
-    await native.methods
-      .mintItems(MintItem, [true])
-      .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
-    await itemProjection.assertCheckBalance(checkBal, CreateItem, idItems);
-
-    var checkBal = await Promise.all(
-      CreateItem.map(async (it, i) => {
-        return await itemsv2.checkBalances(
-          it.accounts,
-          Array(it.accounts.length).fill(idItems[i])
-        );
-      })
-    );
-
     await catchCall(
       native.methods
-       .mintItems(MintItem, [true])
+       .mintItems(MintItem)
        .send(blockchainConnection.getSendingOptions({ from: accounts[1] })),
        "finalized");
 
@@ -2223,8 +2261,6 @@ describe("Item V2 Projections - Native", () => {
          .mintItems(MintItem, [false])
          .send(blockchainConnection.getSendingOptions({ from: accounts[1] })),
          "finalized");
-
-    await itemProjection.assertCheckBalance(checkBal, CreateItem, idItems);
   });
 
   it("#640 Mint previously created items passing finalized as true", async () => {

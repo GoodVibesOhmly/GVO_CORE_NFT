@@ -16,6 +16,7 @@ describe("itemv2 projections ERC20Wrapper", () => {
   var hexToken;
   var celToken;
   var fegToken;
+  var bombToken;
   var osToken;
   var erc20Contract;
   var erc20Contract1;
@@ -90,6 +91,10 @@ describe("itemv2 projections ERC20Wrapper", () => {
     fegToken = new web3.eth.Contract(
       knowledgeBase.IERC20ABI,
       knowledgeBase.fegTokenAddress
+    );
+    bombToken = new web3.eth.Contract(
+      knowledgeBase.IERC20ABI,
+      knowledgeBase.bombTokenAddress
     );
     osToken = new web3.eth.Contract(
       knowledgeBase.IERC20ABI,
@@ -503,25 +508,25 @@ describe("itemv2 projections ERC20Wrapper", () => {
     * mint(address[] calldata tokenAddresses, uint256[][] calldata amounts, address[][] calldata receivers)
     * Items used: Item10
     *
-    * Must fail: Wrap FEG using the mint function passing multiple amounts and receivers (msg.sender + other addresses) for each token. revert witrh Only single transfers allowed for this token
-    * Wrap FEG using the mint function passing a single amount and receiver
+    * Must fail: Wrap BOMB using the mint function passing multiple amounts and receivers (msg.sender + other addresses) for each token. revert witrh Only single transfers allowed for this token
+    * Wrap BOMB using the mint function passing a single amount and receiver
     */
-    await buyForETH(fegToken, 2, accounts[1]);
+    await buyForETH(bombToken, 2, accounts[1]);
 
-    var fegAmounts = (await fegToken.methods.balanceOf(accounts[1]).call()).div(
+    var bombAmounts = (await bombToken.methods.balanceOf(accounts[1]).call()).div(
       2
     );
 
-    var totalAmounts = [[fegAmounts, fegAmounts]];
+    var totalAmounts = [[bombAmounts, bombAmounts]];
     var receivers = [[accounts[2], utilities.voidEthereumAddress]];
-    var tokenAddress = [fegToken.options.address];
-    var tokenDecimal = [9];
-    var tokenName = ["FEG"];
+    var tokenAddress = [bombToken.options.address];
+    var tokenDecimal = [0];
+    var tokenName = ["bomb"];
 
-    await fegToken.methods
+    await bombToken.methods
       .approve(
         wrapper.options.address,
-        await fegToken.methods.balanceOf(accounts[1]).call()
+        await bombToken.methods.balanceOf(accounts[1]).call()
       )
       .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
 
@@ -531,18 +536,20 @@ describe("itemv2 projections ERC20Wrapper", () => {
       totalAmounts,
       receivers,
       accounts[1],
-      fegAmounts
+      bombAmounts
     )
 
-    totalAmounts = [[fegAmounts]];
+    totalAmounts = [[bombAmounts]];
     receivers = [[accounts[2]]];
-    tokenAddress = [fegToken.options.address];
-    await fegToken.methods
+    tokenAddress = [bombToken.options.address];
+    await bombToken.methods
       .approve(
         wrapper.options.address,
-        await fegToken.methods.balanceOf(accounts[1]).call()
+        await bombToken.methods.balanceOf(accounts[1]).call()
       )
       .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
+
+    var prevSupply = await bombToken.methods.totalSupply().call();
 
     var res = await wrapperResource.mintErc20(
       wrapper,
@@ -553,6 +560,10 @@ describe("itemv2 projections ERC20Wrapper", () => {
     );
 
     var itemIds = res["itemIds"];
+
+    var postSupply = await bombToken.methods.totalSupply().call();
+
+    var burnAmount = prevSupply.sub(postSupply);
 
     await Promise.all(
       itemIds.map(async (id, index) => {
@@ -576,18 +587,8 @@ describe("itemv2 projections ERC20Wrapper", () => {
       )[1].data
     );
 
-    totalAmounts = await Promise.all(
-      totalAmounts.map(async (amount, index) => {
-        return await Promise.all(
-          amount.map(async (am, ind) => {
-            return utilities.normalizeValue(am, 9);
-          })
-        );
-      })
-    );
-
     await wrapperResource.assertDecimals(wrapper, itemIds);
-    totalAmounts = [[deflAmount]];
+    totalAmounts = [[utilities.normalizeValue(bombAmounts.sub(burnAmount), tokenDecimal[0])]];
     await wrapperResource.assertCheckErc20ItemBalance(
       wrapper,
       receivers,
@@ -1133,6 +1134,7 @@ describe("itemv2 projections ERC20Wrapper", () => {
     *
     *Unwrap ETH and 3 Items using the burnBatch function passing different receivers (msg.sender + other addresses) for each token.
     */
+   console.log(itemsList)
     var tokenContractList = [erc20Contract, erc20Contract1, osToken];
 
     await Promise.all(
@@ -1292,9 +1294,6 @@ describe("itemv2 projections ERC20Wrapper", () => {
     *
     * Unwrap FEG using the burn function.
     */
-    var tokenContractList = [usdcToken, hexToken, celToken];
-    var tokenDec = [6, 8, 4];
-    var tokenDecDiff = [12, 10, 14];
 
     var acc = itemsList[10].account[0] == utilities.voidEthereumAddress
         ? accounts[1]
@@ -1303,13 +1302,25 @@ describe("itemv2 projections ERC20Wrapper", () => {
       ["address", "address"],
       [itemsList[10].tokenAddress, accounts[6]]
     );
-    var prevBal = await fegToken.methods.balanceOf(accounts[6]).call();
+    var bombAmounts = await bombToken.methods.balanceOf(wrapper.options.address).call();
+    var prevBal = await bombToken.methods.balanceOf(accounts[6]).call();
     var prevSupply = await wrapper.methods
       .totalSupply(itemsList[10].itemId)
       .call();
+      
+    var prevBombSupply = await bombToken.methods.totalSupply().call();
+    console.log("----")
+    console.log(await wrapper.methods.balanceOf(itemsList[10].account[0], itemsList[10].itemId).call())
+    var amountToBurn = await wrapper.methods.balanceOf(itemsList[10].account[0], itemsList[10].itemId).call();
     var tx = await wrapper.methods
-      .burn(acc, itemsList[10].itemId, "1000000000000000000", burn)
+      .burn(acc, itemsList[10].itemId, amountToBurn, burn)
       .send(blockchainConnection.getSendingOptions({ from: acc }));
+    console.log(prevBal)
+    console.log( await bombToken.methods.balanceOf(accounts[6]).call())
+
+    var postBombSupply = await bombToken.methods.totalSupply().call();
+
+    var burnAmount = prevBombSupply.sub(postBombSupply);
 
     var logs = (await web3.eth.getTransactionReceipt(tx.transactionHash)).logs;
     var deflAmount = web3.eth.abi.decodeParameter(
@@ -1320,12 +1331,16 @@ describe("itemv2 projections ERC20Wrapper", () => {
       )[1].data
     );
     assert.equal(
-      prevSupply.sub("1000000000000000000"),
+      prevSupply.sub(amountToBurn),
       await wrapper.methods.totalSupply(itemsList[10].itemId).call()
     );
+    console.log(bombAmounts.sub(burnAmount))
+    console.log(bombAmounts)
+    console.log(burnAmount)
+    console.log(prevBal)
     assert.equal(
-      await fegToken.methods.balanceOf(accounts[6]).call(),
-      prevBal.add(deflAmount)
+      await bombToken.methods.balanceOf(accounts[6]).call(),
+      prevBal.add(bombAmounts.sub(burnAmount))
     );
   });
 
@@ -1365,7 +1380,6 @@ describe("itemv2 projections ERC20Wrapper", () => {
     var totalAmounts = [[prev]];
     var receivers = [[accounts[11]]];
     var tokenAddress = [osToken.options.address];
-    var tokenName = ["erc20"];
 
     await osToken.methods
       .approve(
@@ -1381,6 +1395,8 @@ describe("itemv2 projections ERC20Wrapper", () => {
       receivers,
       accounts[11]
     );
+
+    var osBalance = await osToken.methods.balanceOf(wrapper.options.address).call();
 
     var itemIds = res["itemIds"];
     itemIds = [await wrapper.methods.itemIdOf(knowledgeBase.osTokenAddress).call()];
@@ -1401,26 +1417,38 @@ describe("itemv2 projections ERC20Wrapper", () => {
     await erc20Contract.methods
       .burn(prev.mul(80).div(100))
       .send(blockchainConnection.getSendingOptions({ from: accounts[11] }));
+
       assert.equal(
         prevSupply.sub(prev.mul(80).div(100)),
         await wrapper.methods.totalSupply(itemIds[0]).call()
       );
+
       assert.equal(
         prev.mul(20).div(100),
         await erc20Contract.methods.balanceOf(accounts[11]).call()
       );
+
     var burn = web3.eth.abi.encodeParameters(
       ["address", "address"],
       [osToken.options.address, accounts[6]]
     );
+
     prevSupply = await wrapper.methods.totalSupply(itemIds[0]).call();
+
     await wrapper.methods
       .burn(accounts[11], itemIds[0], prev.mul(20).div(100), burn)
       .send(blockchainConnection.getSendingOptions({ from: accounts[11] }));
+
       assert.equal(
         prevSupply.sub(prev.mul(20).div(100)),
         await wrapper.methods.totalSupply(itemIds[0]).call()
       );
+
+      assert.equal(
+        osBalance.sub(prev.mul(20).div(100)),
+        await osToken.methods.balanceOf(wrapper.options.address).call()
+      );
+
       assert.equal(
         "0",
         await erc20Contract.methods.balanceOf(accounts[11]).call()
@@ -1451,7 +1479,7 @@ describe("itemv2 projections ERC20Wrapper", () => {
     20% remains
     */
     var prev = "1000000000000000000";
-    const prevBalance = await osToken.methods.balanceOf(accounts[11]).call();
+    var prevBalance = await osToken.methods.balanceOf(accounts[11]).call();
     await osToken.methods
       .transfer(accounts[11], "1000000000000000000")
       .send(blockchainConnection.getSendingOptions({ from: host }));
@@ -1480,6 +1508,8 @@ describe("itemv2 projections ERC20Wrapper", () => {
       accounts[11]
     );
 
+    var osBalance = await osToken.methods.balanceOf(wrapper.options.address).call();
+
     var itemIds = res["itemIds"];
     itemIds = [await wrapper.methods.itemIdOf(knowledgeBase.osTokenAddress).call()];
 
@@ -1494,49 +1524,63 @@ describe("itemv2 projections ERC20Wrapper", () => {
     await erc20Contract.methods
       .burn(prev.mul(10).div(100))
       .send(blockchainConnection.getSendingOptions({ from: accounts[11] }));
+
     assert.equal(
       prevSupply.sub(prev.mul(10).div(100)),
       await wrapper.methods.totalSupply(itemIds[0]).call()
     );
+
     assert.equal(
       prev.mul(90).div(100),
       await erc20Contract.methods.balanceOf(accounts[11]).call()
     );
+
     var burn = web3.eth.abi.encodeParameters(
       ["address", "address"],
       [osToken.options.address, accounts[6]]
     );
+
     prevSupply = await wrapper.methods.totalSupply(itemIds[0]).call();
+
     await wrapper.methods
       .burn(accounts[11], itemIds[0], prev.div(2), burn)
       .send(blockchainConnection.getSendingOptions({ from: accounts[11] }));
+
     assert.equal(
       prevSupply.sub(prev.div(2)),
       await wrapper.methods.totalSupply(itemIds[0]).call()
     );
+
     assert.equal(
       prev.mul(40).div(100),
       await erc20Contract.methods.balanceOf(accounts[11]).call()
     );
+
     await erc20Contract.methods
       .transferFrom(accounts[11], accounts[3], prev.mul(20).div(100))
       .send(blockchainConnection.getSendingOptions({ from: accounts[11] }));
+
     assert.equal(
       prev.mul(20).div(100),
       await erc20Contract.methods.balanceOf(accounts[3]).call()
     );
+
     prevSupply = await wrapper.methods.totalSupply(itemIds[0]).call();
+
     await wrapper.methods
       .burn(accounts[3], itemIds[0], prev.mul(20).div(100), burn)
       .send(blockchainConnection.getSendingOptions({ from: accounts[3] }));
+
     assert.equal(
       prevSupply.sub(prev.mul(20).div(100)),
       await wrapper.methods.totalSupply(itemIds[0]).call()
     );
+
     assert.equal(
-      prevSupply.sub(prev.mul(20).div(100)),
-      await original.methods.balanceOf(wrapper.options.address).call()//TODO FIXME
+      osBalance.sub(prev.mul(70).div(100)),
+      await osToken.methods.balanceOf(wrapper.options.address).call()
     );
+
     assert.equal(
       "0",
       await erc20Contract.methods.balanceOf(accounts[3]).call()

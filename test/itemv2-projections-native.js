@@ -833,7 +833,7 @@ describe("Item V2 Projections - Native", () => {
     await catchCall(
       native.methods
         .setHeader(newCollectionHeader)
-        .send(blockchainConnection.getSendingOptions({ from: accounts[3] })),
+        .send(blockchainConnection.getSendingOptions({ from: accounts[1] })),
       "Unauthorized"
     );
 
@@ -1694,6 +1694,81 @@ describe("Item V2 Projections - Native", () => {
     );
   });
 
+
+  it("#632/2 Create Items without passing the Header", async () => {
+    /**
+     * Authorized subjects:
+     * Collection host address
+     * Functions used in the test:
+     * lazyInit
+     * mintItems (CreateItem[] calldata items)
+     *
+     * Create and Mint new Items for different accounts and amounts calling the Native Projection mintItems functions without passing the Header.
+     * The data are automatically taken from the Collection Header.
+     */
+    var collectionId = utilities.voidBytes32;
+
+    var collectionHeader = {
+      host: accounts[1],
+      name: "Collection1",
+      symbol: "COL1",
+      uri: "uri1",
+    };
+
+    var items = [];
+
+    var res = await itemsv2.initialization(
+      collectionId,
+      collectionHeader,
+      items,
+      accounts[1],
+      "URI"
+    );
+    var native = res["native"];
+
+    var CreateItem = [
+      {
+        header: {
+          host: utilities.voidEthereumAddress,
+          name: "",
+          symbol: "",
+          uri: "",
+        },
+        collectionId: await native.methods.collectionId().call(),
+        id: 0,
+        accounts: [accounts[1]],
+        amounts: ["10000000000000000"],
+      },
+    ];
+
+    var tx = await itemProjection.assertCheckBalanceSupply(
+      native.methods
+        .mintItems(CreateItem)
+        .send(blockchainConnection.getSendingOptions({ from: accounts[1] })),
+      CreateItem,
+    );
+
+    var itemIds = await itemProjection.getItemIdFromLog(tx);
+
+    var ExpectedResult = {
+      header: {
+        host: utilities.voidEthereumAddress,
+        name: "Collection1",
+        symbol: "COL1",
+        uri: "uri1",
+      },
+      collectionId: await native.methods.collectionId().call(),
+      id: itemIds[0],
+      accounts: [accounts[1]],
+      amounts: ["10000000000000000"],
+    };
+
+    await itemProjection.checkItem(
+      ExpectedResult,
+      await mainInterface.methods.item(itemIds[0]).call()
+    );
+  });
+
   it("#633 Create and mint Items passing a host address different from void address", async () => {
     /**
      * Authorized subjects:
@@ -1780,6 +1855,82 @@ describe("Item V2 Projections - Native", () => {
     await itemProjection.checkItem(
       ExpectedResult,
       await mainInterface.methods.item(itemIds).call()
+    );
+  });
+
+  it("#633/2 Create and mint Items passing a host address different from void address", async () => {
+    /**
+     * Authorized subjects:
+     * Collection host address
+     * Functions used in the test:
+     * lazyInit
+     * mintItems (CreateItem[] calldata items)
+     *
+     * Create and mint new Items for different accounts and amounts calling the Native Projection mintItems functions passing an Item host
+     * The Item host set is not a valid parameter.
+     * The host is automatically set as void address.
+     */
+    var collectionId = utilities.voidBytes32;
+
+    var collectionHeader = {
+      host: accounts[1],
+      name: "Collection1",
+      symbol: "COL1",
+      uri: "uri1",
+    };
+
+    var items = [];
+
+    var res = await itemsv2.initialization(
+      collectionId,
+      collectionHeader,
+      items,
+      accounts[1],
+      "URI"
+    );
+    var native = res["native"];
+    // var itemIds = res["itemIds"][0];
+
+    var CreateItem = [
+      {
+        header: {
+          host: accounts[4],
+          name: "Item1",
+          symbol: "I1",
+          uri: "uriItem1",
+        },
+        collectionId: await native.methods.collectionId().call(),
+        id: 0,
+        accounts: [accounts[1]],
+        amounts: ["10000000000000000"],
+      },
+    ];
+
+    var tx = await itemProjection.assertCheckBalanceSupply(
+      native.methods
+        .mintItems(CreateItem)
+        .send(blockchainConnection.getSendingOptions({ from: accounts[1] })),
+      CreateItem,
+    );
+
+    var itemIds = await itemProjection.getItemIdFromLog(tx);
+
+    var ExpectedResult = {
+      header: {
+        host: utilities.voidEthereumAddress,
+        name: "Item1",
+        symbol: "I1",
+        uri: "uriItem1",
+      },
+      collectionId: await native.methods.collectionId().call(),
+      id: itemIds[0],
+      accounts: [accounts[1]],
+      amounts: ["10000000000000000"],
+    };
+
+    await itemProjection.checkItem(
+      ExpectedResult,
+      await mainInterface.methods.item(itemIds[0]).call()
     );
   });
 

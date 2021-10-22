@@ -91,20 +91,23 @@ async function initialization(
   item,
   host,
   plainUri,
-  nativeProjectionAddress = utilities.voidEthereumAddress
+  nativeProjectionAddress = utilities.voidEthereumAddress,
+  bool = []
 ) {
   header = await convertHeader(header);
 
   await deploy(host, plainUri, nativeProjectionAddress);
 
-  var deployParam = abi.encode(
+  var deployParam = abi.encode(["bool[]"], [bool]);
+  
+  deployParam = abi.encode(
     [
       "bytes32",
       "tuple(address,string,string,string)",
       "tuple(tuple(address,string,string,string),bytes32,uint256,address[],uint256[])[]",
       "bytes",
     ],
-    [collectionId, header, item, utilities.voidBytes32]
+    [collectionId, header, item, deployParam]
   );
 
   deployParam = abi.encode(["address", "bytes"], [host, deployParam]);

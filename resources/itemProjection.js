@@ -52,7 +52,7 @@ async function assertTransferBalance(
   transferAmount,
   checkBalFrom,
   checkBalTo,
-  native = 0
+  native
 ) {
   var expectedBalanceFrom = await Promise.all(
     checkBalFrom["balances"].map(async (item, index) => {
@@ -75,32 +75,19 @@ async function assertTransferBalance(
 
   var expectedTotalSupplies = checkBalFrom["totalSupplies"];
 
-  await Promise.all(expectedTotalSupplies.map(async (sup, index) => 
-    assert.equal(
-      await native.methods.totalSupply(itemids[index]).call(), sup[0])
-  ))
-
-  await Promise.all(expectedBalanceTo.map(async (bal, index) => 
-    assert.equal(
-      await native.methods.balanceOf(toAddress[index], itemids[index]).call(), bal[0])
-  ))
-
-  await Promise.all(expectedBalanceFrom.map(async (bal, index) => 
-    assert.equal(
-      await native.methods.balanceOf(fromAddress[index], itemids[index]).call(), bal[0])
-  ))
-
   await itemsv2.checkBalances(
     fromAddress,
     itemids,
     expectedBalanceFrom,
-    expectedTotalSupplies
+    expectedTotalSupplies,
+    native
   );
   await itemsv2.checkBalances(
     toAddress,
     itemids,
     expectedBalanceTo,
-    expectedTotalSupplies
+    expectedTotalSupplies,
+    native
   );
 }
 
@@ -125,23 +112,14 @@ async function assertBurnBalance(checkBal, burnAmount, burnAddress, idItems, nat
     })
   );
 
-  await Promise.all(expectedSupply.map(async (sup, index) => 
-    assert.equal(
-      await native.methods.totalSupply(idItems[index]).call(), sup[0])
-  ));
-
-  await Promise.all(expectedBalance.map(async (bal, index) => 
-    assert.equal(
-      await native.methods.balanceOf(Array.isArray(burnAddress[index]) ? burnAddress[index][0] : burnAddress[index], idItems[index]).call(), bal[0])
-  ));
-
   await Promise.all(
     idItems.map(async (item, index) => {
       await itemsv2.checkBalances(
         burnAddress[index],
         [idItems[index]],
         expectedBalance[index],
-        expectedSupply[index]
+        expectedSupply[index],
+        native
       );
     })
   );
@@ -169,7 +147,8 @@ async function assertCheckBalanceSupply(
           accounts.map(async (it, i) => {
             return await itemsv2.checkBalances(
               it,
-              Array(it.length).fill(idItems[i])
+              Array(it.length).fill(idItems[i]),
+              native
             );
           })
         );
@@ -206,7 +185,8 @@ async function assertCheckBalanceSupply(
         accounts[index],
         Array(accounts[index].length).fill(event),
         expectedBalance[index],
-        expectedSupply[0][index]
+        expectedSupply[0][index],
+        native
       );
     })
   );
@@ -214,7 +194,7 @@ async function assertCheckBalanceSupply(
   return transaction;
 }
 
-async function assertCheckBalance(checkBal, CreateItem, itemids) {
+async function assertCheckBalance(checkBal, CreateItem, itemids, native) {
   if (!Array.isArray(itemids)) {
     itemids = [itemids];
   }
@@ -249,7 +229,8 @@ async function assertCheckBalance(checkBal, CreateItem, itemids) {
         it.accounts,
         Array(it.accounts.length).fill(itemids[i]),
         expectedBalance[i],
-        expectedSupply[i]
+        expectedSupply[i],
+        native
       );
     })
   );

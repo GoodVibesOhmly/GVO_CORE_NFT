@@ -330,7 +330,7 @@ describe("Item V2 Projections - Native", () => {
     await native.methods
       .mintItems(CreateItem)
       .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
-    await itemProjection.assertCheckBalance(checkBal, CreateItem, itemIds);
+    await itemProjection.assertCheckBalance(checkBal, CreateItem, itemIds, native);
   });
 
   it("#649 Alternative initialization #3", async () => {
@@ -531,7 +531,7 @@ describe("Item V2 Projections - Native", () => {
     await native.methods
       .mintItems(CreateItem)
       .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
-    await itemProjection.assertCheckBalance(checkBal, CreateItem, itemIds);
+    await itemProjection.assertCheckBalance(checkBal, CreateItem, itemIds, native);
   });
 
   it("#620 Change Collection Metadata", async () => {
@@ -768,7 +768,7 @@ describe("Item V2 Projections - Native", () => {
     await mainInterface.methods
       .mintItems(CreateItem)
       .send(blockchainConnection.getSendingOptions({ from: accounts[3] }));
-    await itemProjection.assertCheckBalance(checkBal, CreateItem, itemIds);
+    await itemProjection.assertCheckBalance(checkBal, CreateItem, itemIds, native);
   });
 
   it("#622 Change Collection host and reset it", async () => {
@@ -941,7 +941,7 @@ describe("Item V2 Projections - Native", () => {
     await native.methods
       .mintItems(CreateItem)
       .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
-    await itemProjection.assertCheckBalance(checkBal, CreateItem, itemIds);
+    await itemProjection.assertCheckBalance(checkBal, CreateItem, itemIds, native);
   });
   it("#623 Change the Metadata of Items", async () => {
     /**
@@ -1519,7 +1519,7 @@ describe("Item V2 Projections - Native", () => {
     await native.methods
       .mintItems(CreateItem)
       .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
-    await itemProjection.assertCheckBalance(checkBal, CreateItem, itemIds);
+    await itemProjection.assertCheckBalance(checkBal, CreateItem, itemIds, native);
   });
 
   it("#630 Create Items for Collection ids and Items ids that don't exist", async () => {
@@ -1700,7 +1700,8 @@ describe("Item V2 Projections - Native", () => {
     await itemProjection.assertCheckBalance(
       checkBal,
       CreateNativeItem,
-      itemIds
+      itemIds, 
+      native
     );
   });
 
@@ -1771,7 +1772,7 @@ describe("Item V2 Projections - Native", () => {
     await native.methods
       .mintItems(CreateItem)
       .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
-    await itemProjection.assertCheckBalance(checkBal, CreateItem, itemIds);
+    await itemProjection.assertCheckBalance(checkBal, CreateItem, itemIds, native);
 
     var ExpectedResult = {
       header: {
@@ -1936,7 +1937,7 @@ describe("Item V2 Projections - Native", () => {
     await native.methods
       .mintItems(CreateItem)
       .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
-    await itemProjection.assertCheckBalance(checkBal, CreateItem, itemIds);
+    await itemProjection.assertCheckBalance(checkBal, CreateItem, itemIds, native);
 
     var ExpectedResult = {
       header: {
@@ -3036,7 +3037,7 @@ describe("Item V2 Projections - Native", () => {
 
     var accountsList = CreateItem.map((it) => it.accounts);
     var noneBal = await itemProjection.createNoneBal(accountsList, idItems);
-    await itemProjection.assertCheckBalance(noneBal, CreateItem, idItems);
+    await itemProjection.assertCheckBalance(noneBal, CreateItem, idItems, native);
 
     var burnAmount = [["10000000000000000"], ["3000000000000000"]];
     var burnAddress = [[accounts[1]], [accounts[2]]];

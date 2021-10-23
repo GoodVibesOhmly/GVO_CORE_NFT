@@ -228,7 +228,8 @@ async function checkBalances(
   owners,
   itemIds,
   expectedBalances,
-  expectedTotalSupplies
+  expectedTotalSupplies,
+  native
 ) {
   itemIds = asArray(itemIds, (owners = asArray(owners)).length > 1);
   if (owners.length === 0 || itemIds.length === 0) {
@@ -262,6 +263,15 @@ async function checkBalances(
           `totalSupply mismatch for item #${itemId}`
         );
 
+        if(native != null){
+          var nativeTotalSupply = await native.methods.totalSupply(itemId).call();
+          assert.equal(
+            nativeTotalSupply,
+            mainTotalSupply,
+            `totalSupply mismatch between native and main interface for item #${itemId}`
+          );
+        }
+
         expectedTotalSupplies &&
           expectedTotalSupplies.length > 0 &&
           assert.equal(
@@ -282,6 +292,15 @@ async function checkBalances(
           interoperableBalance,
           `balanceOf mismatch for owner ${owner} and item #${itemId}`
         );
+
+        if(native != null){
+          var nativeBalance = await native.methods.balanceOf(owner, itemId).call();
+          assert.equal(
+            mainBalance,
+            nativeBalance,
+            `balanceOf mismatch between native and main interface for owner ${owner} and item #${itemId}`
+          );
+        }
         expectedBalances &&
           expectedBalances.length > 0 &&
           assert.equal(

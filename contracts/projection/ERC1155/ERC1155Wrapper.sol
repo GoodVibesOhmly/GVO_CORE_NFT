@@ -12,6 +12,7 @@ import { Uint256Utilities } from "@ethereansos/swissknife/contracts/lib/GeneralU
 contract ERC1155Wrapper is IERC1155Wrapper, ItemProjection, IERC1155Receiver {
     using AddressUtilities for address;
     using Uint256Utilities for uint256;
+    using Uint256Utilities for uint256[];
     using BytesUtilities for bytes;
 
     mapping(bytes32 => uint256) private _itemIdOf;
@@ -32,17 +33,38 @@ contract ERC1155Wrapper is IERC1155Wrapper, ItemProjection, IERC1155Receiver {
         return _itemIdOf[_toItemKey(tokenAddress, tokenId)];
     }
 
-    function mintItems(CreateItem[] calldata) virtual override(Item, ItemProjection) external returns(uint256[] memory) {
-        revert("You need to send ERC1155 token(s)");
+    function mintItems(CreateItem[] calldata createItemsInput) virtual override(Item, ItemProjection) external returns(uint256[] memory itemIds) {
+        CreateItem[] memory createItems = new CreateItem[](createItemsInput.length);
+        uint256[] memory loadedItemIds = new uint256[](createItemsInput.length);
+        string memory uri = plainUri();
+        for(uint256  i = 0; i < createItemsInput.length; i++) {
+            address tokenAddress = address(uint160(uint256(createItemsInput[i].collectionId)));
+            uint256 tokenId = createItemsInput[i].id;
+            uint256 value = createItemsInput[i].amounts.sum();
+            (createItems[i],) = _buildCreateItem(msg.sender, tokenAddress, tokenId, value, abi.encode(createItemsInput[i].accounts, createItemsInput[i].amounts), loadedItemIds[i] = itemIdOf(tokenAddress, tokenId), uri);
+            IERC1155(tokenAddress).safeTransferFrom(msg.sender, address(this), tokenId, value, "");
+        }
+        itemIds = IItemMainInterface(mainInterface).mintItems(createItems);
+        for(uint256 i = 0; i < createItemsInput.length; i++) {
+            if(loadedItemIds[i] == 0) {
+                address tokenAddress = address(uint160(uint256(createItemsInput[i].collectionId)));
+                uint256 tokenId = createItemsInput[i].id;
+                _itemIdOf[_toItemKey(tokenAddress, tokenId)] = itemIds[i];
+                emit Token(tokenAddress, tokenId, itemIds[i]);
+            }
+        }
     }
 
     function onERC1155Received(
-        address,
+        address operator,
         address from,
         uint256 tokenId,
         uint256 amount,
         bytes calldata data
     ) override external returns (bytes4) {
+        if(operator == address(this)) {
+            return this.onERC1155Received.selector;
+        }
         uint256 itemId = itemIdOf(msg.sender, tokenId);
         (CreateItem memory createItem, uint256 tokenDecimals) = _buildCreateItem(from, msg.sender, tokenId, amount, data, itemId, plainUri());
         _trySaveCreatedItemAndEmitTokenEvent(itemId, 0, tokenId, createItem, tokenDecimals);
@@ -50,12 +72,15 @@ contract ERC1155Wrapper is IERC1155Wrapper, ItemProjection, IERC1155Receiver {
     }
 
     function onERC1155BatchReceived(
-        address,
+        address operator,
         address from,
         uint256[] calldata tokenIds,
         uint256[] calldata amounts,
         bytes memory data
     ) override external returns (bytes4) {
+        if(operator == address(this)) {
+            return this.onERC1155BatchReceived.selector;
+        }
         bytes[] memory dataArray = abi.decode(data, (bytes[]));
         for(uint256 i = 0 ; i < tokenIds.length; i++) {
             _prepareTempVars(from, tokenIds[i], amounts[i], dataArray[i]);

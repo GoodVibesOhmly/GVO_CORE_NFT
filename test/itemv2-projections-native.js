@@ -2470,6 +2470,55 @@ describe("Item V2 Projections - Native", () => {
         .send(blockchainConnection.getSendingOptions({ from: accounts[1] })),
       "Finalized"
     );
+
+    var CreateItem5 = [
+      {
+        header: {
+          host: accounts[1],
+          name: "Item1",
+          symbol: "I1",
+          uri: "uriItem1",
+        },
+        collectionId: await native.methods.collectionId().call(),
+        id: 0,
+        accounts: [accounts[1]],
+        amounts: ["10000000000000000"],
+      },
+    ];
+
+    var tx = await native.methods
+        .mintItems(CreateItem5, [false])
+        .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
+
+    var itemId5 = await itemProjection.getItemIdFromLog(tx);
+
+    await itemProjection.assertCheckFinalized(
+      native.methods.isFinalized(itemId5[0]).call(),
+      false
+    );
+
+    CreateItem5 =
+      {
+        header: {
+          host: accounts[1],
+          name: "Item1",
+          symbol: "I1",
+          uri: "uriItem1",
+        },
+        collectionId: await native.methods.collectionId().call(),
+        id: itemId5[0],
+        accounts: [accounts[1]],
+        amounts: ["10000000000000000"],
+      };
+
+    await native.methods
+        .mintItems([CreateItem5, CreateItem5], [true, false])
+        .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
+
+    await itemProjection.assertCheckFinalized(
+      native.methods.isFinalized(itemId5[0]).call(),
+      true
+    );
   });
 
   it("#637 Items operation: safeTransferFrom", async () => {

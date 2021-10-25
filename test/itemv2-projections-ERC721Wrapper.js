@@ -284,7 +284,6 @@ describe("itemv2 projections ERC721Wrapper", () => {
     await Promise.all(
       receivers5.map(async(addresses, index) => {
         addresses.map(async(address, ind) => {
-          console.log(address)
             await wrapper.methods.safeTransferFrom(address, accounts[1], itemIds5[index], amounts5[index][ind], "0x").send(blockchainConnection.getSendingOptions({from: address}))
         })
       })
@@ -548,7 +547,6 @@ describe("itemv2 projections ERC721Wrapper", () => {
     );
 
     assert.equal(await uniToken.methods.balanceOf(accounts[9]).call(), "1");
-    console.log(itemsList)
 
     await mainInterface.methods
       .approve(
@@ -769,7 +767,7 @@ describe("itemv2 projections ERC721Wrapper", () => {
     );
   });
 
-  it("#656 Testing some different unwrap and rewrap scenarios with different balances: scenario 1", async () => {
+  it("#656 Scenario 1 Testing some different unwrap and rewrap scenarios with different balances", async () => {
     /**
     * Authorized subjects:
     * Item holders
@@ -915,7 +913,7 @@ describe("itemv2 projections ERC721Wrapper", () => {
     );
   });
 
-  it("#656 Testing some different unwrap and rewrap scenarios with different balances: scenario2 ", async () => {
+  it("#656 Scenario 2 Testing some different unwrap and rewrap scenarios with different balances", async () => {
     /**
     * Authorized subjects:
     * Item holders
@@ -1023,7 +1021,7 @@ describe("itemv2 projections ERC721Wrapper", () => {
     assert.equal(await mainToken.methods.balanceOf(accounts[1]).call(), "0");
   });
 
-  it("#656 Testing some different unwrap and rewrap scenarios with different balances: scenario3", async () => {
+  it("#656 Scenario 3 Testing some different unwrap and rewrap scenarios with different balances", async () => {
     /**
     * Authorized subjects:
     * Item holders
@@ -1115,14 +1113,6 @@ describe("itemv2 projections ERC721Wrapper", () => {
       ]
     );
 
-    // await wrapper.methods
-    //   .burn(
-    //     accounts[1],
-    //     itemIds[0],
-    //     await wrapper.methods.balanceOf(accounts[1], itemIds[0]).call(),
-    //     burn1
-    //   )
-    //   .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
       await wrapperResource.burn721(
         accounts[1],
         accounts[1],
@@ -1155,7 +1145,7 @@ describe("itemv2 projections ERC721Wrapper", () => {
     assert.equal(await mainToken.methods.balanceOf(accounts[1]).call(), "0");
   });
 
-  it("#656 Testing some different unwrap and rewrap scenarios with different balances: scenario4", async () => {
+  it("#656 Scenario 4 Testing some different unwrap and rewrap scenarios with different balances", async () => {
     /**
     * Authorized subjects:
     * Item holders
@@ -1279,7 +1269,7 @@ describe("itemv2 projections ERC721Wrapper", () => {
     );
   });
 
-  it("#656 Testing some different unwrap and rewrap scenarios with different balances: scenario5", async () => {
+  it("#656 Scenario 5 Testing some different unwrap and rewrap scenarios with different balances", async () => {
     /**
     * Authorized subjects:
     * Item holders
@@ -1415,14 +1405,6 @@ describe("itemv2 projections ERC721Wrapper", () => {
       ]
     );
 
-    // await wrapper.methods
-    //   .burn(
-    //     accounts[1],
-    //     itemIds[0],
-    //     await wrapper.methods.balanceOf(accounts[1], itemIds[0]).call(),
-    //     burn1
-    //   )
-    //   .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
       await wrapperResource.burn721(
         accounts[1],
         accounts[1],
@@ -1466,7 +1448,7 @@ describe("itemv2 projections ERC721Wrapper", () => {
     assert.equal(await mainToken.methods.balanceOf(accounts[1]).call(), "0");
   });
 
-  it("#657 Testing some different unwrap and rewrap scenarios with different balances using the Interoperable burn operation: scenario 1", async () => {
+  it("#657 Scenario 1 Testing some different unwrap and rewrap scenarios with different balances using the Interoperable burn operation", async () => {
     /**
     * Authorized subjects:
     * Item holders
@@ -1550,15 +1532,6 @@ describe("itemv2 projections ERC721Wrapper", () => {
       ]
     );
 
-    // await wrapper.methods
-    //   .burn(
-    //     accounts[1],
-    //     itemIds[0],
-    //     await wrapper.methods.balanceOf(accounts[1], itemIds[0]).call(),
-    //     burn1
-    //   )
-    //   .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
-
       await wrapperResource.burn721(
         accounts[1],
         accounts[1],
@@ -1595,7 +1568,7 @@ describe("itemv2 projections ERC721Wrapper", () => {
     assert.equal(await mainToken.methods.balanceOf(accounts[1]).call(), "0");
   });
 
-  it("#657 Testing some different unwrap and rewrap scenarios with different balances using the Interoperable burn operation: scenario2", async () => {
+  it("#657 Scenario 2 Testing some different unwrap and rewrap scenarios with different balances using the Interoperable burn operation", async () => {
     /**
     * Authorized subjects:
     * Item holders
@@ -1692,7 +1665,7 @@ describe("itemv2 projections ERC721Wrapper", () => {
     assert.equal(await mainToken.methods.balanceOf(accounts[1]).call(), "0");
   });
 
-  it("#657 Testing some different unwrap and rewrap scenarios with different balances using the Interoperable burn operation: scenario3", async () => {
+  it("#657 Scenario 3 Testing some different unwrap and rewrap scenarios with different balances using the Interoperable burn operation", async () => {
     /**
     * Authorized subjects:
     * Item holders
@@ -1822,7 +1795,7 @@ describe("itemv2 projections ERC721Wrapper", () => {
     assert.equal(await mainToken.methods.balanceOf(accounts[1]).call(), "0");
   });
 
-  it("#657 Testing some different unwrap and rewrap scenarios with different balances using the Interoperable burn operation: scenario4", async () => {
+  it("#657 Scenario 4 Testing some different unwrap and rewrap scenarios with different balances using the Interoperable burn operation", async () => {
     /**
     * Authorized subjects:
     * Item holders
@@ -1934,14 +1907,6 @@ describe("itemv2 projections ERC721Wrapper", () => {
       "Insufficient balance"
     );
 
-    // await wrapper.methods
-    //   .burn(
-    //     accounts[2],
-    //     itemIds[0],
-    //     await wrapper.methods.balanceOf(accounts[2], itemIds[0]).call(),
-    //     burn1
-    //   )
-    //   .send(blockchainConnection.getSendingOptions({ from: accounts[2] }));
       await wrapperResource.burn721(
         accounts[2],
         accounts[2],

@@ -39,6 +39,8 @@ describe("itemv2 projections ERC1155Wrapper", () => {
   var itemId6;
   var itemId7;
   var item3;
+  var exec669 = false;
+  var exec670 = false;
 
   var approvedHost = [];
 
@@ -60,133 +62,9 @@ describe("itemv2 projections ERC1155Wrapper", () => {
     return c;
   }
 
-  before(async () => {
-    ItemInteroperableInterface = await compile(
-      "impl/ItemInteroperableInterface"
-    );
-    itemInteroperableInterface = await new web3.eth.Contract(
-      ItemInteroperableInterface.abi
-    )
-      .deploy({ data: ItemInteroperableInterface.bin })
-      .send(blockchainConnection.getSendingOptions());
-    itemInteroperableInterfaceAddress =
-      itemInteroperableInterface.options.address;
-    var headerCollection = {
-      host: accounts[1],
-      name: "Colection1",
-      symbol: "C1",
-      uri: "uriC1",
-    };
+  async function test669(){
+    exec669 = true;
 
-    var items = [];
-
-    var deployParam = abi.encode(
-      [
-        "bytes32",
-        "tuple(address,string,string,string)",
-        "tuple(tuple(address,string,string,string),bytes32,uint256,address[],uint256[])[]",
-        "bytes",
-      ],
-      [
-        utilities.voidBytes32,
-        await itemsv2.convertHeader(headerCollection),
-        items,
-        utilities.voidBytes32,
-      ]
-    );
-
-    deployParam = abi.encode(
-      ["address", "bytes"],
-      [knowledgeBase.mainInterfaceAddress, deployParam]
-    );
-
-    deployParam = abi.encode(["address", "bytes"], [accounts[1], deployParam]);
-
-    var ERC1155Wrapper = await compile("projection/ERC1155/ERC1155Wrapper");
-    wrapper = await new web3.eth.Contract(ERC1155Wrapper.abi)
-      .deploy({ data: ERC1155Wrapper.bin, arguments: ["0x"] })
-      .send(blockchainConnection.getSendingOptions());
-
-    var ZeroDecimals = await compile("../resources/ERC1155ZeroDecimals");
-    zeroDecimals = await new web3.eth.Contract(ZeroDecimals.abi)
-      .deploy({ data: ZeroDecimals.bin, arguments: ["0x"] })
-      .send(blockchainConnection.getSendingOptions());
-
-    await wrapper.methods
-      .lazyInit(deployParam)
-      .send(blockchainConnection.getSendingOptions());
-
-    await zeroDecimals.methods
-      .lazyInit(deployParam)
-      .send(blockchainConnection.getSendingOptions());
-
-    MainInterface = await compile("model/IItemMainInterface");
-    mainInterface = new web3.eth.Contract(
-      MainInterface.abi,
-      knowledgeBase.mainInterfaceAddress
-    );
-
-    token1 = new web3.eth.Contract(
-      knowledgeBase.IERC1155ABI,
-      item1erc1155Address
-    );
-    token2 = new web3.eth.Contract(
-      knowledgeBase.IERC1155ABI,
-      item2erc1155Address
-    );
-    token4 = new web3.eth.Contract(
-      knowledgeBase.IERC1155ABI,
-      item4erc1155Address
-    );
-    token5 = new web3.eth.Contract(
-      knowledgeBase.IERC1155ABI,
-      item5erc1155Address
-    );
-
-    var CreateItem3 = [
-      {
-        header: {
-          host: accounts[1],
-          name: "Item1",
-          symbol: "I1",
-          uri: "uriItem1",
-        },
-        collectionId: await zeroDecimals.methods.collectionId().call(),
-        id: 0,
-        accounts: [accounts[1]],
-        amounts: ["1"],
-      },
-    ];
-
-    var tx = await zeroDecimals.methods
-      .mintItems(CreateItem3)
-      .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
-
-    item3erc1155Id = await itemProjection.getItemIdFromLog(tx);
-
-    var tx = await zeroDecimals.methods
-      .mintItems(CreateItem3)
-      .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
-
-    item6erc1155Id = await itemProjection.getItemIdFromLog(tx);
-  });
-
-  it("#669 Wrap ERC1155 using the onERC1155Received", async () => {
-    /**
-        Authorized subjects:
-        Item holders
-        approved operator address
-        Functions used in the test:
-        onERC1155Received
-        onERC1155BatchReceived
-        Items used:
-        Must fail: an ERC1155 with decimals different from 0 (not Item) cannot be wrapped.
-        Must fail: a wrapping operation using the onERC1155Received without passing an array of values, cannot be performed.
-        Wrap Item1 using the safeTransferFrom (onERC1155Received).
-        Wrap Item2 using the safeTransferFrom (onERC1155Received).
-        Wrap Item2 using the safeTransferFrom (onERC1155Received).
-        Wrap Item3 using the safeTransferFrom (onERC1155Received).
-        */
     var prevResult2Holder1 = await token2.methods
       .balanceOf(item2Holder1, item2erc1155Id)
       .call();
@@ -370,9 +248,11 @@ describe("itemv2 projections ERC1155Wrapper", () => {
       "0x",
       wrapper
     );
-  });
 
-  it("#670 Wrap ERC1155 using the onERC1155BatchReceived", async () => {
+  };
+
+  async function test670(){
+    exec670 = true;
     var prevResult2Holder1 = await token2.methods
       .balanceOf(item2Holder1, item2erc1155Id)
       .call();
@@ -539,9 +419,145 @@ describe("itemv2 projections ERC1155Wrapper", () => {
       "0x",
       wrapper
     );
+
+  };
+
+  before(async () => {
+    ItemInteroperableInterface = await compile(
+      "impl/ItemInteroperableInterface"
+    );
+    itemInteroperableInterface = await new web3.eth.Contract(
+      ItemInteroperableInterface.abi
+    )
+      .deploy({ data: ItemInteroperableInterface.bin })
+      .send(blockchainConnection.getSendingOptions());
+    itemInteroperableInterfaceAddress =
+      itemInteroperableInterface.options.address;
+    var headerCollection = {
+      host: accounts[1],
+      name: "Colection1",
+      symbol: "C1",
+      uri: "uriC1",
+    };
+
+    var items = [];
+
+    var deployParam = abi.encode(
+      [
+        "bytes32",
+        "tuple(address,string,string,string)",
+        "tuple(tuple(address,string,string,string),bytes32,uint256,address[],uint256[])[]",
+        "bytes",
+      ],
+      [
+        utilities.voidBytes32,
+        await itemsv2.convertHeader(headerCollection),
+        items,
+        utilities.voidBytes32,
+      ]
+    );
+
+    deployParam = abi.encode(
+      ["address", "bytes"],
+      [knowledgeBase.mainInterfaceAddress, deployParam]
+    );
+
+    deployParam = abi.encode(["address", "bytes"], [accounts[1], deployParam]);
+
+    var ERC1155Wrapper = await compile("projection/ERC1155/ERC1155Wrapper");
+    wrapper = await new web3.eth.Contract(ERC1155Wrapper.abi)
+      .deploy({ data: ERC1155Wrapper.bin, arguments: ["0x"] })
+      .send(blockchainConnection.getSendingOptions());
+
+    var ZeroDecimals = await compile("../resources/ERC1155ZeroDecimals");
+    zeroDecimals = await new web3.eth.Contract(ZeroDecimals.abi)
+      .deploy({ data: ZeroDecimals.bin, arguments: ["0x"] })
+      .send(blockchainConnection.getSendingOptions());
+
+    await wrapper.methods
+      .lazyInit(deployParam)
+      .send(blockchainConnection.getSendingOptions());
+
+    await zeroDecimals.methods
+      .lazyInit(deployParam)
+      .send(blockchainConnection.getSendingOptions());
+
+    MainInterface = await compile("model/IItemMainInterface");
+    mainInterface = new web3.eth.Contract(
+      MainInterface.abi,
+      knowledgeBase.mainInterfaceAddress
+    );
+
+    token1 = new web3.eth.Contract(
+      knowledgeBase.IERC1155ABI,
+      item1erc1155Address
+    );
+    token2 = new web3.eth.Contract(
+      knowledgeBase.IERC1155ABI,
+      item2erc1155Address
+    );
+    token4 = new web3.eth.Contract(
+      knowledgeBase.IERC1155ABI,
+      item4erc1155Address
+    );
+    token5 = new web3.eth.Contract(
+      knowledgeBase.IERC1155ABI,
+      item5erc1155Address
+    );
+
+    var CreateItem3 = [
+      {
+        header: {
+          host: accounts[1],
+          name: "Item1",
+          symbol: "I1",
+          uri: "uriItem1",
+        },
+        collectionId: await zeroDecimals.methods.collectionId().call(),
+        id: 0,
+        accounts: [accounts[1]],
+        amounts: ["1"],
+      },
+    ];
+
+    var tx = await zeroDecimals.methods
+      .mintItems(CreateItem3)
+      .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
+
+    item3erc1155Id = await itemProjection.getItemIdFromLog(tx);
+
+    var tx = await zeroDecimals.methods
+      .mintItems(CreateItem3)
+      .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
+
+    item6erc1155Id = await itemProjection.getItemIdFromLog(tx);
+  });
+
+  it("#669 Wrap ERC1155 using the onERC1155Received", async () => {
+    /**
+        Authorized subjects:
+        Item holders
+        approved operator address
+        Functions used in the test:
+        onERC1155Received
+        onERC1155BatchReceived
+        Items used:
+        Must fail: an ERC1155 with decimals different from 0 (not Item) cannot be wrapped.
+        Must fail: a wrapping operation using the onERC1155Received without passing an array of values, cannot be performed.
+        Wrap Item1 using the safeTransferFrom (onERC1155Received).
+        Wrap Item2 using the safeTransferFrom (onERC1155Received).
+        Wrap Item2 using the safeTransferFrom (onERC1155Received).
+        Wrap Item3 using the safeTransferFrom (onERC1155Received).
+        */
+      await test669();
+  });
+
+  it("#670 Wrap ERC1155 using the onERC1155BatchReceived", async () => {
+    await test670();
   });
 
   it("#671 Unwrap single using Burn", async () => {
+    if(!exec669) await test669();
     var prevBal = await token2.methods
       .balanceOf(accounts[1], item2erc1155Id)
       .call();
@@ -611,6 +627,8 @@ describe("itemv2 projections ERC1155Wrapper", () => {
   });
 
   it("#672 Unwrap batch using burnBatch", async () => {
+    if(!exec669) await test669();
+    if(!exec670) await test670();
     var prevAmount2 = await wrapper.methods
       .balanceOf(accounts[3], itemId2)
       .call();
@@ -696,6 +714,53 @@ describe("itemv2 projections ERC1155Wrapper", () => {
       })
     );
   });
+
+  it("#000 ", async () => {
+    var CreateItem7 = [
+      {
+        header: {
+          host: accounts[1],
+          name: "Item1",
+          symbol: "I1",
+          uri: "uriItem1",
+        },
+        collectionId: await zeroDecimals.methods.collectionId().call(),
+        id: 0,
+        accounts: [accounts[5]],
+        amounts: ["6"],
+      },
+    ];
+
+    var tx = await zeroDecimals.methods
+      .mintItems(CreateItem7)
+      .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
+
+    var scenarioItem7erc1155Id = await itemProjection.getItemIdFromLog(tx);
+
+    assert.equal(await zeroDecimals.methods.balanceOf(accounts[5], scenarioItem7erc1155Id[0]).call(), "6")
+
+    var encodeMint = web3.eth.abi.encodeParameters(
+      ["uint256[]", "address[]"],
+      [["1", "3", "2"], [utilities.voidEthereumAddress, accounts[6], accounts[7]]]
+    );
+
+    var itemId = await wrapperResource.mintMultiItems1155(
+      zeroDecimals,
+      accounts[5],
+      wrapper.options.address,
+      scenarioItem7erc1155Id[0],
+      6,
+      encodeMint,
+      item3,
+      wrapper,
+      [accounts[5]],
+      ["1000000000000000000"]
+    );
+    assert.equal(await wrapper.methods.totalSupply(itemId).call(), "6000000000000000000");
+    assert.equal(await wrapper.methods.balanceOf(accounts[5], itemId).call(), "1000000000000000000")
+    assert.equal(await wrapper.methods.balanceOf(accounts[6], itemId).call(), "3000000000000000000")
+    assert.equal(await wrapper.methods.balanceOf(accounts[7], itemId).call(), "2000000000000000000")
+  })
 
   it("#673 Scenario 1 Testing some different unwrap scenarios with different balances", async () => {
     var prevResult2Holder1 = await token2.methods

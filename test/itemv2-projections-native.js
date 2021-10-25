@@ -228,8 +228,6 @@ describe("Item V2 Projections - Native", () => {
       },
     ].map(it => [Object.values(it.header), ...Object.entries(it).filter(it => it[0] !== 'header').map(it => it[1])]);
 
-    //items = abi.encode(["tuple(tuple(address,string,string,string),bytes32,uint256,address[],uint256[])[]"], [items]);
-
     var collectionHeader = [accounts[1], "Collection", "COL", "uri"];
 
     await catchCall(

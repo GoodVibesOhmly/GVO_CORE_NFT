@@ -116,7 +116,7 @@ describe("itemv2 projections ERC721Wrapper", () => {
       .balanceOf(wrapper.options.address)
       .call();
 
-    var data = web3.eth.abi.encodeParameters(["address"], [accounts[2]]);
+    var data = web3.eth.abi.encodeParameters(["uint256[]","address[]"], [["1000000000000000000"],[accounts[2]]]);
     var tx1 = await mainToken1.methods
       .safeTransferFrom(accounts[1], wrapper.options.address, token721Id1, data)
       .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));

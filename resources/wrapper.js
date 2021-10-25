@@ -220,6 +220,60 @@ async function mintItems721(
   return tx;
 }
 
+async function mintMultiItems721(
+  tokenList,
+  receivers,
+  from,
+  wrapper,
+  nftTokenAddress,
+  amount,
+  revert = ""
+) {
+
+  var itemList = [];
+
+  await Promise.all(
+    receivers.map(async (address, index) =>
+      itemList.push({
+        header: {
+          host: utilities.voidEthereumAddress,
+          name: "",
+          symbol: "",
+          uri: "",
+        },
+        collectionId: web3.eth.abi.encodeParameter("address", nftTokenAddress),
+        id: tokenList[index],
+        accounts: address,
+        amounts: amount[index],
+      })
+    )
+  );
+
+  if(revert == ""){
+    var tx = await wrapper.methods
+    .mintItems(itemList)
+    .send(blockchainConnection.getSendingOptions({ from: from }));
+
+    var logs = (await web3.eth.getTransactionReceipt(tx.transactionHash)).logs;
+
+    var itemIds = logs
+      .filter(
+        (it) =>
+          it.topics[0] === web3.utils.sha3("Token(address,uint256,uint256)")
+      )
+      .map((it) => web3.eth.abi.decodeParameter("uint256", it.topics[3]));
+
+    return itemIds;
+  }
+
+  await catchCall(
+    wrapper.methods
+    .mintItems(itemList)
+    .send(blockchainConnection.getSendingOptions({ from: from })),
+    revert
+  )
+}
+
 async function mintItems1155(
   tokenInstance,
   from,
@@ -378,6 +432,30 @@ async function safeBatchTransfer1155(
     }))
 }
 
+async function burn721(
+  from,
+  operator,
+  item,
+  amount,
+  data,
+  tokenInstance
+){
+  var prevSupply = await tokenInstance.methods.totalSupply(item).call();
+  var prevBalance = await tokenInstance.methods.balanceOf(from, item).call();
+  await tokenInstance.methods
+      .burn(from, item, amount, data)
+      .send(blockchainConnection.getSendingOptions({ from: operator }));
+  assert.equal(
+    await tokenInstance.methods.totalSupply(item).call(),
+    prevSupply.sub(amount)
+  )
+
+  assert.equal(
+    await tokenInstance.methods.balanceOf(from, item).call(),
+    prevBalance.sub(amount)
+  )
+}
+
 async function burn1155(
   from,
   operator,
@@ -408,11 +486,13 @@ module.exports = {
   assertCheckErc20ItemBalance,
   revertMintErc20Wrapper,
   mintItems721,
+  mintMultiItems721,
   mintErc20,
   revertMintErc20,
   mintItems1155,
   mintBatchItems1155,
   safeTransfer1155,
   safeBatchTransfer1155,
+  burn721,
   burn1155,
 };

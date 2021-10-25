@@ -551,6 +551,11 @@ describe("itemv2 projections ERC1155Wrapper", () => {
       [token1.options.address, item1erc1155Id, accounts[5], "0x"]
     );
 
+    var burnCatchCall = web3.eth.abi.encodeParameters(
+      ["address", "uint256", "address", "bytes"],
+      [token2.options.address, item1erc1155Id, accounts[5], "0x"]
+    );
+
     var burn2 = web3.eth.abi.encodeParameters(
       ["address", "uint256", "address", "bytes"],
       [
@@ -564,6 +569,13 @@ describe("itemv2 projections ERC1155Wrapper", () => {
     var burn3 = web3.eth.abi.encodeParameters(
       ["address", "uint256", "address", "bytes"],
       [zeroDecimals.options.address, item3erc1155Id[0], accounts[5], "0x"]
+    );
+
+    await catchCall(
+      wrapper.methods
+      .burn(accounts[1], itemId1, "1000000000000000000", burnCatchCall)
+      .send(blockchainConnection.getSendingOptions({ from: accounts[1] })),
+      "Wrong ERC1155"
     );
 
     await wrapperResource.burn1155(

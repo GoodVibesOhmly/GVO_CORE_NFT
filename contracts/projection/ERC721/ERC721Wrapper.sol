@@ -31,7 +31,7 @@ contract ERC721Wrapper is IERC721Wrapper, ItemProjection, IERC721Receiver {
             address tokenAddress = address(uint160(uint256(createItemsInput[i].collectionId)));
             uint256 tokenId = createItemsInput[i].id;
             IERC721(tokenAddress).transferFrom(msg.sender, address(this), tokenId);
-            createItems[i] = _buildCreateItem(tokenAddress, createItemsInput[i].accounts, createItemsInput[i].amounts, loadedItemIds[i] = itemIdOf(tokenAddress, tokenId), uri);
+            createItems[i] = _buildCreateItem(msg.sender, tokenAddress, createItemsInput[i].accounts, createItemsInput[i].amounts, loadedItemIds[i] = itemIdOf(tokenAddress, tokenId), uri);
         }
         itemIds = IItemMainInterface(mainInterface).mintItems(createItems);
         for(uint256 i = 0; i < createItemsInput.length; i++) {
@@ -50,14 +50,14 @@ contract ERC721Wrapper is IERC721Wrapper, ItemProjection, IERC721Receiver {
         uint256 tokenId,
         bytes calldata data
     ) override external returns (bytes4) {
-        address itemReceiver = from;
+        uint256[] memory values;
+        address[] memory receivers;
         if(data.length > 0) {
-            itemReceiver = abi.decode(data, (address));
+            (values, receivers) = abi.decode(data, (uint256[], address[]));
         }
-        itemReceiver = itemReceiver != address(0) ? itemReceiver : from;
         uint256 itemId = itemIdOf(msg.sender, tokenId);
         CreateItem[] memory createItems = new CreateItem[](1);
-        createItems[0] = _buildCreateItem(msg.sender, itemReceiver.asSingletonArray(), new uint256[](0), itemId, plainUri());
+        createItems[0] = _buildCreateItem(from, msg.sender, receivers, values, itemId, plainUri());
         uint256 createdItemId = IItemMainInterface(mainInterface).mintItems(createItems)[0];
         if(itemId == 0) {
             _itemIdOf[_toItemKey(msg.sender, tokenId)] = createdItemId;
@@ -104,10 +104,10 @@ contract ERC721Wrapper is IERC721Wrapper, ItemProjection, IERC721Receiver {
         token.safeTransferFrom(address(this), receiver, tokenId);
     }
 
-    function _buildCreateItem(address tokenAddress, address[] memory receivers, uint256[] memory values, uint256 itemId, string memory uri) private view returns(CreateItem memory) {
+    function _buildCreateItem(address from, address tokenAddress, address[] memory receivers, uint256[] memory values, uint256 itemId, string memory uri) private view returns(CreateItem memory) {
         (string memory name, string memory symbol) = itemId != 0 ? ("", "") : _tryRecoveryMetadata(tokenAddress);
         uint256 supplyToMint = (1e18 - (itemId == 0 ? 0 : IItemMainInterface(mainInterface).totalSupply(itemId)));
-        address[] memory accounts = receivers.length == 0 ? msg.sender.asSingletonArray() : receivers;
+        address[] memory accounts = receivers.length == 0 ? from.asSingletonArray() : receivers;
         uint256[] memory amounts = values.length == 0 ? supplyToMint.asSingletonArray() : values;
         require(accounts.length == amounts.length, "length");
         for(uint256 i = 0; i < amounts.length; i++) {

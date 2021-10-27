@@ -50,12 +50,14 @@ contract ERC20Wrapper is IERC20Wrapper, ItemProjection {
     }
 
     function burn(address account, uint256 itemId, uint256 amount, bytes memory data) override(Item, ItemProjection) public {
+        require(account != address(0), "required account");
         IItemMainInterface(mainInterface).mintTransferOrBurn(false, abi.encode(msg.sender, account, address(0), itemId, toInteroperableInterfaceAmount(amount, itemId, account)));
         emit TransferSingle(msg.sender, account, address(0), itemId, amount);
         _unwrap(account, itemId, amount, data);
     }
 
     function burnBatch(address account, uint256[] calldata itemIds, uint256[] calldata amounts, bytes memory data) override(Item, ItemProjection) public {
+        require(account != address(0), "required account");
         uint256[] memory interoperableInterfaceAmounts = new uint256[](amounts.length);
         for(uint256 i = 0 ; i < interoperableInterfaceAmounts.length; i++) {
             interoperableInterfaceAmounts[i] = toInteroperableInterfaceAmount(amounts[i], itemIds[i], account);

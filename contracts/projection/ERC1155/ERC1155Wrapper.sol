@@ -41,7 +41,8 @@ contract ERC1155Wrapper is IERC1155Wrapper, ItemProjection, IERC1155Receiver {
             address tokenAddress = address(uint160(uint256(createItemsInput[i].collectionId)));
             uint256 tokenId = createItemsInput[i].id;
             uint256 value = createItemsInput[i].amounts.sum();
-            (createItems[i],) = _buildCreateItem(msg.sender, tokenAddress, tokenId, value, abi.encode(createItemsInput[i].accounts, createItemsInput[i].amounts), loadedItemIds[i] = itemIdOf(tokenAddress, tokenId), uri);
+            bytes memory encodedData = abi.encode(createItemsInput[i].accounts, createItemsInput[i].amounts);
+            (createItems[i],) = _buildCreateItem(msg.sender, tokenAddress, tokenId, value, encodedData, loadedItemIds[i] = itemIdOf(tokenAddress, tokenId), uri);
             IERC1155(tokenAddress).safeTransferFrom(msg.sender, address(this), tokenId, value, "");
         }
         itemIds = IItemMainInterface(mainInterface).mintItems(createItems);
@@ -124,11 +125,13 @@ contract ERC1155Wrapper is IERC1155Wrapper, ItemProjection, IERC1155Receiver {
     }
 
     function burn(address account, uint256 itemId, uint256 amount, bytes memory data) override(Item, ItemProjection) public {
+        require(account != address(0), "required account");
         IItemMainInterface(mainInterface).mintTransferOrBurn(false, abi.encode(msg.sender, account, address(0), itemId, _unwrap(account, itemId, amount, data)));
         emit TransferSingle(msg.sender, account, address(0), itemId, amount);
     }
 
     function burnBatch(address account, uint256[] calldata itemIds, uint256[] calldata amounts, bytes memory data) override(Item, ItemProjection) public {
+        require(account != address(0), "required account");
         uint256[] memory interoperableInterfaceAmounts = new uint256[](amounts.length);
         bytes[] memory datas = abi.decode(data, (bytes[]));
         for(uint256 i = 0; i < itemIds.length; i++) {
@@ -210,7 +213,10 @@ contract ERC1155Wrapper is IERC1155Wrapper, ItemProjection, IERC1155Receiver {
     }
 
     function _safeDecimals(address tokenAddress, uint256 tokenId) private view returns(uint256 dec) {
-        (bool result, bytes memory response) = tokenAddress.staticcall(abi.encodeWithSelector(Item(tokenAddress).decimals.selector, tokenId));
+        (bool result, bytes memory response) = tokenAddress.staticcall(abi.encodeWithSelector(0x3f47e662, tokenId));//decimals(uint256)
+        if(!result) {
+            (result, response) = tokenAddress.staticcall(abi.encodeWithSelector(0x313ce567));//decimals()
+        }
         if(result) {
             dec = abi.decode(response, (uint256));
         } else {

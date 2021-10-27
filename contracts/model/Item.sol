@@ -27,6 +27,7 @@ interface Item is IERC1155, IERC1155Views {
 
     function name() external view returns(string memory);
     function symbol() external view returns(string memory);
+    function decimals() external view returns(uint256);
 
     function burn(address account, uint256 itemId, uint256 amount) external;
     function burnBatch(address account, uint256[] calldata itemIds, uint256[] calldata amounts) external;

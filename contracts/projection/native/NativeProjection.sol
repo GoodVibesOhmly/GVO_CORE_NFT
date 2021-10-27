@@ -36,7 +36,7 @@ contract NativeProjection is ItemProjection {
     }
 
     function mintItems(CreateItem[] calldata items, bool[] memory finalized) authorizedOnly public returns(uint256[] memory itemIds) {
-        itemIds = IItemMainInterface(mainInterface).mintItems(items);
+        itemIds = super.mintItems(items);
         for(uint256 i = 0; i < items.length; i++) {
             uint256 itemId = items[i].id;
             require(itemId == 0 || !isFinalized[itemId], "Finalized");
@@ -52,7 +52,7 @@ contract NativeProjection is ItemProjection {
         }
     }
 
-    function mintItems(CreateItem[] calldata items) authorizedOnly virtual override external returns(uint256[] memory itemIds) {
+    function mintItems(CreateItem[] calldata items) authorizedOnly virtual override public returns(uint256[] memory itemIds) {
         return mintItems(items, new bool[](items.length));
     }
 

@@ -35,15 +35,49 @@ abstract contract ItemProjection is IItemProjection, LazyInitCapableElement {
         lazyInitResponse = _projectionLazyInit(lazyInitResponse);
     }
 
-    function _supportsInterface(bytes4 interfaceId) override internal view returns (bool) {
-        //TODO SupportsInterface
+    function _supportsInterface(bytes4 interfaceId) override internal pure returns (bool) {
+        return
+            interfaceId == type(IItemProjection).interfaceId ||
+            interfaceId == 0xeac989f8 ||//uri()
+            interfaceId == this.mainInterface.selector ||
+            interfaceId == this.collectionId.selector ||
+            interfaceId == this.plainUri.selector ||
+            interfaceId == this.itemPlainUri.selector ||
+            interfaceId == this.setHeader.selector ||
+            interfaceId == this.toInteroperableInterfaceAmount.selector ||
+            interfaceId == this.toMainInterfaceAmount.selector ||
+            interfaceId == this.balanceOf.selector ||
+            interfaceId == this.balanceOfBatch.selector ||
+            interfaceId == this.setApprovalForAll.selector ||
+            interfaceId == this.isApprovedForAll.selector ||
+            interfaceId == this.safeTransferFrom.selector ||
+            interfaceId == this.safeBatchTransferFrom.selector ||
+            interfaceId == 0xd9b67a26 ||//OpenSea Standard
+            interfaceId == type(IERC1155Views).interfaceId ||
+            interfaceId == this.totalSupply.selector ||
+            interfaceId == 0x00ad800c ||//name(uint256)
+            interfaceId == 0x4e41a1fb ||//symbol(uint256)
+            interfaceId == 0x3f47e662 ||//decimals(uint256)
+            interfaceId == 0x313ce567 ||//decimals()
+            interfaceId == 0x0e89341c ||//uri(uint256)
+            interfaceId == type(Item).interfaceId ||
+            interfaceId == 0x06fdde03 ||//name()
+            interfaceId == 0x95d89b41 ||//symbol()
+            interfaceId == 0xf5298aca ||//burn(address,uint256,uint256)
+            interfaceId == 0x6b20c454 ||//burnBatch(address,uint256[],uint256[])
+            interfaceId == 0x8a94b05f ||//burn(address,uint256,uint256,bytes)
+            interfaceId == 0x5473422e ||//burnBatch(address,uint256[],uint256[],bytes)
+            interfaceId == this.mintItems.selector ||
+            interfaceId == this.setItemsCollection.selector ||
+            interfaceId == this.setItemsMetadata.selector ||
+            interfaceId == this.interoperableOf.selector;
     }
 
     function _projectionLazyInit(bytes memory) internal virtual returns (bytes memory) {
         return "";
     }
 
-    function setHeader(Header calldata value) authorizedOnly override external returns(Header memory oldValue) {
+    function setHeader(Header calldata value) authorizedOnly override external virtual returns(Header memory oldValue) {
         Header[] memory values = new Header[](1);
         values[0] = value;
         bytes32[] memory collectionIds = new bytes32[](1);
@@ -55,11 +89,12 @@ abstract contract ItemProjection is IItemProjection, LazyInitCapableElement {
         return IItemMainInterface(mainInterface).setItemsMetadata(itemIds, values);
     }
 
-    function mintItems(CreateItem[] memory items) authorizedOnly virtual override external returns(uint256[] memory itemIds) {
+    function mintItems(CreateItem[] memory items) authorizedOnly virtual override public returns(uint256[] memory itemIds) {
         uint256 multiplier = 10 ** (18 - decimals(0));
         for(uint256 i = 0; i < items.length; i++) {
+            items[i].collectionId = collectionId;
             uint256[] memory amounts = items[i].amounts;
-            for(uint256 z = 0; z < items.length; z++) {
+            for(uint256 z = 0; z < amounts.length; z++) {
                 amounts[z] = amounts[z] * multiplier;
             }
             items[i].amounts = amounts;
@@ -102,6 +137,10 @@ abstract contract ItemProjection is IItemProjection, LazyInitCapableElement {
     }
 
     function decimals(uint256) override public virtual view returns(uint256) {
+        return 18;
+    }
+
+    function decimals() external override view returns(uint256) {
         return 18;
     }
 
@@ -175,17 +214,21 @@ abstract contract ItemProjection is IItemProjection, LazyInitCapableElement {
         return IItemMainInterface(mainInterface).isApprovedForAll(account, operator);
     }
 
-    function setApprovalForAll(address, bool) override external {
-        revert(string(abi.encodePacked("call directly the setApprovalForAll on the main Interface ", mainInterface.toString())));
+    function setApprovalForAll(address operator, bool approved) override external virtual {
+        IItemMainInterface(mainInterface).setApprovalForAllByCollectionHost(collectionId, msg.sender, operator, approved);
     }
 
-    function safeTransferFrom(address from, address to, uint256 itemId, uint256 amount, bytes calldata data) virtual override external {
+    function safeTransferFrom(address from, address to, uint256 itemId, uint256 amount, bytes calldata data) override external virtual {
+        require(from != address(0), "required from");
+        require(to != address(0), "required to");
         IItemMainInterface(mainInterface).mintTransferOrBurn(false, abi.encode(msg.sender, from, to, itemId, toInteroperableInterfaceAmount(amount, itemId, from)));
         ERC1155CommonLibrary.doSafeTransferAcceptanceCheck(msg.sender, from, to, itemId, amount, data);
         emit TransferSingle(msg.sender, from, to, itemId, amount);
     }
 
-    function safeBatchTransferFrom(address from, address to, uint256[] calldata itemIds, uint256[] calldata amounts, bytes calldata data) virtual override external {
+    function safeBatchTransferFrom(address from, address to, uint256[] calldata itemIds, uint256[] calldata amounts, bytes calldata data) override external virtual {
+        require(from != address(0), "required from");
+        require(to != address(0), "required to");
         uint256[] memory interoperableInterfaceAmounts = new uint256[](amounts.length);
         for(uint256 i = 0 ; i < interoperableInterfaceAmounts.length; i++) {
             interoperableInterfaceAmounts[i] = toInteroperableInterfaceAmount(amounts[i], itemIds[i], from);
@@ -204,11 +247,13 @@ abstract contract ItemProjection is IItemProjection, LazyInitCapableElement {
     }
 
     function burn(address account, uint256 itemId, uint256 amount, bytes memory) override virtual public {
+        require(account != address(0), "required account");
         IItemMainInterface(mainInterface).mintTransferOrBurn(false, abi.encode(msg.sender, account, address(0), itemId, toInteroperableInterfaceAmount(amount, itemId, account)));
         emit TransferSingle(msg.sender, account, address(0), itemId, amount);
     }
 
     function burnBatch(address account, uint256[] calldata itemIds, uint256[] calldata amounts, bytes memory) override virtual public {
+        require(account != address(0), "required account");
         uint256[] memory interoperableInterfaceAmounts = new uint256[](amounts.length);
         for(uint256 i = 0 ; i < interoperableInterfaceAmounts.length; i++) {
             interoperableInterfaceAmounts[i] = toInteroperableInterfaceAmount(amounts[i], itemIds[i], account);

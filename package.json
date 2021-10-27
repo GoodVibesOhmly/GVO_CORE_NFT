@@ -10,7 +10,8 @@
     "abi": "node util/contracts-compiler.js nobin",
     "build": "yarn flat && yarn compile",
     "test": "mocha",
-    "server": "node util/server.js"
+    "server": "node util/server.js",
+    "cli-compiler": "node util/cli-compiler.js impl/ItemMainInterface"
   },
   "config": {
     "solidityVersion": "0.8.6"

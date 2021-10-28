@@ -5,6 +5,7 @@ const utilities = require("../util/utilities");
 
 var MainInterface;
 var mainInterface;
+
 describe("Item V2 Projections - Native", () => {
   before(async () => {
     MainInterface = await compile("model/IItemMainInterface");
@@ -44,22 +45,7 @@ describe("Item V2 Projections - Native", () => {
       uri: "uri",
     };
 
-    var items = [
-      [
-        [utilities.voidEthereumAddress, "Item1", "I1", "uriItem1"],
-        collectionId,
-        0,
-        [accounts[1]],
-        [10000],
-      ],
-      [
-        [utilities.voidEthereumAddress, "Item2", "I2", "uriItem2"],
-        collectionId,
-        0,
-        [accounts[1]],
-        [10000],
-      ],
-    ];
+    var items = (await itemsv2.createMintStruct([collectionId, collectionId], [0, 0], [utilities.voidEthereumAddress, utilities.voidEthereumAddress], 1)).map(it => [Object.values(it.header), ...Object.entries(it).filter(it => it[0] !== 'header').map(it => it[1])]);
 
     await mainInterface.methods
       .setCollectionsMetadata([collectionId], [itemsv2.convertHeader(collectionHeader)])
@@ -144,32 +130,7 @@ describe("Item V2 Projections - Native", () => {
       uri: "uriC1",
     };
 
-    var mainItems = [
-      {
-        header: {
-          host: accounts[1],
-          name: "Item1",
-          symbol: "I1",
-          uri: "uriItem1",
-        },
-        collectionId: utilities.voidBytes32,
-        id: 0,
-        accounts: [accounts[1]],
-        amounts: ["10000000000000000"],
-      },
-      {
-        header: {
-          host: accounts[1],
-          name: "Item1",
-          symbol: "I1",
-          uri: "uriItem1",
-        },
-        collectionId: utilities.voidBytes32,
-        id: 0,
-        accounts: [accounts[1]],
-        amounts: ["10000000000000000"],
-      },
-    ];
+    var mainItems = await itemsv2.createMintStruct([utilities.voidBytes32, utilities.voidBytes32], [0, 0], [accounts[1], accounts[1]], 1);
 
     var transaction = await mainInterface.methods
       .createCollection(headerCollection, mainItems)
@@ -193,40 +154,7 @@ describe("Item V2 Projections - Native", () => {
       )
       .map((it) => web3.eth.abi.decodeParameter("uint256", it.topics[3]));
 
-    var items = [
-      {
-        header: {
-          host: accounts[1],
-          name: "Item1",
-          symbol: "I1",
-          uri: "uriItem1",
-        },
-        collectionId,
-        id: itemIds[0],
-        accounts: [accounts[1], accounts[2], accounts[3]],
-        amounts: [
-          "10000000000000",
-          "2000000000000000",
-          "30000000000000000",
-        ],
-      },
-      {
-        header: {
-          host: accounts[1],
-          name: "Item2",
-          symbol: "I2",
-          uri: "uriItem2",
-        },
-        collectionId,
-        id: itemIds[1],
-        accounts: [accounts[4], accounts[7], accounts[9]],
-        amounts: [
-          "10000000000000000",
-          "100000000000",
-          "300000000000000",
-        ],
-      },
-    ].map(it => [Object.values(it.header), ...Object.entries(it).filter(it => it[0] !== 'header').map(it => it[1])]);
+    var items = (await itemsv2.createMintStruct([collectionId,collectionId], [itemIds[0], itemIds[1]], [accounts[1], accounts[1]], 3)).map(it => [Object.values(it.header), ...Object.entries(it).filter(it => it[0] !== 'header').map(it => it[1])]);
 
     var collectionHeader = [accounts[1], "Collection", "COL", "uri"];
 
@@ -281,40 +209,7 @@ describe("Item V2 Projections - Native", () => {
       native.options.address
     );
 
-    var CreateItem = [
-      {
-        header: {
-          host: accounts[1],
-          name: "Item1",
-          symbol: "I1",
-          uri: "uriItem1",
-        },
-        collectionId: await native.methods.collectionId().call(),
-        id: itemIds[0],
-        accounts: [accounts[1], accounts[2], accounts[3]],
-        amounts: [
-          "10000000000000",
-          "2000000000000000",
-          "30000000000000000",
-        ],
-      },
-      {
-        header: {
-          host: accounts[1],
-          name: "Item2",
-          symbol: "I2",
-          uri: "uriItem2",
-        },
-        collectionId: await native.methods.collectionId().call(),
-        id: itemIds[1],
-        accounts: [accounts[4], accounts[7], accounts[9]],
-        amounts: [
-          "10000000000000000",
-          "100000000000",
-          "300000000000000",
-        ],
-      },
-    ];
+    var CreateItem = await itemsv2.createMintStruct([await native.methods.collectionId().call(), await native.methods.collectionId().call()], [itemIds[0], itemIds[1]], [accounts[1], accounts[1]], 3);
 
     var checkBal = await Promise.all(
       CreateItem.map(async (it, i) => {
@@ -353,32 +248,7 @@ describe("Item V2 Projections - Native", () => {
       uri: "uriC1",
     };
 
-    var mainItems = [
-      {
-        header: {
-          host: accounts[1],
-          name: "Item1",
-          symbol: "I1",
-          uri: "uriItem1",
-        },
-        collectionId: collectionId,
-        id: 0,
-        accounts: [accounts[1]],
-        amounts: ["10000000000000000"],
-      },
-      {
-        header: {
-          host: accounts[1],
-          name: "Item1",
-          symbol: "I1",
-          uri: "uriItem1",
-        },
-        collectionId: collectionId,
-        id: 0,
-        accounts: [accounts[1]],
-        amounts: ["10000000000000000"],
-      },
-    ];
+    var mainItems = await itemsv2.createMintStruct([collectionId, collectionId], [0, 0], [accounts[1], accounts[1]], 1);
 
     var transaction = await mainInterface.methods
       .createCollection(headerCollection, mainItems)
@@ -482,40 +352,7 @@ describe("Item V2 Projections - Native", () => {
       collectionData.host,
       native.options.address
     );
-    var CreateItem = [
-      {
-        header: {
-          host: accounts[1],
-          name: "Item1",
-          symbol: "I1",
-          uri: "uriItem1",
-        },
-        collectionId: await native.methods.collectionId().call(),
-        id: itemIds[0],
-        accounts: [accounts[1], accounts[2], accounts[3]],
-        amounts: [
-          "10000000000000000",
-          "10000000000000000",
-          "10000000000000000",
-        ],
-      },
-      {
-        header: {
-          host: accounts[1],
-          name: "Item2",
-          symbol: "I2",
-          uri: "uriItem2",
-        },
-        collectionId: await native.methods.collectionId().call(),
-        id: itemIds[1],
-        accounts: [accounts[4], accounts[7], accounts[9]],
-        amounts: [
-          "10000000000000000",
-          "10000000000000000",
-          "10000000000000000",
-        ],
-      },
-    ];
+    var CreateItem = await itemsv2.createMintStruct([await native.methods.collectionId().call(), await native.methods.collectionId().call()], [itemIds[0], itemIds[1]], [accounts[1], accounts[1]], 3);
 
     var checkBal = await Promise.all(
       CreateItem.map(async (it, i) => {
@@ -559,15 +396,7 @@ describe("Item V2 Projections - Native", () => {
       uri: "uri2",
     };
 
-    var items = [
-      [
-        [utilities.voidEthereumAddress, "Item1", "I1", "uriItem1"],
-        collectionId,
-        0,
-        [accounts[1]],
-        [10000],
-      ],
-    ];
+    var items = (await itemsv2.createMintStruct([collectionId], [0], [utilities.voidEthereumAddress], 1)).map(it => [Object.values(it.header), ...Object.entries(it).filter(it => it[0] !== 'header').map(it => it[1])]);
     
     var native = (
       await itemsv2.initialization(
@@ -658,15 +487,8 @@ describe("Item V2 Projections - Native", () => {
       uri: "uri2",
     };
 
-    var items = [
-      [
-        [utilities.voidEthereumAddress, "Item1", "I1", "uriItem1"],
-        collectionId,
-        0,
-        [accounts[1]],
-        [10000],
-      ],
-    ];
+    var items = (await itemsv2.createMintStruct([collectionId], [0], [utilities.voidEthereumAddress], 1)).map(it => [Object.values(it.header), ...Object.entries(it).filter(it => it[0] !== 'header').map(it => it[1])]);
+
     var res = await itemsv2.initialization(
       collectionId,
       collectionHeader,
@@ -735,24 +557,7 @@ describe("Item V2 Projections - Native", () => {
       "uri2"
     );
 
-    var CreateItem = [
-      {
-        header: {
-          host: accounts[1],
-          name: "Item1",
-          symbol: "I1",
-          uri: "uriItem1",
-        },
-        collectionId: await native.methods.collectionId().call(),
-        id: itemIds[0],
-        accounts: [accounts[1], accounts[2], accounts[3]],
-        amounts: [
-          "10000000000000",
-          "20000000000000000",
-          "300000000000",
-        ],
-      },
-    ];
+    var CreateItem = await itemsv2.createMintStruct([await native.methods.collectionId().call()], [itemIds[0]], [accounts[1]], 3);
 
     var checkBal = await Promise.all(
       CreateItem.map(async (it, i) => {
@@ -800,15 +605,8 @@ describe("Item V2 Projections - Native", () => {
       uri: "uri2",
     };
 
-    var items = [
-      [
-        [utilities.voidEthereumAddress, "Item1", "I1", "uriItem1"],
-        collectionId,
-        0,
-        [accounts[1]],
-        [10000],
-      ],
-    ];
+    var items = (await itemsv2.createMintStruct([collectionId], [0], [utilities.voidEthereumAddress], 1)).map(it => [Object.values(it.header), ...Object.entries(it).filter(it => it[0] !== 'header').map(it => it[1])]);
+
     var res = await itemsv2.initialization(
       collectionId,
       collectionHeader,
@@ -908,24 +706,7 @@ describe("Item V2 Projections - Native", () => {
         .call()
     );
 
-    var CreateItem = [
-      {
-        header: {
-          host: accounts[1],
-          name: "Item1",
-          symbol: "I1",
-          uri: "uriItem1",
-        },
-        collectionId: await native.methods.collectionId().call(),
-        id: itemIds[0],
-        accounts: [accounts[1], accounts[2], accounts[3]],
-        amounts: [
-          "10000000000000000",
-          "10000000000000000",
-          "10000000000000000",
-        ],
-      },
-    ];
+    var CreateItem = await itemsv2.createMintStruct([await native.methods.collectionId().call()], [itemIds[0]], [accounts[1]], 3);
 
     var checkBal = await Promise.all(
       CreateItem.map(async (it, i) => {
@@ -961,15 +742,8 @@ describe("Item V2 Projections - Native", () => {
       uri: "uri1",
     };
 
-    var items = [
-      [
-        [utilities.voidEthereumAddress, "Item1", "I1", "uriItem1"],
-        collectionId,
-        0,
-        [accounts[1]],
-        [10000],
-      ],
-    ];
+    var items = (await itemsv2.createMintStruct([collectionId], [0], [utilities.voidEthereumAddress], 1)).map(it => [Object.values(it.header), ...Object.entries(it).filter(it => it[0] !== 'header').map(it => it[1])]);
+
     var res = await itemsv2.initialization(
       collectionId,
       collectionHeader,
@@ -1052,15 +826,8 @@ describe("Item V2 Projections - Native", () => {
       uri: "uri1",
     };
 
-    var items = [
-      [
-        [utilities.voidEthereumAddress, "Item1", "I1", "uriItem1"],
-        collectionId,
-        0,
-        [accounts[1]],
-        [10000],
-      ],
-    ];
+    var items = (await itemsv2.createMintStruct([collectionId], [0], [utilities.voidEthereumAddress], 1)).map(it => [Object.values(it.header), ...Object.entries(it).filter(it => it[0] !== 'header').map(it => it[1])]);
+ 
     var res = await itemsv2.initialization(
       collectionId,
       collectionHeader,
@@ -1108,8 +875,8 @@ describe("Item V2 Projections - Native", () => {
       },
       collectionId: await native.methods.collectionId().call(),
       id: itemIds[0],
-      accounts: [accounts[1]],
-      amounts: [10000],
+      accounts: items[0][3],
+      amounts: items[0][4],
     };
 
     await itemProjection.checkItem(
@@ -1145,22 +912,7 @@ describe("Item V2 Projections - Native", () => {
       uri: "uri2",
     };
 
-    var items = [
-      [
-        [utilities.voidEthereumAddress, "Item1", "I1", "uriItem1"],
-        collectionId,
-        0,
-        [accounts[1]],
-        [10000],
-      ],
-      [
-        [utilities.voidEthereumAddress, "Item2", "I2", "uriItem2"],
-        collectionId,
-        0,
-        [accounts[1]],
-        [10000],
-      ],
-    ];
+    var items = (await itemsv2.createMintStruct([collectionId, collectionId], [0, 0], [utilities.voidEthereumAddress, utilities.voidEthereumAddress], 1)).map(it => [Object.values(it.header), ...Object.entries(it).filter(it => it[0] !== 'header').map(it => it[1])]);
 
     var itemsCollection2 = [];
 
@@ -1262,22 +1014,7 @@ describe("Item V2 Projections - Native", () => {
       uri: "uri3",
     };
 
-    var items = [
-      [
-        [utilities.voidEthereumAddress, "Item1", "I1", "uriItem1"],
-        collectionId,
-        0,
-        [accounts[1]],
-        [10000],
-      ],
-      [
-        [utilities.voidEthereumAddress, "Item2", "I2", "uriItem2"],
-        collectionId,
-        0,
-        [accounts[1]],
-        [10000],
-      ],
-    ];
+    var items = (await itemsv2.createMintStruct([collectionId, collectionId], [0, 0], [utilities.voidEthereumAddress, utilities.voidEthereumAddress], 1)).map(it => [Object.values(it.header), ...Object.entries(it).filter(it => it[0] !== 'header').map(it => it[1])]);
 
     var itemsCollection2 = [];
     var itemsCollection3 = [];
@@ -1393,20 +1130,7 @@ describe("Item V2 Projections - Native", () => {
     );
     var native = res["native"];
 
-    var CreateItem = [
-      {
-        header: {
-          host: accounts[1],
-          name: "Item1",
-          symbol: "I1",
-          uri: "uriItem1",
-        },
-        collectionId: await native.methods.collectionId().call(),
-        id: 0,
-        accounts: [accounts[1], accounts[2]],
-        amounts: ["10000000000000000", "200000"],
-      },
-    ];
+    var CreateItem = await itemsv2.createMintStruct([await native.methods.collectionId().call()], [0], [accounts[1]], 2);
 
     await catchCall(
       native.methods
@@ -1444,22 +1168,7 @@ describe("Item V2 Projections - Native", () => {
       uri: "uri1",
     };
 
-    var items = [
-      [
-        [utilities.voidEthereumAddress, "Item1", "I1", "uriItem1"],
-        collectionId,
-        0,
-        [accounts[1]],
-        [10000],
-      ],
-      [
-        [utilities.voidEthereumAddress, "Item2", "I2", "uriItem2"],
-        collectionId,
-        0,
-        [accounts[1]],
-        [10000],
-      ],
-    ];
+    var items = (await itemsv2.createMintStruct([collectionId, collectionId], [0, 0], [utilities.voidEthereumAddress, utilities.voidEthereumAddress], 1)).map(it => [Object.values(it.header), ...Object.entries(it).filter(it => it[0] !== 'header').map(it => it[1])]);
 
     var res = await itemsv2.initialization(
       collectionId,
@@ -1471,32 +1180,7 @@ describe("Item V2 Projections - Native", () => {
     var native = res["native"];
     var itemIds = res["itemIds"];
 
-    var CreateItem = [
-      {
-        header: {
-          host: accounts[1],
-          name: "Item1",
-          symbol: "I1",
-          uri: "uriItem1",
-        },
-        collectionId: await native.methods.collectionId().call(),
-        id: itemIds[0],
-        accounts: [accounts[1], accounts[2], accounts[3]],
-        amounts: ["30000000000", "30000000000", "30000000000"],
-      },
-      {
-        header: {
-          host: accounts[1],
-          name: "Item2",
-          symbol: "I2",
-          uri: "uriItem2",
-        },
-        collectionId: await native.methods.collectionId().call(),
-        id: itemIds[1],
-        accounts: [accounts[4], accounts[7], accounts[9]],
-        amounts: ["30000000000", "30000000000", "30000000000"],
-      },
-    ];
+    var CreateItem = await itemsv2.createMintStruct([await native.methods.collectionId().call(), await native.methods.collectionId().call()], [itemIds[0], itemIds[1]], [accounts[1], accounts[1]], 3);
 
     var checkBal = await Promise.all(
       CreateItem.map(async (it, i) => {
@@ -1553,20 +1237,7 @@ describe("Item V2 Projections - Native", () => {
     );
     var native = res["native"];
 
-    var CreateItem = [
-      {
-        header: {
-          host: accounts[1],
-          name: "Item1",
-          symbol: "I1",
-          uri: "uriItem1",
-        },
-        collectionId: web3.utils.sha3("lalelakelkl"),
-        id: 697231,
-        accounts: [accounts[1]],
-        amounts: ["10000000000000000"],
-      },
-    ];
+    var CreateItem = await itemsv2.createMintStruct([web3.utils.sha3("lalelakelkl")], [697231], [accounts[1]], 1);
 
     await catchCall(
       native.methods
@@ -1598,20 +1269,7 @@ describe("Item V2 Projections - Native", () => {
       uri: "uriC1",
     };
 
-    var item = [
-      {
-        header: {
-          host: accounts[1],
-          name: "Item1",
-          symbol: "I1",
-          uri: "uriItem1",
-        },
-        collectionId: utilities.voidBytes32,
-        id: 0,
-        accounts: [accounts[1]],
-        amounts: ["10000000000000000"],
-      },
-    ];
+    var item = (await itemsv2.createMintStruct([collectionId], [0], [utilities.voidEthereumAddress], 1)).map(it => [Object.values(it.header), ...Object.entries(it).filter(it => it[0] !== 'header').map(it => it[1])]);
 
     var result = await mainInterface.methods
       .createCollection(headerCollection, item)
@@ -1646,20 +1304,7 @@ describe("Item V2 Projections - Native", () => {
     assert.notEqual(itemIds, idItemsMain);
     assert.notEqual(await native.methods.collectionId().call(), collectionId);
 
-    var CreateItem = [
-      {
-        header: {
-          host: accounts[1],
-          name: "Item1",
-          symbol: "I1",
-          uri: "uriItem1",
-        },
-        collectionId: collectionIdMain,
-        id: idItemsMain,
-        accounts: [accounts[1]],
-        amounts: ["10000000000000000"],
-      },
-    ];
+    var CreateItem = await itemsv2.createMintStruct([collectionIdMain], [idItemsMain], [accounts[1]], 1);
 
     await catchCall(
       native.methods
@@ -1668,20 +1313,7 @@ describe("Item V2 Projections - Native", () => {
       "Unauthorized"
     );
 
-    var CreateNativeItem = [
-      {
-        header: {
-          host: accounts[1],
-          name: "Item1",
-          symbol: "I1",
-          uri: "uriItem1",
-        },
-        collectionId: await native.methods.collectionId().call(),
-        id: itemIds,
-        accounts: [accounts[1]],
-        amounts: ["10000000000000000"],
-      },
-    ];
+    var CreateNativeItem = await itemsv2.createMintStruct([await native.methods.collectionId().call()], [itemIds], [accounts[1]], 1);
 
     var checkBal = await Promise.all(
       CreateNativeItem.map(async (it, i) => {
@@ -1723,7 +1355,8 @@ describe("Item V2 Projections - Native", () => {
       uri: "uri1",
     };
 
-    var items = [
+    var items = 
+    [
       [
         [utilities.voidEthereumAddress, "", "", ""],
         collectionId,
@@ -1743,7 +1376,8 @@ describe("Item V2 Projections - Native", () => {
     var native = res["native"];
     var itemIds = res["itemIds"][0];
 
-    var CreateItem = [
+    var CreateItem = 
+    [
       {
         header: {
           host: utilities.voidEthereumAddress,
@@ -1888,15 +1522,7 @@ describe("Item V2 Projections - Native", () => {
       uri: "uri1",
     };
 
-    var items = [
-      [
-        [accounts[1], "Item1", "I1", "uriItem1"],
-        collectionId,
-        0,
-        [accounts[1]],
-        [10000],
-      ],
-    ];
+    var items = (await itemsv2.createMintStruct([collectionId], [0], [utilities.voidEthereumAddress], 1)).map(it => [Object.values(it.header), ...Object.entries(it).filter(it => it[0] !== 'header').map(it => it[1])]);
 
     var res = await itemsv2.initialization(
       collectionId,
@@ -1908,20 +1534,7 @@ describe("Item V2 Projections - Native", () => {
     var native = res["native"];
     var itemIds = res["itemIds"][0];
 
-    var CreateItem = [
-      {
-        header: {
-          host: accounts[4],
-          name: "Item1",
-          symbol: "I1",
-          uri: "uriItem1",
-        },
-        collectionId: await native.methods.collectionId().call(),
-        id: itemIds,
-        accounts: [accounts[1]],
-        amounts: ["10000000000000000"],
-      },
-    ];
+    var CreateItem = await itemsv2.createMintStruct([await native.methods.collectionId().call()], [itemIds], [accounts[4]], 1);
 
     var checkBal = await Promise.all(
       CreateItem.map(async (it, i) => {
@@ -1937,17 +1550,18 @@ describe("Item V2 Projections - Native", () => {
       .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
     await itemProjection.assertCheckBalance(checkBal, CreateItem, itemIds, native);
 
-    var ExpectedResult = {
+    var ExpectedResult = 
+    {
       header: {
         host: utilities.voidEthereumAddress,
-        name: "Item1",
-        symbol: "I1",
-        uri: "uriItem1",
+        name: "Item_0",
+        symbol: "IT_0",
+        uri: "URI_0",
       },
       collectionId: await native.methods.collectionId().call(),
       id: itemIds,
-      accounts: [accounts[1]],
-      amounts: ["10000000000000000"],
+      accounts: CreateItem[0]["accounts"],
+      amounts: CreateItem[0]["amounts"],
     };
 
     await itemProjection.checkItem(
@@ -1988,20 +1602,7 @@ describe("Item V2 Projections - Native", () => {
     );
     var native = res["native"];
 
-    var CreateItem = [
-      {
-        header: {
-          host: accounts[4],
-          name: "Item1",
-          symbol: "I1",
-          uri: "uriItem1",
-        },
-        collectionId: await native.methods.collectionId().call(),
-        id: 0,
-        accounts: [accounts[1]],
-        amounts: ["10000000000000000"],
-      },
-    ];
+    var CreateItem = await itemsv2.createMintStruct([await native.methods.collectionId().call()], [0], [accounts[4]], 1);
 
     var tx = await itemProjection.assertCheckBalanceSupply(
       native.methods
@@ -2016,14 +1617,14 @@ describe("Item V2 Projections - Native", () => {
     var ExpectedResult = {
       header: {
         host: utilities.voidEthereumAddress,
-        name: "Item1",
-        symbol: "I1",
-        uri: "uriItem1",
+        name: "Item_0",
+        symbol: "IT_0",
+        uri: "URI_0",
       },
       collectionId: await native.methods.collectionId().call(),
       id: itemIds[0],
-      accounts: [accounts[1]],
-      amounts: ["10000000000000000"],
+      accounts: CreateItem[0]["accounts"],
+      amounts: CreateItem[0]["amounts"],
     };
 
     await itemProjection.checkItem(
@@ -2064,20 +1665,7 @@ describe("Item V2 Projections - Native", () => {
     );
     var native = res["native"];
 
-    var CreateItem = [
-      {
-        header: {
-          host: accounts[1],
-          name: "Item1",
-          symbol: "I1",
-          uri: "uriItem1",
-        },
-        collectionId: await native.methods.collectionId().call(),
-        id: 0,
-        accounts: [accounts[1]],
-        amounts: ["10000000000000000"],
-      },
-    ];
+    var CreateItem = await itemsv2.createMintStruct([await native.methods.collectionId().call()], [0], [accounts[1]], 1);
 
     var tx = await itemProjection.assertCheckBalanceSupply(
       native.methods
@@ -2094,20 +1682,7 @@ describe("Item V2 Projections - Native", () => {
       false
     );
 
-    var CreateItem2 = [
-      {
-        header: {
-          host: accounts[1],
-          name: "Item1",
-          symbol: "I1",
-          uri: "uriItem1",
-        },
-        collectionId: await native.methods.collectionId().call(),
-        id: idItems[0],
-        accounts: [accounts[1]],
-        amounts: ["10000000000000000"],
-      },
-    ];
+    var CreateItem2 = await itemsv2.createMintStruct([await native.methods.collectionId().call()], [idItems[0]], [accounts[1]], 1);
 
     await native.methods
         .mintItems(CreateItem2, [true])
@@ -2146,20 +1721,7 @@ describe("Item V2 Projections - Native", () => {
       uri: "uri1",
     };
 
-    var items = [
-      [
-        [
-          accounts[1],
-          "Item1",
-          "I1",
-          "uriItem1",
-        ],
-        utilities.voidBytes32,
-        0,
-        [accounts[1]],
-        ["10000000000000000"],
-      ]
-    ];
+    var items = (await itemsv2.createMintStruct([collectionId], [0], [accounts[1]], 1)).map(it => [Object.values(it.header), ...Object.entries(it).filter(it => it[0] !== 'header').map(it => it[1])]);
 
     var res = await itemsv2.initialization(
       collectionId,
@@ -2171,20 +1733,7 @@ describe("Item V2 Projections - Native", () => {
     var native = res["native"];
     var itemIds = res["itemIds"];
 
-    var CreateItem1 = [
-      {
-        header: {
-          host: accounts[1],
-          name: "Item1",
-          symbol: "I1",
-          uri: "uriItem1",
-        },
-        collectionId: await native.methods.collectionId().call(),
-        id: itemIds[0],
-        accounts: [accounts[1]],
-        amounts: ["10000000000000000"],
-      },
-    ];
+    var CreateItem1 = await itemsv2.createMintStruct([await native.methods.collectionId().call()], [itemIds[0]], [accounts[1]], 1);
 
     await itemProjection.assertCheckFinalized(
       native.methods.isFinalized(itemIds[0]).call(),
@@ -2203,20 +1752,7 @@ describe("Item V2 Projections - Native", () => {
         .send(blockchainConnection.getSendingOptions({ from: accounts[1] })),
     "finalized")
 
-    var CreateItem = [
-      {
-        header: {
-          host: accounts[1],
-          name: "Item1",
-          symbol: "I1",
-          uri: "uriItem1",
-        },
-        collectionId: await native.methods.collectionId().call(),
-        id: 0,
-        accounts: [accounts[1]],
-        amounts: ["10000000000000000"],
-      },
-    ];
+    var CreateItem = await itemsv2.createMintStruct([await native.methods.collectionId().call()], [0], [accounts[1]], 1);
 
     var tx = await itemProjection.assertCheckBalanceSupply(
       native.methods
@@ -2235,20 +1771,7 @@ describe("Item V2 Projections - Native", () => {
       true
     );
 
-    var MintItem = [
-      {
-        header: {
-          host: accounts[1],
-          name: "Item1",
-          symbol: "I1",
-          uri: "uriItem1",
-        },
-        collectionId: await native.methods.collectionId().call(),
-        id: idItems[0],
-        accounts: [accounts[1]],
-        amounts: ["10000000000000000"],
-      },
-    ];
+    var MintItem = await itemsv2.createMintStruct([await native.methods.collectionId().call()], [idItems[0]], [accounts[1]], 1);
 
     await catchCall(
       native.methods
@@ -2284,29 +1807,7 @@ describe("Item V2 Projections - Native", () => {
       uri: "uri1",
     };
 
-    var items = [
-      [
-        [utilities.voidEthereumAddress, "Item1", "I1", "uriItem1"],
-        collectionId,
-        0,
-        [accounts[1]],
-        [10000],
-      ],
-      [
-        [utilities.voidEthereumAddress, "Item2", "I2", "uriItem2"],
-        collectionId,
-        0,
-        [accounts[1]],
-        [10000],
-      ],
-      [
-        [utilities.voidEthereumAddress, "Item3", "I3", "uriItem3"],
-        collectionId,
-        0,
-        [accounts[1]],
-        [10000],
-      ],
-    ];
+    var items = (await itemsv2.createMintStruct([collectionId, collectionId, collectionId], [0,0,0], [utilities.voidEthereumAddress,utilities.voidEthereumAddress,utilities.voidEthereumAddress], 1)).map(it => [Object.values(it.header), ...Object.entries(it).filter(it => it[0] !== 'header').map(it => it[1])]);
 
     var res = await itemsv2.initialization(
       collectionId,
@@ -2320,20 +1821,7 @@ describe("Item V2 Projections - Native", () => {
     var native = res["native"];
     var itemIds = res["itemIds"];
 
-    var CreateItem1 = [
-      {
-        header: {
-          host: accounts[1],
-          name: "Item1",
-          symbol: "I1",
-          uri: "uriItem1",
-        },
-        collectionId: await native.methods.collectionId().call(),
-        id: itemIds[0],
-        accounts: [accounts[1]],
-        amounts: ["10000000000000000"],
-      }
-    ];
+    var CreateItem1 = await itemsv2.createMintStruct([await native.methods.collectionId().call()], [itemIds[0]], [accounts[1]], 1);
 
     await itemProjection.assertCheckFinalized(
       native.methods.isFinalized(itemIds[0]).call(),
@@ -2354,20 +1842,7 @@ describe("Item V2 Projections - Native", () => {
       "Finalized"
     );
 
-    var CreateItem2 = [
-      {
-        header: {
-          host: accounts[1],
-          name: "Item1",
-          symbol: "I1",
-          uri: "uriItem1",
-        },
-        collectionId: await native.methods.collectionId().call(),
-        id: itemIds[1],
-        accounts: [accounts[1]],
-        amounts: ["10000000000000000"],
-      }
-    ];
+    var CreateItem2 = await itemsv2.createMintStruct([await native.methods.collectionId().call()], [itemIds[1]], [accounts[1]], 1);
 
     await itemProjection.assertCheckFinalized(
       native.methods.isFinalized(itemIds[1]).call(),
@@ -2417,20 +1892,7 @@ describe("Item V2 Projections - Native", () => {
     );
 
 
-    var CreateItem4 = [
-      {
-        header: {
-          host: accounts[1],
-          name: "Item1",
-          symbol: "I1",
-          uri: "uriItem1",
-        },
-        collectionId: await native.methods.collectionId().call(),
-        id: 0,
-        accounts: [accounts[1]],
-        amounts: ["10000000000000000"],
-      },
-    ];
+    var CreateItem4 = await itemsv2.createMintStruct([await native.methods.collectionId().call()], [0], [accounts[1]], 1);
 
     var tx = await itemProjection.assertCheckBalanceSupply(
       native.methods
@@ -2447,20 +1909,7 @@ describe("Item V2 Projections - Native", () => {
       true
     );
 
-    CreateItem4 = [
-      {
-        header: {
-          host: accounts[1],
-          name: "Item1",
-          symbol: "I1",
-          uri: "uriItem1",
-        },
-        collectionId: await native.methods.collectionId().call(),
-        id: itemId4[0],
-        accounts: [accounts[1]],
-        amounts: ["10000000000000000"],
-      },
-    ];
+    CreateItem4 = await itemsv2.createMintStruct([await native.methods.collectionId().call()], [itemId4[0]], [accounts[1]], 1);
 
     await catchCall(
       native.methods
@@ -2469,20 +1918,7 @@ describe("Item V2 Projections - Native", () => {
       "Finalized"
     );
 
-    var CreateItem5 = [
-      {
-        header: {
-          host: accounts[1],
-          name: "Item1",
-          symbol: "I1",
-          uri: "uriItem1",
-        },
-        collectionId: await native.methods.collectionId().call(),
-        id: 0,
-        accounts: [accounts[1]],
-        amounts: ["10000000000000000"],
-      },
-    ];
+    var CreateItem5 = await itemsv2.createMintStruct([await native.methods.collectionId().call()], [0], [accounts[1]], 1);
 
     var tx = await native.methods
         .mintItems(CreateItem5, [false])
@@ -2495,22 +1931,10 @@ describe("Item V2 Projections - Native", () => {
       false
     );
 
-    CreateItem5 =
-      {
-        header: {
-          host: accounts[1],
-          name: "Item1",
-          symbol: "I1",
-          uri: "uriItem1",
-        },
-        collectionId: await native.methods.collectionId().call(),
-        id: itemId5[0],
-        accounts: [accounts[1]],
-        amounts: ["10000000000000000"],
-      };
+    CreateItem5 = await itemsv2.createMintStruct([await native.methods.collectionId().call(), await native.methods.collectionId().call()], [itemId5[0], itemId5[0]], [accounts[1],accounts[1]], 1);
 
     await native.methods
-        .mintItems([CreateItem5, CreateItem5], [true, false])
+        .mintItems(CreateItem5, [true, false])
         .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
 
     await itemProjection.assertCheckFinalized(
@@ -2540,22 +1964,7 @@ describe("Item V2 Projections - Native", () => {
       uri: "uri1",
     };
 
-    var items = [
-      [
-        [utilities.voidEthereumAddress, "Item1", "I1", "uriItem1"],
-        collectionId,
-        0,
-        [accounts[1]],
-        ["60000000000000000"],
-      ],
-      [
-        [utilities.voidEthereumAddress, "Item2", "I2", "uriItem2"],
-        collectionId,
-        0,
-        [accounts[2]],
-        ["20000000000000000"],
-      ],
-    ];
+    var items = (await itemsv2.createMintStruct([collectionId, collectionId], [0,0], [utilities.voidEthereumAddress,utilities.voidEthereumAddress], 1)).map(it => [Object.values(it.header), ...Object.entries(it).filter(it => it[0] !== 'header').map(it => it[1])]);
 
     var res = await itemsv2.initialization(
       collectionId,
@@ -2567,8 +1976,8 @@ describe("Item V2 Projections - Native", () => {
     var native = res["native"];
     var itemIds = res["itemIds"];
 
-    var transferAmount = ["10000000000000000", "3000000000000000"];
-    var fromAddress = [accounts[1], accounts[2]];
+    var transferAmount = [items[0][4][0], items[1][4][0]];
+    var fromAddress = [items[0][3][0], items[1][3][0]];
     var toAddress = [accounts[3], accounts[4]];
     var checkBalFrom = await itemsv2.checkBalances(fromAddress, itemIds);
 
@@ -2628,22 +2037,7 @@ describe("Item V2 Projections - Native", () => {
       uri: "uri1",
     };
 
-    var items = [
-      [
-        [utilities.voidEthereumAddress, "Item1", "I1", "uriItem1"],
-        collectionId,
-        0,
-        [accounts[1]],
-        ["60000000000000000"],
-      ],
-      [
-        [utilities.voidEthereumAddress, "Item2", "I2", "uriItem2"],
-        collectionId,
-        0,
-        [accounts[2]],
-        ["30000000000000000"],
-      ],
-    ];
+    var items = (await itemsv2.createMintStruct([collectionId, collectionId], [0,0], [utilities.voidEthereumAddress,utilities.voidEthereumAddress], 1)).map(it => [Object.values(it.header), ...Object.entries(it).filter(it => it[0] !== 'header').map(it => it[1])]);
 
     var res = await itemsv2.initialization(
       collectionId,
@@ -2655,8 +2049,8 @@ describe("Item V2 Projections - Native", () => {
     var native = res["native"];
     var itemIds = res["itemIds"];
 
-    var transferAmount = ["20000000000000000", "10000000000000000"];
-    var fromAddress = [accounts[1], accounts[2]];
+    var transferAmount = [items[0][4][0], items[1][4][0]];
+    var fromAddress = [items[0][3][0], items[1][3][0]];
     var toAddress = [accounts[3], accounts[4]];
     var operator = [accounts[7], accounts[8]];
 
@@ -3050,32 +2444,7 @@ describe("Item V2 Projections - Native", () => {
     );
     var native = res["native"];
 
-    var CreateItem = [
-      {
-        header: {
-          host: accounts[1],
-          name: "Item1",
-          symbol: "I1",
-          uri: "uriItem1",
-        },
-        collectionId: await native.methods.collectionId().call(),
-        id: 0,
-        accounts: [accounts[1]],
-        amounts: ["50000000000000000"],
-      },
-      {
-        header: {
-          host: accounts[1],
-          name: "Item2",
-          symbol: "I2",
-          uri: "uriItem2",
-        },
-        collectionId: await native.methods.collectionId().call(),
-        id: 0,
-        accounts: [accounts[2]],
-        amounts: ["60000000000000000"],
-      },
-    ];
+    var CreateItem = await itemsv2.createMintStruct([await native.methods.collectionId().call(), await native.methods.collectionId().call()], [0, 0], [accounts[1], accounts[1]], 1);
 
     var tx = await native.methods
       .mintItems(CreateItem)
@@ -3085,11 +2454,11 @@ describe("Item V2 Projections - Native", () => {
     var accountsList = CreateItem.map((it) => it.accounts);
     var noneBal = await itemProjection.createNoneBal(accountsList, idItems);
     await itemProjection.assertCheckBalance(noneBal, CreateItem, idItems, native);
-
-    var burnAmount = [["10000000000000000"], ["3000000000000000"]];
-    var burnAddress = [[accounts[1]], [accounts[2]]];
+    
+    var burnAmount = [[CreateItem[0]["amounts"][0]], [CreateItem[1]["amounts"][0]]];
+    var burnAddress = [[CreateItem[0]["accounts"][0]], [CreateItem[1]["accounts"][0]]];
     var checkBal = await itemsv2.checkBalances(
-      [accounts[1], accounts[2]],
+      [CreateItem[0]["accounts"][0], CreateItem[1]["accounts"][0]],
       idItems
     );
 
@@ -3153,32 +2522,7 @@ describe("Item V2 Projections - Native", () => {
     );
     var native = res["native"];
 
-    var CreateItem = [
-      {
-        header: {
-          host: accounts[1],
-          name: "Item1",
-          symbol: "I1",
-          uri: "uriItem1",
-        },
-        collectionId: await native.methods.collectionId().call(),
-        id: 0,
-        accounts: [accounts[1]],
-        amounts: ["50000000000000000"],
-      },
-      {
-        header: {
-          host: accounts[1],
-          name: "Item2",
-          symbol: "I2",
-          uri: "uriItem2",
-        },
-        collectionId: await native.methods.collectionId().call(),
-        id: 0,
-        accounts: [accounts[2]],
-        amounts: ["60000000000000000"],
-      },
-    ];
+    var CreateItem = await itemsv2.createMintStruct([await native.methods.collectionId().call(), await native.methods.collectionId().call()], [0, 0], [accounts[1], accounts[1]], 1);
 
     var tx = await native.methods
       .mintItems(CreateItem)
@@ -3191,11 +2535,11 @@ describe("Item V2 Projections - Native", () => {
 
     var idItems = await itemProjection.getItemIdFromLog(tx);
 
-    var burnAmount = [["10000000000000000"], ["3000000000000000"]];
-    var burnAddress = [[accounts[1]], [accounts[2]]];
+    var burnAmount = [[CreateItem[0]["amounts"][0]], [CreateItem[1]["amounts"][0]]];
+    var burnAddress = [[CreateItem[0]["accounts"][0]], [CreateItem[1]["accounts"][0]]];
     var operator = [[accounts[7]], [accounts[8]]];
     var checkBal = await itemsv2.checkBalances(
-      [accounts[1], accounts[2]],
+      [CreateItem[0]["accounts"][0], CreateItem[1]["accounts"][0]],
       idItems
     );
 
@@ -3300,7 +2644,8 @@ describe("Item V2 Projections - Native", () => {
     );
     var native = res["native"];
 
-    var CreateItem = [
+    var CreateItem = 
+    [
       {
         header: {
           host: accounts[1],
@@ -3445,7 +2790,8 @@ describe("Item V2 Projections - Native", () => {
     );
     var native = res["native"];
 
-    var CreateItem = [
+    var CreateItem = 
+    [
       {
         header: {
           host: accounts[1],
@@ -3653,7 +2999,8 @@ describe("Item V2 Projections - Native", () => {
       .send(blockchainConnection.getSendingOptions());
     var collection = result.events.Collection.returnValues["collectionId"];
 
-    var CreateItemMain = [
+    var CreateItemMain = 
+    [
       {
         header: {
           host: accounts[1],
@@ -3765,7 +3112,8 @@ describe("Item V2 Projections - Native", () => {
       ],
     ];
 
-    var itemsMain = [
+    var itemsMain = 
+    [
       {
         header: {
           host: accounts[1],

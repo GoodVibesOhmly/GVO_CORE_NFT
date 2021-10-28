@@ -356,6 +356,34 @@ async function checkBalances(
   };
 }
 
+async function createMintStruct(collections, itemids, host, account){
+  var val = [1e14, 1e15, 1e16, 1e17];
+
+  const nums = new Set();
+  const address = new Set();
+  while(nums.size !== account) {
+    nums.add((Math.floor(Math.random() * 10)+ 1).mul(val[Math.floor(Math.random() * val.length)]));
+  }
+  while(address.size !== account) {
+    address.add(accounts[Math.floor(Math.random() * 10)]);
+  }
+
+  return collections.map((collection, i) => {
+    return {
+      header: {
+        host: host[i],
+        name: "Item_" + i,
+        symbol: "IT_" + i,
+        uri: "URI_" + i,
+      },
+      collectionId: collection,
+      id: itemids[i],
+      accounts: Array.from(address),
+      amounts: Array.from(nums),
+    };
+  });
+}
+
 module.exports = {
   initialization,
   deployNativeProjection,
@@ -363,5 +391,6 @@ module.exports = {
   createCollection,
   checkBalances,
   convertHeader,
-  convertItem
+  convertItem,
+  createMintStruct
 };

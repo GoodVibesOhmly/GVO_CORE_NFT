@@ -47,10 +47,10 @@ var currentTestTitle;
 
 function setupTransactionDebugger(web3) {
     var provider = web3.currentProvider;
-    provider.oldSend = provider.send;
-    provider.send = (args, callback) => tryManageSendTransaction(args, callback, provider.oldSend);
-    provider.oldSendAsync = provider.sendAsync;
-    provider.sendAsync = (args, callback) => tryManageSendTransaction(args, callback, provider.oldSendAsync);
+    var oldSend = provider.send;
+    provider.send = (args, callback) => tryManageSendTransaction(args, callback, oldSend);
+    var oldSendAsync = provider.sendAsync;
+    provider.sendAsync = (args, callback) => tryManageSendTransaction(args, callback, oldSendAsync);
 
     function tryManageSendTransaction(args, callback, originalMethod) {
         var batteryTitle = testBatteryTitle;
@@ -121,9 +121,9 @@ function setupTransactionDebugger(web3) {
 }
 
 async function initDFOHubManager() {
-    global.dfoManager = require('./dfo')
+    /*global.dfoManager = require('./dfo')
     global.dfoHubManager = require('./dfoHub');
-    await global.dfoHubManager.init;
+    await global.dfoHubManager.init;*/
     startBlock = parseInt((await global.web3.eth.getBlock('latest')).number);
 }
 

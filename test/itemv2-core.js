@@ -58,7 +58,7 @@ describe("Item V2 Core", () => {
     };
 
     function deployCollection(header, items, operators, code) {
-        if(header.host == utilities.voidEthereumAddress) {
+        if(header.host == utilities.voidEthereumAddress && !operators) {
             return itemMainInterface.methods.createCollectionOld(header, items);
         }
         return {
@@ -101,7 +101,7 @@ describe("Item V2 Core", () => {
                                 returnValues : {
                                     fromCollectionId : it.topics[1],
                                     toCollectionId : it.topics[2],
-                                    itemId : web3.eth.abi.decodeParameter("address", it.topics[3])
+                                    itemId : web3.eth.abi.decodeParameter("uint256", it.topics[3])
                                 }
                             }
                         });
@@ -226,30 +226,17 @@ describe("Item V2 Core", () => {
     }
 
     async function prepareMainInterfaceDeploy() {
-        var DynamicUriResolver = await compile("../node_modules/@ethereansos/swissknife/contracts/dynamicMetadata/impl/DynamicUriResolver");
-        var dynamicUriResolver = await new web3.eth.Contract(DynamicUriResolver.abi).deploy({data : DynamicUriResolver.bin}).send(blockchainConnection.getSendingOptions());
         var ItemInteroperableInterface = await compile('impl/ItemInteroperableInterface');
-        var itemInteroperableInterface = await new web3.eth.Contract(ItemInteroperableInterface.abi).deploy({ data: ItemInteroperableInterface.bin }).send(blockchainConnection.getSendingOptions());
         var ItemMainInterfaceSupportsInterfaceImplementer = await compile('impl/ItemMainInterfaceSupportsInterfaceImplementer');
-        var itemMainInterfaceSupportsInterfaceImplementer = await new web3.eth.Contract(ItemMainInterfaceSupportsInterfaceImplementer.abi).deploy({ data: ItemMainInterfaceSupportsInterfaceImplementer.bin }).send(blockchainConnection.getSendingOptions());
-        var singletonUri = "ipfs://ipfs/Qmd7W69mAwyyMuV4XC3YQgSJ6kQVCnSxFqKKFeRX3SAsjJ"
-        var MyUriRenderer = await compile("../resources/MyUriRenderer");
-        var myUriRenderer = await new web3.eth.Contract(MyUriRenderer.abi).deploy({data : MyUriRenderer.bin}).send(blockchainConnection.getSendingOptions());
-        var customString = "Domenicali";
-        singletonUri =  web3.eth.abi.encodeParameters(["address", "bytes"], [myUriRenderer.options.address, web3.eth.abi.encodeParameter("string", customString)]);
-        var dynamicUriResolverAddress = dynamicUriResolver.options.address;
-        var itemInteroperableInterfaceAddress = itemInteroperableInterface.options.address;
-        var itemMainInterfaceSupportsInterfaceImplementerAddress = itemMainInterfaceSupportsInterfaceImplementer.options.address;
-        dynamicUriResolverAddress = "0x3ff777884412c7CE8A1DA679B4B0CD54f720ab2e";
-        //itemInteroperableInterfaceAddress = "0x55BbAb8BbEfc49996507b84cccb92C74a0c2be3F";
-        //itemMainInterfaceSupportsInterfaceImplementerAddress = "0xE4CD064c93Fe94C21884670B3708a7a57dD2AfE3";
+
+        var singletonUri = "ipfs://ipfs/QmcF2RPjEZEjSsbmR8Zc3jVC7QXnHL3wYKMaiWZiEZ8oA2"
+        var dynamicUriResolverAddress = "0x3ff777884412c7CE8A1DA679B4B0CD54f720ab2e";
         var arguments = [
             singletonUri,
             dynamicUriResolverAddress,
-            itemInteroperableInterfaceAddress,
+            new web3.eth.Contract(ItemInteroperableInterface.abi).deploy({ data: ItemInteroperableInterface.bin }).encodeABI(),
             await new web3.eth.Contract(ItemMainInterfaceSupportsInterfaceImplementer.abi).deploy({ data: ItemMainInterfaceSupportsInterfaceImplementer.bin }).encodeABI()
         ];
-        //return await new web3.eth.Contract(ItemMainInterface.abi).deploy({ data: ItemMainInterface.bin, arguments }).send(blockchainConnection.getSendingOptions());
         return new web3.eth.Contract(ItemMainInterface.abi).deploy({ data: ItemMainInterface.bin, arguments }).encodeABI();
     };
 
@@ -264,6 +251,10 @@ describe("Item V2 Core", () => {
                 return;
             }
         }
+        try {
+            accounts[0] = JSON.parse(process.env.BLOCKCHAIN_ADDRESSES_TO_UNLOCK)[0];
+        } catch(e) {
+        }
         var ItemProjectionFactory = await compile('projection/factory/impl/ItemProjectionFactory');
         itemMainInterface = await prepareMainInterfaceDeploy();
         var multiOperatorHostData = await prepareMultiOperatorHostDeployData();
@@ -271,34 +262,60 @@ describe("Item V2 Core", () => {
         data = web3.eth.abi.encodeParameters(["address", "bytes"], [utilities.voidEthereumAddress, data]);
         var dynamicUriResolverAddress = "0x3ff777884412c7CE8A1DA679B4B0CD54f720ab2e"
         data = web3.eth.abi.encodeParameters(["string", "address", "bytes"], ["myUri", dynamicUriResolverAddress, data]);
-        data = web3.eth.abi.encodeParameters(["address", "bytes"], [accounts[1], data]);
+        data = web3.eth.abi.encodeParameters(["address", "bytes"], [accounts[0], data]);
         itemProjectionFactory = await new web3.eth.Contract(ItemProjectionFactory.abi).deploy({ data: ItemProjectionFactory.bin, arguments : [data] }).send(blockchainConnection.getSendingOptions());
-        await catchCall(itemProjectionFactory.methods.lazyInit(data), "init");
         //itemProjectionFactory = await new web3.eth.Contract(ItemProjectionFactory.abi, "0x915A22A152654714FcecA3f4704fCf6bd314624c");
-        console.log(await itemProjectionFactory.methods.mainInterface().call());
-        console.log(await itemProjectionFactory.methods.models().call());
+        console.log("ItemProjectionFactory", itemProjectionFactory.options.address);
+        var itemMainInterfaceAddress = await itemProjectionFactory.methods.mainInterface().call();
+        console.log("MainInterface", itemMainInterfaceAddress);
+        console.log("ItemInteroperableInterface", await web3.eth.getStorageAt(itemMainInterfaceAddress, 0));
+        console.log("ItemMainInterfaceSupportsInterfaceImplementer", await web3.eth.getStorageAt(itemMainInterfaceAddress, 1));
         var factoryHost = await itemProjectionFactory.methods.host().call();
+        console.log("ItemProjectionFactory Host", factoryHost);
+
+        itemMainInterface = await new web3.eth.Contract(ItemMainInterface.abi, await itemProjectionFactory.methods.mainInterface().call());
+        itemMainInterface.methods.createCollectionOld = itemMainInterface.methods.createCollection;
+        itemMainInterface.methods.createCollection = deployCollection;
+        itemMainInterface.methods.mintItemsOld = itemMainInterface.methods.mintItems;
+        itemMainInterface.methods.mintItems = createOrMintItems;
+
+        var transaction = await deployCollection({
+            host : utilities.voidEthereumAddress,
+            name : "Ethereans",
+            symbol : "OS",
+            uri : "ipfs://ipfs/QmU2FA9sC2jpkrXa9P2X9nQ6pWh8dy8Bgv5EYYfE97Y94r"
+        }, [{
+            header : {
+                host : utilities.voidEthereumAddress,
+                name : "Ethereans",
+                symbol : "OS",
+                uri : "ipfs://ipfs/QmU2FA9sC2jpkrXa9P2X9nQ6pWh8dy8Bgv5EYYfE97Y94r"
+            },
+            collectionId : utilities.voidBytes32,
+            id : 0,
+            accounts : [accounts[0]],
+            amounts : ["1000000".mul(1e18)]
+        }], [accounts[0], utilities.voidEthereumAddress, utilities.voidEthereumAddress, accounts[0], utilities.voidEthereumAddress]).send(blockchainConnection.getSendingOptions());
+        var itemId = transaction.events.CollectionItem.returnValues.itemId;
+        console.log("ItemId", itemId);
+        var interoperable = await itemMainInterface.methods.interoperableOf(itemId).call();
+        console.log("OS Address", interoperable);
+
+        await catchCall(itemProjectionFactory.methods.lazyInit(data), "init");
         try {
             await blockchainConnection.unlockAccounts(factoryHost);
         } catch(e) {
         }
 
         var oldModels = await itemProjectionFactory.methods.models().call();
-        await catchCall(itemProjectionFactory.methods.addModel(multiOperatorHostData), "unauthorized");
+        await catchCall(itemProjectionFactory.methods.addModel(multiOperatorHostData).send(blockchainConnection.getSendingOptions({from : accounts[6]})), "unauthorized");
         await itemProjectionFactory.methods.addModel(multiOperatorHostData).send(blockchainConnection.getSendingOptions({from : factoryHost}));
         var newModels = await itemProjectionFactory.methods.models().call();
         assert.equal(oldModels.length + 1, newModels.length);
         oldModels = newModels;
 
-        itemMainInterface = await new web3.eth.Contract(ItemMainInterface.abi, await itemProjectionFactory.methods.mainInterface().call());
-        console.log("ItemMainInterfaceSupportsInterfaceImplementer", await web3.eth.getStorageAt(itemMainInterface.options.address, 1));
-        console.log("Item main interface: " + itemMainInterface.options.address);
         console.log("Plain Uri", await itemMainInterface.methods.plainUri().call());
         console.log("Uri", await itemMainInterface.methods.uri().call());
-        itemMainInterface.methods.createCollectionOld = itemMainInterface.methods.createCollection;
-        itemMainInterface.methods.createCollection = deployCollection;
-        itemMainInterface.methods.mintItemsOld = itemMainInterface.methods.mintItems;
-        itemMainInterface.methods.mintItems = createOrMintItems;
     }
 
     before(async () => {
@@ -746,7 +763,7 @@ describe("Item V2 Core", () => {
              * 4) uriString string
              */
             await deploy();
-            var multiOperatorHostData = await prepareMultiOperatorHostDeployData();
+            /*var multiOperatorHostData = await prepareMultiOperatorHostDeployData();
             var oldModels = await itemProjectionFactory.methods.models().call();
             await deployCollection({
                 host : accounts[4],
@@ -762,7 +779,7 @@ describe("Item V2 Core", () => {
                 name : "Singleton",
                 symbol : "sym",
                 uri : "tomare"
-            }, []), "invalid host");
+            }, []), "invalid host");*/
         });
 
         /*it("#??? Should change InteroperableInterfaceModel", async () => { USELESS

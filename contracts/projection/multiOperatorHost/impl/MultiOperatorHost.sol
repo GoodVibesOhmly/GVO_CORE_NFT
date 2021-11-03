@@ -90,15 +90,15 @@ contract MultiOperatorHost is IMultiOperatorHost, ItemProjection {
     function _subjectIsAuthorizedFor(address subject, address location, bytes4 selector, bytes calldata, uint256) internal virtual override view returns(bool, bool) {
         //1 = mintItems, 2 = burn, 3 = transfer, 4 = setMetadata, 5 = itemsCollection
         uint256 op = selector == this.mintItems.selector ? 1 :
-            (
+            /*(
                 selector == 0xf5298aca ||//burn(address,uint256,uint256)
                 selector == 0x6b20c454 ||//burnBatch(address,uint256[],uint256[])
                 selector == 0x8a94b05f ||//burn(address,uint256,uint256,bytes)
                 selector == 0x5473422e   //burnBatch(address,uint256[],uint256[],bytes)
             ) ? 2 :
-            (selector == this.safeTransferFrom.selector || selector == this.safeBatchTransferFrom.selector) ? 3 :
-            (selector == this.setHeader.selector || selector == this.setItemsMetadata.selector) ? 4 :
-            selector == this.setItemsCollection.selector ? 5 : 0;
+            (selector == this.safeTransferFrom.selector || selector == this.safeBatchTransferFrom.selector) ? 3 :*/
+            (selector == this.setHeader.selector || selector == this.setItemsMetadata.selector) ? 4 : 0;
+            //selector == this.setItemsCollection.selector ? 5 : 0;
         return(true, op > 0 && location == address(this) && operator[op] == subject);
     }
 }

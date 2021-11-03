@@ -30,11 +30,15 @@ contract ItemMainInterface is IItemMainInterface {
     mapping(bytes32 => mapping(uint256 => uint256)) private _batchAmounts;
     bytes32[] private _batchKeys;
 
-    constructor(string memory _plainUri, address _dynamicUriResolver, address _interoperableInterfaceModel, bytes memory itemMainInterfaceSupportsInterfaceImplementerData) {
+    constructor(string memory _plainUri, address _dynamicUriResolver, bytes memory _interoperableInterfaceModel, bytes memory itemMainInterfaceSupportsInterfaceImplementerData) {
         plainUri = _plainUri;
         dynamicUriResolver = _dynamicUriResolver;
-        interoperableInterfaceModel = _interoperableInterfaceModel;
         address created;
+        assembly {
+            created := create(0, add(_interoperableInterfaceModel, 0x20), mload(_interoperableInterfaceModel))
+        }
+        interoperableInterfaceModel = created;
+        created = address(0);
         assembly {
             created := create(0, add(itemMainInterfaceSupportsInterfaceImplementerData, 0x20), mload(itemMainInterfaceSupportsInterfaceImplementerData))
         }

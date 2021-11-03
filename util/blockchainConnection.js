@@ -59,10 +59,10 @@ module.exports = {
                         return !localArgs ? newCallback(undefined, args) : originalMethod.apply(provider, [{...args, params : [localArgs]}, newCallback]);
                     };
 
-                    provider.oldSend = provider.send;
-                    provider.send = (args, callback) => tryManageLogs(args, callback, provider.oldSend);
-                    provider.oldSendAsync = provider.sendAsync;
-                    provider.sendAsync = (args, callback) => tryManageLogs(args, callback, provider.oldSendAsync);
+                    var oldSend = provider.send;
+                    provider.send = (args, callback) => tryManageLogs(args, callback, oldSend);
+                    var oldSendAsync = provider.sendAsync;
+                    provider.sendAsync = (args, callback) => tryManageLogs(args, callback, oldSendAsync);
                 }
                 await global.blockchainConnection.fastForward(10);
                 if(process.env.BLOCKCHAIN_ADDRESSES_TO_UNLOCK) {

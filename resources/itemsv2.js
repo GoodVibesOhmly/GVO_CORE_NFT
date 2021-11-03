@@ -118,7 +118,7 @@ function deployCollection(header, items, modelOrCode, data) {
         send(sendingOptions) {
             return new Promise(async function(ok, ko) {
                 try {
-                    var mintHost = header.host;
+                    var mintHost = header.host || header[0];
                     var deployer = await itemProjectionFactory.methods.deployer(mintHost).call();
                     if (deployer !== utilities.voidEthereumAddress) {
                         return ok(await mainInterface.methods.createCollection(header, items).send(sendingOptions));
@@ -131,7 +131,7 @@ function deployCollection(header, items, modelOrCode, data) {
                     var headerTuple = "tuple(address,string,string,string)";
                     var itemsTuple = `tuple(${headerTuple},bytes32,uint256,address[],uint256[])[]`;
                     data = abi.encode(["bytes32", headerTuple, itemsTuple, "bytes"], [utilities.voidBytes32, headerArray, itemsArray, data]);
-                    data = web3.eth.abi.encodeParameters(["address", "bytes"], [modelOrCode === 0 ? utilities.voidEthereumAddress : mintHost, data]);
+                    data = web3.eth.abi.encodeParameters(["address", "bytes"], [!modelOrCode || modelOrCode === 0 ? utilities.voidEthereumAddress : mintHost, data]);
                     var transaction;
                     if (modelOrCode && typeof modelOrCode === "string" && modelOrCode.indexOf('0x') === 0) {
                         await catchCall(itemProjectionFactory.methods.deploySingleton(modelOrCode, data), "unauthorized");
@@ -180,12 +180,14 @@ function deployNativeCollection(host, itemsToMint, finalized, header) {
 
 async function createCollection(host, itemsToMint, modelOrCode, data, header) {
     mainInterface = await getMainInterface();
-    var collection = header || {
+    var collection = header ? {...header} : {
         host,
         name: "Collection",
         symbol: "COL",
         uri: "uri",
     };
+    collection instanceof Array && (collection[0] = host);
+    !(collection instanceof Array) && (collection.host = host);
     var items = !itemsToMint || itemsToMint.length === 0 ?
         [] :
         itemsToMint[0] instanceof Array ? itemsToMint :
@@ -199,8 +201,8 @@ async function createCollection(host, itemsToMint, modelOrCode, data, header) {
                 },
                 collectionId: utilities.voidBytes32,
                 id: 0,
-                accounts: Object.keys(it),
-                amounts: Object.values(it),
+                accounts: it.accounts || Object.keys(it),
+                amounts: it.amounts || Object.values(it),
             };
         });
     var transaction = await deployCollection(collection, items, modelOrCode, data).send(blockchainConnection.getSendingOptions());

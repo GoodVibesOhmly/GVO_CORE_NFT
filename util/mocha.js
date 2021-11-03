@@ -81,7 +81,7 @@ function setupTransactionDebugger(web3) {
     global.transactionDebugger = require('./transactionDebugger')(web3);
     var OldContract = web3.eth.Contract;
     web3.eth.Contract = function Contract(abi, address) {
-        var contract = global.contractsInfo[web3.utils.sha3(JSON.stringify(abi))];
+        var contract = (global.contractsInfo = global.contractsInfo || {})[web3.utils.sha3(JSON.stringify(abi))];
         var oldContract = new OldContract(...arguments);
         try {
             oldContract.name = contract.contractName;

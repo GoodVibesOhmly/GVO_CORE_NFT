@@ -44,6 +44,19 @@ contract ERC721Wrapper is IERC721Wrapper, ItemProjection, IERC721Receiver {
         }
     }
 
+    function setHeader(Header calldata value) authorizedOnly override(IItemProjection, ItemProjection) external virtual returns(Header memory oldValue) {
+        Header[] memory values = new Header[](1);
+        values[0] = value;
+        values[0].host = address(this);
+        bytes32[] memory collectionIds = new bytes32[](1);
+        collectionIds[0] = collectionId;
+        return IItemMainInterface(mainInterface).setCollectionsMetadata(collectionIds, values)[0];
+    }
+
+    function setItemsCollection(uint256[] calldata, bytes32[] calldata) authorizedOnly virtual override(Item, ItemProjection) external returns(bytes32[] memory) {
+        revert("Impossibru!");
+    }
+
     function onERC721Received(
         address,
         address from,

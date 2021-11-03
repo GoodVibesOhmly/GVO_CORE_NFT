@@ -381,7 +381,7 @@ describe("Item V2 Projections - Native", () => {
         };
 
         var newCollectionHeader = {
-            host: accounts[1],
+            host: utilities.voidEthereumAddress,
             name: "Collection2",
             symbol: "COL2",
             uri: "uri2",
@@ -407,7 +407,7 @@ describe("Item V2 Projections - Native", () => {
         };
 
         var expectedNewCollection = {
-            host: accounts[1],
+            host: native.options.address,
             name: "Collection2",
             symbol: "COL2",
             uri: "uri2",
@@ -499,7 +499,7 @@ describe("Item V2 Projections - Native", () => {
         };
 
         var expectedNewCollection = {
-            host: accounts[3],
+            host: native.options.address,
             name: "Collection2",
             symbol: "COL2",
             uri: "uri2",
@@ -540,7 +540,7 @@ describe("Item V2 Projections - Native", () => {
 
         await itemProjection.assertEqualHeaderHost(
             collectionData.host,
-            accounts[3]
+            native.options.address
         );
 
         await itemProjection.assertEqualHeaderUri(
@@ -1261,13 +1261,12 @@ describe("Item V2 Projections - Native", () => {
 
         var item = (await itemsv2.createMintStruct([collectionId], [0], [utilities.voidEthereumAddress], 1)).map(it => [Object.values(it.header), ...Object.entries(it).filter(it => it[0] !== 'header').map(it => it[1])]);
 
-        var result = await mainInterface.methods
-            .createCollection(headerCollection, item)
-            .send(blockchainConnection.getSendingOptions());
-        var res = result.events.CollectionItem.returnValues;
+        var result = await itemsv2
+            .createCollection(headerCollection.host, item, undefined, undefined, headerCollection);
+        var res = result;
 
-        var collectionIdMain = res["toCollectionId"];
-        var idItemsMain = res["itemId"];
+        var collectionIdMain = res["collectionId"];
+        var idItemsMain = res["itemIds"][0];
 
         var collectionHeader = [accounts[1], "Collection1", "COL1", "uri1"];
 
@@ -2946,10 +2945,9 @@ describe("Item V2 Projections - Native", () => {
         var native = res["native"];
         var itemIds = res["itemIds"];
 
-        var result = await mainInterface.methods
-            .createCollection(mainCollectionHeader, mainItems)
-            .send(blockchainConnection.getSendingOptions());
-        var collection = result.events.Collection.returnValues["collectionId"];
+        var result = await itemsv2
+            .createCollection(mainCollectionHeader.host, mainItems, undefined, undefined, mainCollectionHeader);
+        var collection = result["collectionId"];
 
         var CreateItemMain = [{
                 header: {
@@ -2977,7 +2975,7 @@ describe("Item V2 Projections - Native", () => {
             },
         ];
 
-        var mintItem = await mainInterface.methods
+        var mintItem = await result.projection.methods
             .mintItems(CreateItemMain)
             .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
         var mainItemId = [];
@@ -3096,15 +3094,10 @@ describe("Item V2 Projections - Native", () => {
         var native = res["native"];
         var itemIds = res["itemIds"];
 
-        var result = await mainInterface.methods
-            .createCollection(collectionHeader, itemsMain)
-            .send(blockchainConnection.getSendingOptions());
-        var res = result.events.CollectionItem.returnValues;
-        var resLog = result.events.CollectionItem;
-        var idItemsMain = resLog.map((event) => event.returnValues["itemId"]);
-        var collectionIdMain = resLog.map(
-            (event) => event.returnValues["toCollectionId"]
-        );
+        var result = await itemsv2
+            .createCollection(collectionHeader.host, itemsMain, undefined, undefined, collectionHeader);
+        var idItemsMain = result.itemIds;
+        var collectionIdMain = result.collectionId;
 
         var totalItemsId = itemIds.concat(idItemsMain);
 

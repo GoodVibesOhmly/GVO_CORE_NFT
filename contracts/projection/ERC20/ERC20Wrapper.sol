@@ -26,7 +26,7 @@ contract ERC20Wrapper is IERC20Wrapper, ItemProjection {
     constructor(bytes memory lazyInitData) ItemProjection(lazyInitData) {
     }
 
-    function mintItems(CreateItem[] calldata createItemsInput) virtual override(Item, ItemProjection) external returns(uint256[] memory) {
+    function mintItems(CreateItem[] calldata createItemsInput) virtual override(Item, ItemProjection) public returns(uint256[] memory) {
         return mintItemsWithPermit(createItemsInput, new bytes[](0));
     }
 
@@ -47,6 +47,19 @@ contract ERC20Wrapper is IERC20Wrapper, ItemProjection {
         for(uint256 i = 0; i < createItemsInput.length; i++) {
             itemIds[i] = itemIdOf[address(uint160(uint256(createItemsInput[i].collectionId)))];
         }
+    }
+
+    function setHeader(Header calldata value) authorizedOnly override(IItemProjection, ItemProjection) external virtual returns(Header memory oldValue) {
+        Header[] memory values = new Header[](1);
+        values[0] = value;
+        values[0].host = address(this);
+        bytes32[] memory collectionIds = new bytes32[](1);
+        collectionIds[0] = collectionId;
+        return IItemMainInterface(mainInterface).setCollectionsMetadata(collectionIds, values)[0];
+    }
+
+    function setItemsCollection(uint256[] calldata, bytes32[] calldata) authorizedOnly virtual override(Item, ItemProjection) external returns(bytes32[] memory) {
+        revert("Impossibru!");
     }
 
     function burn(address account, uint256 itemId, uint256 amount, bytes memory data) override(Item, ItemProjection) public {

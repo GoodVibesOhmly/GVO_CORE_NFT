@@ -457,32 +457,28 @@ describe("itemv2 projections ERC1155Wrapper", () => {
       ]
     );
 
-    deployParam = abi.encode(
-      ["address", "bytes"],
-      [knowledgeBase.mainInterfaceAddress, deployParam]
-    );
+    mainInterface = await itemsv2.getMainInterface();
 
     deployParam = abi.encode(["address", "bytes"], [accounts[1], deployParam]);
 
     var ERC1155Wrapper = await compile("projection/ERC1155/ERC1155Wrapper");
-    wrapper = await new web3.eth.Contract(ERC1155Wrapper.abi)
-      .deploy({ data: ERC1155Wrapper.bin, arguments: ["0x"] })
-      .send(blockchainConnection.getSendingOptions());
+    var wrapperData = await new web3.eth.Contract(ERC1155Wrapper.abi)
+    .deploy({ data: ERC1155Wrapper.bin, arguments: ["0x"] }).encodeABI();
+
+    var data = await itemsv2.createCollection(headerCollection.host, items, wrapperData, "0x", headerCollection);
+
+    wrapper = new web3.eth.Contract(ERC1155Wrapper.abi, data.projection.options.address);
 
     var ZeroDecimals = await compile("../resources/ERC1155ZeroDecimals");
-    zeroDecimals = await new web3.eth.Contract(ZeroDecimals.abi)
+    wrapperData = await new web3.eth.Contract(ZeroDecimals.abi)
       .deploy({ data: ZeroDecimals.bin, arguments: ["0x"] })
-      .send(blockchainConnection.getSendingOptions());
+      .encodeABI();
 
-    await wrapper.methods
-      .lazyInit(deployParam)
-      .send(blockchainConnection.getSendingOptions());
+      var data = await itemsv2.createCollection(headerCollection.host, items, wrapperData, "0x", headerCollection);
 
-    await zeroDecimals.methods
-      .lazyInit(deployParam)
-      .send(blockchainConnection.getSendingOptions());
+      zeroDecimals = new web3.eth.Contract(ZeroDecimals.abi, data.projection.options.address);
 
-    mainInterface = await itemsv2.getMainInterface();
+
 
     token1 = new web3.eth.Contract(
       knowledgeBase.IERC1155ABI,

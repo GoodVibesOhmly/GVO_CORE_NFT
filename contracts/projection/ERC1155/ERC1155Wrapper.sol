@@ -33,7 +33,7 @@ contract ERC1155Wrapper is IERC1155Wrapper, ItemProjection, IERC1155Receiver {
         return _itemIdOf[_toItemKey(tokenAddress, tokenId)];
     }
 
-    function mintItems(CreateItem[] calldata createItemsInput) virtual override(Item, ItemProjection) external returns(uint256[] memory itemIds) {
+    function mintItems(CreateItem[] calldata createItemsInput) virtual override(Item, ItemProjection) public returns(uint256[] memory itemIds) {
         CreateItem[] memory createItems = new CreateItem[](createItemsInput.length);
         uint256[] memory loadedItemIds = new uint256[](createItemsInput.length);
         string memory uri = plainUri();
@@ -54,6 +54,19 @@ contract ERC1155Wrapper is IERC1155Wrapper, ItemProjection, IERC1155Receiver {
                 emit Token(tokenAddress, tokenId, itemIds[i]);
             }
         }
+    }
+
+    function setHeader(Header calldata value) authorizedOnly override(IItemProjection, ItemProjection) external virtual returns(Header memory oldValue) {
+        Header[] memory values = new Header[](1);
+        values[0] = value;
+        values[0].host = address(this);
+        bytes32[] memory collectionIds = new bytes32[](1);
+        collectionIds[0] = collectionId;
+        return IItemMainInterface(mainInterface).setCollectionsMetadata(collectionIds, values)[0];
+    }
+
+    function setItemsCollection(uint256[] calldata, bytes32[] calldata) authorizedOnly virtual override(Item, ItemProjection) external returns(bytes32[] memory) {
+        revert("Impossibru!");
     }
 
     function onERC1155Received(

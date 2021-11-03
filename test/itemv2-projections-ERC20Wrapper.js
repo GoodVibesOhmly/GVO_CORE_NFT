@@ -329,7 +329,7 @@ describe("itemv2 projections ERC20Wrapper", () => {
       },
     ];
 
-    var mintItem = await mainInterface.methods
+    var mintItem = await res.projection.methods
       .mintItems(CreateItem)
       .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
     var idItems = mintItem.events.CollectionItem.map(
@@ -591,23 +591,17 @@ describe("itemv2 projections ERC20Wrapper", () => {
       ]
     );
 
-    deployParam = abi.encode(
-      ["address", "bytes"],
-      [knowledgeBase.mainInterfaceAddress, deployParam]
-    );
+    mainInterface = await itemsv2.getMainInterface();
 
     deployParam = abi.encode(["address", "bytes"], [accounts[1], deployParam]);
 
     var ERC20Wrapper = await compile("projection/ERC20/ERC20Wrapper");
-    wrapper = await new web3.eth.Contract(ERC20Wrapper.abi)
-      .deploy({ data: ERC20Wrapper.bin, arguments: ["0x"] })
-      .send(blockchainConnection.getSendingOptions());
+    var wrapperData = await new web3.eth.Contract(ERC20Wrapper.abi)
+    .deploy({ data: ERC20Wrapper.bin, arguments: ["0x"] }).encodeABI();
 
-    await wrapper.methods
-      .lazyInit(deployParam)
-      .send(blockchainConnection.getSendingOptions());
+    var data = await itemsv2.createCollection(headerCollection.host, items, wrapperData, "0x", headerCollection);
 
-      mainInterface = await itemsv2.getMainInterface();
+    wrapper = new web3.eth.Contract(ERC20Wrapper.abi, data.projection.options.address);
   });
 
   it("#659 Wrap ERC20 (18 decimals) and ETH", async () => {

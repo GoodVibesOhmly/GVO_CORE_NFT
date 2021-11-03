@@ -56,6 +56,19 @@ contract NativeProjection is ItemProjection {
         return mintItems(items, new bool[](items.length));
     }
 
+    function setHeader(Header calldata value) authorizedOnly override external virtual returns(Header memory oldValue) {
+        Header[] memory values = new Header[](1);
+        values[0] = value;
+        values[0].host = address(this);
+        bytes32[] memory collectionIds = new bytes32[](1);
+        collectionIds[0] = collectionId;
+        return IItemMainInterface(mainInterface).setCollectionsMetadata(collectionIds, values)[0];
+    }
+
+    function setItemsCollection(uint256[] calldata, bytes32[] calldata) authorizedOnly virtual override external returns(bytes32[] memory) {
+        revert("Impossibru!");
+    }
+
     function finalize(uint256[] calldata itemIds) external authorizedOnly {
         for(uint256 i = 0; i < itemIds.length; i++) {
             uint256 itemId = itemIds[i];

@@ -81,24 +81,24 @@ function setupTransactionDebugger(web3) {
     global.transactionDebugger = require('./transactionDebugger')(web3);
     var OldContract = web3.eth.Contract;
     web3.eth.Contract = function Contract(abi, address) {
-        var contract;
+        var contract = global.contractsInfo[web3.utils.sha3(JSON.stringify(abi))];
+        var oldContract = new OldContract(...arguments);
         try {
-            contract = global.contractsInfo[web3.utils.sha3(JSON.stringify(abi))];
-        } catch (e) {}
-        var oldContract = new OldContract(abi, address);
-        if (contract) {
             oldContract.name = contract.contractName;
             oldContract.abi = contract.abi;
+            address && web3.eth.getCode(address).then(code => {
+                var key = web3.utils.sha3(code);
+                (global.compiledContracts = global.compiledContracts || {})[key] = {
+                    name: oldContract.name,
+                    abi: oldContract.abi
+                };
+            });
             var oldDeploy = oldContract.deploy;
             oldContract.deploy = function deploy() {
-                var compiledInfo = {
-                    name: this.name,
-                    abi: this.abi
-                };
-                var dep = oldDeploy.apply(this, arguments);
+                var dep = oldDeploy.apply(oldContract, arguments);
                 var oldSend = dep.send;
                 dep.send = function send() {
-                    return oldSend.apply(this, arguments).then(deployedContract => {
+                    return oldSend.apply(oldContract, arguments).then(deployedContract => {
                         var address = deployedContract.options.address;
                         var set = async() => {
                             try {
@@ -106,7 +106,10 @@ function setupTransactionDebugger(web3) {
                                 if (!key) {
                                     setTimeout(set);
                                 }
-                                (global.compiledContracts = global.compiledContracts || {})[key] = compiledInfo;
+                                (global.compiledContracts = global.compiledContracts || {})[key] = {
+                                    name: oldContract.name,
+                                    abi: oldContract.abi
+                                };
                             } catch (e) {}
                         };
                         setTimeout(set);
@@ -115,16 +118,16 @@ function setupTransactionDebugger(web3) {
                 };
                 return dep;
             };
-        }
+        } catch (e) {}
         return oldContract;
     };
 }
 
 async function initDFOHubManager() {
-    /*global.dfoManager = require('./dfo')
+    /*global.dfoManager = require('./dfo');
     global.dfoHubManager = require('./dfoHub');
     await global.dfoHubManager.init;*/
-    startBlock = parseInt((await global.web3.eth.getBlock('latest')).number);
+    startBlock = parseInt((await global.web3.eth.getBlock('latest')).number) + 1;
 }
 
 async function dumpBlocks() {

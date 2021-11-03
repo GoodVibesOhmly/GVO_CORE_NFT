@@ -482,11 +482,7 @@ describe("itemv2 projections ERC1155Wrapper", () => {
       .lazyInit(deployParam)
       .send(blockchainConnection.getSendingOptions());
 
-    MainInterface = await compile("model/IItemMainInterface");
-    mainInterface = new web3.eth.Contract(
-      MainInterface.abi,
-      knowledgeBase.mainInterfaceAddress
-    );
+    mainInterface = await itemsv2.getMainInterface();
 
     token1 = new web3.eth.Contract(
       knowledgeBase.IERC1155ABI,

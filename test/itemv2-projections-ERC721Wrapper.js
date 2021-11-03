@@ -399,11 +399,7 @@ describe("itemv2 projections ERC721Wrapper", () => {
       .lazyInit(deployParam)
       .send(blockchainConnection.getSendingOptions());
 
-    MainInterface = await compile("model/IItemMainInterface");
-    mainInterface = new web3.eth.Contract(
-      MainInterface.abi,
-      knowledgeBase.mainInterfaceAddress
-    );
+      mainInterface = await itemsv2.getMainInterface();
   });
 
   it("#651 Wrap using onERC721Received", async () => {

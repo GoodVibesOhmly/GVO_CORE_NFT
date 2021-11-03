@@ -607,11 +607,7 @@ describe("itemv2 projections ERC20Wrapper", () => {
       .lazyInit(deployParam)
       .send(blockchainConnection.getSendingOptions());
 
-    MainInterface = await compile("model/IItemMainInterface");
-    mainInterface = new web3.eth.Contract(
-      MainInterface.abi,
-      knowledgeBase.mainInterfaceAddress
-    );
+      mainInterface = await itemsv2.getMainInterface();
   });
 
   it("#659 Wrap ERC20 (18 decimals) and ETH", async () => {

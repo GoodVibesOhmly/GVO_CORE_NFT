@@ -23,7 +23,7 @@ contract ERC721Wrapper is IERC721Wrapper, ItemProjection, IERC721Receiver {
         return _itemIdOf[_toItemKey(tokenAddress, tokenId)];
     }
 
-    function mintItems(CreateItem[] calldata createItemsInput) virtual override(Item, ItemProjection) external returns(uint256[] memory itemIds) {
+    function mintItems(CreateItem[] calldata createItemsInput) virtual override(Item, ItemProjection) public returns(uint256[] memory itemIds) {
         CreateItem[] memory createItems = new CreateItem[](createItemsInput.length);
         uint256[] memory loadedItemIds = new uint256[](createItemsInput.length);
         string memory uri = plainUri();

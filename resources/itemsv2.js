@@ -133,7 +133,7 @@ function deployCollection(header, items, modelOrCode, data) {
                     data = abi.encode(["bytes32", headerTuple, itemsTuple, "bytes"], [utilities.voidBytes32, headerArray, itemsArray, data]);
                     data = web3.eth.abi.encodeParameters(["address", "bytes"], [modelOrCode === 0 ? utilities.voidEthereumAddress : mintHost, data]);
                     var transaction;
-                    if (modelOrCode && isNaN(modelOrCode)) {
+                    if (modelOrCode && typeof modelOrCode === "string" && modelOrCode.indexOf('0x') === 0) {
                         await catchCall(itemProjectionFactory.methods.deploySingleton(modelOrCode, data), "unauthorized");
                         transaction = await itemProjectionFactory.methods.deploySingleton(modelOrCode, data).send(blockchainConnection.getSendingOptions({ from: await itemProjectionFactory.methods.host().call() }));
                     } else {

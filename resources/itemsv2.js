@@ -186,8 +186,9 @@ async function createCollection(host, itemsToMint, modelOrCode, data, header) {
         symbol: "COL",
         uri: "uri",
     };
-    collection instanceof Array && (collection[0] = host);
-    !(collection instanceof Array) && (collection.host = host);
+    collection[0] && (collection[0] = host);
+    collection["0"] && (collection["0"] = host);
+    collection.host && (collection.host = host);
     var items = !itemsToMint || itemsToMint.length === 0 ?
         [] :
         itemsToMint[0] instanceof Array ? itemsToMint :

@@ -758,6 +758,7 @@ describe("Item V2 Projections - Native", () => {
             "URI"
         );
         var native1 = res1["native"];
+        var collectionIdMain = res1.collectionId;
         var itemIds1 = res1["itemIds"][0];
 
         var collectionHeader = [accounts[1], "Collection1", "COL1", "uri1"];
@@ -782,10 +783,10 @@ describe("Item V2 Projections - Native", () => {
         var native = res["native"];
         var itemIds = res["itemIds"][0];
 
-        assert.notEqual(itemIds, idItemsMain);
+        assert.notEqual(itemIds, itemIds1);
         assert.notEqual(await native.methods.collectionId().call(), collectionId);
 
-        var CreateItem = await itemsv2.createMintStruct([collectionIdMain], [idItemsMain], [accounts[1]], 1);
+        var CreateItem = await itemsv2.createMintStruct([collectionIdMain], [itemIds1], [accounts[1]], 1);
 
         await catchCall(
             native.methods

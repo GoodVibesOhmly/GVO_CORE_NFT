@@ -659,6 +659,42 @@ describe("itemv2 projections ERC721Wrapper", () => {
             })
         );
 
+        await catchCall(
+            wrapper.methods
+            .safeTransferFrom(
+              utilities.voidEthereumAddress,
+              accounts[5],
+              itemsList[0].itemId,
+              '100000000',
+              "0x",
+            )
+            .send(blockchainConnection.getSendingOptions({ from: accounts[5] })),
+          "required from");
+      
+          await catchCall(
+            wrapper.methods
+            .safeTransferFrom(
+              utilities.voidEthereumAddress,
+              utilities.voidEthereumAddress,
+              itemsList[0].itemId,
+              '100000000',
+              "0x",
+            )
+            .send(blockchainConnection.getSendingOptions({ from: accounts[5] })),
+          "required from");
+      
+          await catchCall(
+            wrapper.methods
+            .safeTransferFrom(
+              itemsList[0].account,
+              utilities.voidEthereumAddress,
+              itemsList[0].itemId,
+              '100000000',
+              "0x",
+            )
+            .send(blockchainConnection.getSendingOptions({ from: accounts[5] })),
+          "required to");
+
         await Promise.all(
             itemsList.slice(3).map(async(item, index) => {
                 await wrapper.methods
@@ -706,6 +742,39 @@ describe("itemv2 projections ERC721Wrapper", () => {
             })
         );
 
+        await catchCall(wrapper.methods
+            .safeBatchTransferFrom(
+              utilities.voidEthereumAddress,
+              accounts[9],
+              itemIdsToTransfer,
+              amountsToTransfer,
+              "0x"
+            )
+          .send(blockchainConnection.getSendingOptions({ from: accounts[7] })),
+          "required from");
+      
+          await catchCall(wrapper.methods
+            .safeBatchTransferFrom(
+              accounts[7],
+              utilities.voidEthereumAddress,
+              itemIdsToTransfer,
+              amountsToTransfer,
+              "0x"
+            )
+          .send(blockchainConnection.getSendingOptions({ from: accounts[7] })),
+          "required to");
+      
+          await catchCall(wrapper.methods
+            .safeBatchTransferFrom(
+              utilities.voidEthereumAddress,
+              utilities.voidEthereumAddress,
+              itemIdsToTransfer,
+              amountsToTransfer,
+              "0x"
+            )
+          .send(blockchainConnection.getSendingOptions({ from: accounts[7] })),
+          "required from");
+
         await wrapper.methods.safeBatchTransferFrom(accounts[7], accounts[9], itemIdsToTransfer, amountsToTransfer, "0x").send(blockchainConnection.getSendingOptions({ from: accounts[7] }))
         await wrapper.methods.safeBatchTransferFrom(accounts[9], accounts[7], itemIdsToTransfer, amountsToTransfer, "0x").send(blockchainConnection.getSendingOptions({ from: accounts[9] }))
 
@@ -718,6 +787,13 @@ describe("itemv2 projections ERC721Wrapper", () => {
         );
 
         var datas = web3.eth.abi.encodeParameters(["bytes[]"], [burn]);
+
+        await catchCall(
+            wrapper.methods
+              .burnBatch(utilities.voidEthereumAddress, itemIds, amounts, datas)
+              .send(blockchainConnection.getSendingOptions({ from: accounts[7] })),
+            "required account"
+          );
 
         await catchCall(
             wrapper.methods
@@ -775,6 +851,54 @@ describe("itemv2 projections ERC721Wrapper", () => {
                 );
             })
         );
+
+
+        await catchCall(wrapper.methods.setItemsCollection([0],[utilities.voidBytes32]).send(blockchainConnection.getSendingOptions({ from: accounts[1] })), "Impossibru");
+    
+        var headerCollection = {
+          host: accounts[1],
+          name: "newCollection",
+          symbol: "newC1",
+          uri: "newUriC1",
+        };
+    
+        await wrapper.methods.setHeader(headerCollection).send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
+        headerCollection.host = wrapper.options.address;
+        await itemProjection.assertCheckHeader(headerCollection, mainInterface.methods
+          .collection(await wrapper.methods.collectionId().call())
+          .call())
+    
+          var newItemsMetadata = [{
+            host: accounts[1],
+            name: "newItems1",
+            symbol: "newI1",
+            uri: "newUriI1",
+          },{
+            host: accounts[2],
+            name: "newItems2",
+            symbol: "newI2",
+            uri: "newUriI2",
+          },{
+            host: accounts[3],
+            name: "newItems3",
+            symbol: "newI3",
+            uri: "newUriI3",
+          },];
+    
+        var itemToUpdate = [itemsList[4].itemId, itemsList[5].itemId, itemsList[6].itemId];
+    
+        await wrapper.methods.setItemsMetadata(itemToUpdate, newItemsMetadata).send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
+        await Promise.all(itemToUpdate.map(
+          async (item, index) => {
+              newItemsMetadata[index].host = utilities.voidEthereumAddress;
+              await itemProjection.checkHeader(
+              (await mainInterface.methods
+              .item(item)
+              .call())["header"],
+              newItemsMetadata[index]
+            )
+          }
+        ))
     });
 
     it("#656 Scenario 1 Testing some different unwrap and rewrap scenarios with different balances", async() => {

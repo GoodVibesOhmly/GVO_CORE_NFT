@@ -11,355 +11,6 @@ describe("Item V2 Projections - Native", () => {
         mainInterface = await itemsv2.getMainInterface();
     });
 
-    it("#619 Alternative Initialization", async() => {
-        /**
-         * Authorized subjects:
-         * -initializer address
-         * Functions used in the test:
-         * lazyInit
-         *
-         * Initialize the NativeProjection with a previously created Collection id and mint/create Items inside.
-         * In this case a Collection is created through the Main interface with a certain host.
-         * The NativeProjection is created but not inizialized.
-         * The collection.host is set as NativeProjection address.
-         * The NativeProjection is initialized passing the collectionId and some Items to mint and create
-         */
-        var collectionId = utilities.voidBytes32;
-
-        var mainItems = [];
-
-        collectionId = (await itemsv2.createCollection(accounts[1], mainItems))[
-            "collectionId"
-        ];
-
-        var nativeProjectionAddress = utilities.voidEthereumAddress;
-
-        var collectionHeader = {
-            host: nativeProjectionAddress,
-            name: "Collection",
-            symbol: "COL",
-            uri: "uri",
-        };
-
-        var items = (await itemsv2.createMintStruct([collectionId, collectionId], [0, 0], [utilities.voidEthereumAddress, utilities.voidEthereumAddress], 1)).map(it => [Object.values(it.header), ...Object.entries(it).filter(it => it[0] !== 'header').map(it => it[1])]);
-
-        await mainInterface.methods
-            .setCollectionsMetadata([collectionId], [itemsv2.convertHeader(collectionHeader)])
-            .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
-
-        await itemProjection.assertCheckHeader(
-            collectionHeader,
-            mainInterface.methods.collection(collectionId).call()
-        );
-
-        var deployParam = abi.encode(
-            [
-                "bytes32",
-                "tuple(address,string,string,string)",
-                "tuple(tuple(address,string,string,string),bytes32,uint256,address[],uint256[])[]",
-                "bytes",
-            ], [collectionId, await itemsv2.convertHeader(collectionHeader), items, utilities.voidBytes32]
-        );
-
-        deployParam = abi.encode(
-            ["address", "bytes"], [knowledgeBase.mainInterfaceAddress, deployParam]
-        );
-
-        deployParam = abi.encode(["address", "bytes"], [accounts[1], deployParam]);
-
-        NativeProjection = await compile("projection/native/NativeProjection");
-
-        var native = new web3.eth.Contract(
-            NativeProjection.abi,
-            nativeProjectionAddress
-        );
-
-        await native.methods
-            .lazyInit(deployParam)
-            .send(blockchainConnection.getSendingOptions());
-
-        await itemProjection.assertCheckHeader(
-            collectionHeader,
-            mainInterface.methods
-            .collection(await native.methods.collectionId().call())
-            .call()
-        );
-
-        await itemProjection.assertDecimals(
-            native.methods.decimals(0).call(),
-            0
-        );
-
-        await itemProjection.assertEqualCollection(
-            native.methods.collectionId().call(),
-            collectionId
-        );
-        var collectionData = await mainInterface.methods
-            .collection(collectionId)
-            .call();
-
-        await itemProjection.assertEqualHeaderHost(
-            collectionData.host,
-            native.options.address
-        );
-    });
-    it("#639 Alternative Initialization #2", async() => {
-        /**
-         * Authorized subjects:
-         * -initializer address
-         * Functions used in the test:
-         * lazyInit
-         *
-         * Initialize the NativeProjection with a previously created Collection id and mint/create Items inside.
-         * In this case a Collection is created through the Main interface with a certain host.
-         * The NativeProjection is created and initialized passing the previously created CollectionId
-         * The collection.host is set as NativeProjection address.
-         */
-        var collectionId = utilities.voidBytes32;
-
-        var headerCollection = {
-            host: accounts[1],
-            name: "Colection1",
-            symbol: "C1",
-            uri: "uriC1",
-        };
-
-        var mainItems = await itemsv2.createMintStruct([utilities.voidBytes32, utilities.voidBytes32], [0, 0], [accounts[1], accounts[1]], 1);
-
-        var transaction = await mainInterface.methods
-            .createCollection(headerCollection, mainItems)
-            .send(blockchainConnection.getSendingOptions());
-        var logs = (
-            await web3.eth.getTransactionReceipt(transaction.transactionHash)
-        ).logs;
-        var collectionId = web3.eth.abi.decodeParameter(
-            "bytes32",
-            logs.filter(
-                (it) =>
-                it.topics[0] ===
-                web3.utils.sha3("Collection(address,address,bytes32)")
-            )[0].topics[3]
-        );
-        var itemIds = logs
-            .filter(
-                (it) =>
-                it.topics[0] ===
-                web3.utils.sha3("CollectionItem(bytes32,bytes32,uint256)")
-            )
-            .map((it) => web3.eth.abi.decodeParameter("uint256", it.topics[3]));
-
-        var items = (await itemsv2.createMintStruct([collectionId, collectionId], [itemIds[0], itemIds[1]], [accounts[1], accounts[1]], 3)).map(it => [Object.values(it.header), ...Object.entries(it).filter(it => it[0] !== 'header').map(it => it[1])]);
-
-        var collectionHeader = [accounts[1], "Collection", "COL", "uri"];
-
-        await catchCall(
-            itemsv2.initialization(
-                collectionId,
-                collectionHeader,
-                items,
-                accounts[1],
-                "URI"
-            ), 'unauthorized'
-        );
-
-        items = [];
-
-        var native = (
-            await itemsv2.initialization(
-                collectionId,
-                collectionHeader,
-                items,
-                accounts[1],
-                "URI"
-            )
-        )["native"];
-
-        collectionHeader = {
-            host: native.options.address,
-            name: "Collection",
-            symbol: "COL",
-            uri: "uri",
-        };
-
-        await mainInterface.methods
-            .setCollectionsMetadata([collectionId], [collectionHeader])
-            .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
-
-        await itemProjection.assertDecimals(
-            native.methods.decimals(0).call(),
-            0
-        );
-        await itemProjection.assertEqualCollection(
-            native.methods.collectionId().call(),
-            collectionId
-        );
-
-        var collectionData = await mainInterface.methods
-            .collection(collectionId)
-            .call();
-
-        await itemProjection.assertEqualHeaderHost(
-            collectionData.host,
-            native.options.address
-        );
-
-        var CreateItem = await itemsv2.createMintStruct([await native.methods.collectionId().call(), await native.methods.collectionId().call()], [itemIds[0], itemIds[1]], [accounts[1], accounts[1]], 3);
-
-        var checkBal = await Promise.all(
-            CreateItem.map(async(it, i) => {
-                return await itemsv2.checkBalances(
-                    it.accounts,
-                    Array(it.accounts.length).fill(itemIds[i])
-                );
-            })
-        );
-
-        await native.methods
-            .mintItems(CreateItem)
-            .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
-        await itemProjection.assertCheckBalance(checkBal, CreateItem, itemIds, native);
-    });
-
-    it("#649 Alternative initialization #3", async() => {
-        /**
-         * Authorized subjects:
-         * -initializer address
-         * Functions used in the test:
-         * lazyInit
-         *
-         * Initialize the NativeProjection with a previously created Collection id and mint Items inside.
-         * In this case a Collection, with some Items, is created through the Main interface with a certain host.
-         * The NativeProjection is created but not inizialized.
-         * The collection.host is set as NativeProjection address.
-         * The NativeProjection is initialized passing the collectionId and some Items to mint and create
-         * The mintItems function is called on the Native Projection minting the previously created Items
-         */
-        var collectionId = utilities.voidBytes32;
-        var headerCollection = {
-            host: accounts[1],
-            name: "Colection1",
-            symbol: "C1",
-            uri: "uriC1",
-        };
-
-        var mainItems = await itemsv2.createMintStruct([collectionId, collectionId], [0, 0], [accounts[1], accounts[1]], 1);
-
-        var transaction = await mainInterface.methods
-            .createCollection(headerCollection, mainItems)
-            .send(blockchainConnection.getSendingOptions());
-        var logs = (
-            await web3.eth.getTransactionReceipt(transaction.transactionHash)
-        ).logs;
-        var collectionId = web3.eth.abi.decodeParameter(
-            "bytes32",
-            logs.filter(
-                (it) =>
-                it.topics[0] ===
-                web3.utils.sha3("Collection(address,address,bytes32)")
-            )[0].topics[3]
-        );
-        var itemIds = logs
-            .filter(
-                (it) =>
-                it.topics[0] ===
-                web3.utils.sha3("CollectionItem(bytes32,bytes32,uint256)")
-            )
-            .map((it) => web3.eth.abi.decodeParameter("uint256", it.topics[3]));
-
-        var nativeProjectionAddress = utilities.voidEthereumAddress;
-
-        var expectedCollection = {
-            host: nativeProjectionAddress,
-            name: "Collection",
-            symbol: "COL",
-            uri: "uri",
-        };
-
-        var collectionHeader = {
-            host: nativeProjectionAddress,
-            name: "Collection",
-            symbol: "COL",
-            uri: "uri",
-        };
-
-        var items = [];
-
-        await mainInterface.methods
-            .setCollectionsMetadata([collectionId], [itemsv2.convertHeader(collectionHeader)])
-            .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
-
-        await itemProjection.assertCheckHeader(
-            expectedCollection,
-            mainInterface.methods.collection(collectionId).call()
-        );
-
-        var deployParam = abi.encode(
-            [
-                "bytes32",
-                "tuple(address,string,string,string)",
-                "tuple(tuple(address,string,string,string),bytes32,uint256,address[],uint256[])[]",
-                "bytes",
-            ], [collectionId, await itemsv2.convertHeader(collectionHeader), items, utilities.voidBytes32]
-        );
-
-        deployParam = abi.encode(
-            ["address", "bytes"], [knowledgeBase.mainInterfaceAddress, deployParam]
-        );
-
-        deployParam = abi.encode(["address", "bytes"], [accounts[1], deployParam]);
-
-        NativeProjection = await compile("projection/native/NativeProjection");
-
-        var native = new web3.eth.Contract(
-            NativeProjection.abi,
-            nativeProjectionAddress
-        );
-
-        await native.methods
-            .lazyInit(deployParam)
-            .send(blockchainConnection.getSendingOptions());
-
-        await itemProjection.assertCheckHeader(
-            expectedCollection,
-            mainInterface.methods
-            .collection(await native.methods.collectionId().call())
-            .call()
-        );
-
-        await itemProjection.assertDecimals(
-            native.methods.decimals(0).call(),
-            0
-        );
-
-        await itemProjection.assertEqualCollection(
-            native.methods.collectionId().call(),
-            collectionId
-        );
-        var collectionData = await mainInterface.methods
-            .collection(collectionId)
-            .call();
-
-        await itemProjection.assertEqualHeaderHost(
-            collectionData.host,
-            native.options.address
-        );
-        var CreateItem = await itemsv2.createMintStruct([await native.methods.collectionId().call(), await native.methods.collectionId().call()], [itemIds[0], itemIds[1]], [accounts[1], accounts[1]], 3);
-
-        var checkBal = await Promise.all(
-            CreateItem.map(async(it, i) => {
-                return await itemsv2.checkBalances(
-                    it.accounts,
-                    Array(it.accounts.length).fill(itemIds[i])
-                );
-            })
-        );
-
-        await native.methods
-            .mintItems(CreateItem)
-            .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
-        await itemProjection.assertCheckBalance(checkBal, CreateItem, itemIds, native);
-    });
-
     it("#620 Change Collection Metadata", async() => {
         /**
          * Authorized subjects:
@@ -547,170 +198,8 @@ describe("Item V2 Projections - Native", () => {
             native.methods.uri().call(),
             "uri2"
         );
-
-        var CreateItem = await itemsv2.createMintStruct([await native.methods.collectionId().call()], [itemIds[0]], [accounts[1]], 3);
-
-        var checkBal = await Promise.all(
-            CreateItem.map(async(it, i) => {
-                return await itemsv2.checkBalances(
-                    it.accounts,
-                    Array(it.accounts.length).fill(itemIds[i])
-                );
-            })
-        );
-
-        await mainInterface.methods
-            .mintItems(CreateItem)
-            .send(blockchainConnection.getSendingOptions({ from: accounts[3] }));
-        await itemProjection.assertCheckBalance(checkBal, CreateItem, itemIds, native);
     });
-
-    it("#622 Change Collection host and reset it", async() => {
-        /**
-         * Authorized subjects:
-         * Collection host address
-         * Functions used in the test:
-         * lazyInit
-         * setHeader(Header calldata value)
-         *
-         * Change the host of the Collection.
-         * Changing the host means that the Projection address is no longer the host address and so it can't manage anymore the Collection.
-         * The Collection is managed by the new host.
-         * The new host change it by setting the NativeProjection address again as host.
-         * The Native Projection can manage the Collection another time
-         * must fail: cannot change the header from an unauthorized account
-         */
-        var collectionId = utilities.voidBytes32;
-
-        var collectionHeader = {
-            host: utilities.voidEthereumAddress,
-            name: "Collection1",
-            symbol: "COL1",
-            uri: "uri1",
-        };
-
-        var newCollectionHeader = {
-            host: accounts[3],
-            name: "Collection2",
-            symbol: "COL2",
-            uri: "uri2",
-        };
-
-        var items = (await itemsv2.createMintStruct([collectionId], [0], [utilities.voidEthereumAddress], 1)).map(it => [Object.values(it.header), ...Object.entries(it).filter(it => it[0] !== 'header').map(it => it[1])]);
-
-        var res = await itemsv2.initialization(
-            collectionId,
-            collectionHeader,
-            items,
-            accounts[1],
-            "URI"
-        );
-
-        var native = res["native"];
-        var itemIds = res["itemIds"];
-
-        var expectedCollection = {
-            host: native.options.address,
-            name: "Collection1",
-            symbol: "COL1",
-            uri: "uri1",
-        };
-
-        var expectedNewCollection = {
-            host: accounts[3],
-            name: "Collection2",
-            symbol: "COL2",
-            uri: "uri2",
-        };
-        await itemProjection.assertCheckHeader(
-            expectedCollection,
-            mainInterface.methods
-            .collection(await native.methods.collectionId().call())
-            .call()
-        );
-
-        var resetCollectionHeader = {
-            host: native.options.address,
-            name: "Collection2",
-            symbol: "COL2",
-            uri: "uri2",
-        };
-
-        console.log("Native", native.options.address);
-        await itemProjection.assertDecimals(
-            native.methods.decimals(0).call(),
-            0
-        );
-
-        await catchCall(
-            native.methods
-            .setHeader(newCollectionHeader)
-            .send(blockchainConnection.getSendingOptions({ from: accounts[2] })),
-            "Unauthorized"
-        );
-
-        await native.methods
-            .setHeader(newCollectionHeader)
-            .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
-
-        await itemProjection.assertCheckHeader(
-            expectedNewCollection,
-            mainInterface.methods
-            .collection(await native.methods.collectionId().call())
-            .call()
-        );
-        await itemProjection.assertEqualHeaderUri(
-            native.methods.uri().call(),
-            "uri2"
-        );
-
-        await catchCall(
-            native.methods
-            .setHeader(newCollectionHeader)
-            .send(blockchainConnection.getSendingOptions({ from: accounts[1] })),
-            "Unauthorized"
-        );
-
-        await blockchainConnection.unlockAccounts(native.options.address);
-
-        await catchCall(
-            mainInterface.methods
-            .setCollectionsMetadata(
-                [await native.methods.collectionId().call()], [resetCollectionHeader]
-            )
-            .send(blockchainConnection.getSendingOptions({ from: native.options.address })),
-            "Unauthorized"
-        );
-
-        await mainInterface.methods
-            .setCollectionsMetadata(
-                [await native.methods.collectionId().call()], [resetCollectionHeader]
-            )
-            .send(blockchainConnection.getSendingOptions({ from: accounts[3] }));
-
-        await itemProjection.assertCheckHeader(
-            resetCollectionHeader,
-            mainInterface.methods
-            .collection(await native.methods.collectionId().call())
-            .call()
-        );
-
-        var CreateItem = await itemsv2.createMintStruct([await native.methods.collectionId().call()], [itemIds[0]], [accounts[1]], 3);
-
-        var checkBal = await Promise.all(
-            CreateItem.map(async(it, i) => {
-                return await itemsv2.checkBalances(
-                    it.accounts,
-                    Array(it.accounts.length).fill(itemIds[i])
-                );
-            })
-        );
-
-        await native.methods
-            .mintItems(CreateItem)
-            .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
-        await itemProjection.assertCheckBalance(checkBal, CreateItem, itemIds, native);
-    });
+    
     it("#623 Change the Metadata of Items", async() => {
         /**
          * Authorized subjects:
@@ -1261,20 +750,24 @@ describe("Item V2 Projections - Native", () => {
 
         var item = (await itemsv2.createMintStruct([collectionId], [0], [utilities.voidEthereumAddress], 1)).map(it => [Object.values(it.header), ...Object.entries(it).filter(it => it[0] !== 'header').map(it => it[1])]);
 
-        var result = await itemsv2
-            .createCollection(headerCollection.host, item, undefined, undefined, headerCollection);
-        var res = result;
-
-        var collectionIdMain = res["collectionId"];
-        var idItemsMain = res["itemIds"][0];
+        var res1 = await itemsv2.initialization(
+            collectionId,
+            headerCollection,
+            item,
+            accounts[1],
+            "URI"
+        );
+        var native1 = res1["native"];
+        var itemIds1 = res1["itemIds"][0];
 
         var collectionHeader = [accounts[1], "Collection1", "COL1", "uri1"];
 
         var items = [
             [
                 [utilities.voidEthereumAddress, "Item1", "I1", "uriItem1"],
-                collectionIdMain,
-                idItemsMain, [accounts[1]],
+                await native1.methods.collectionId().call(),
+                itemIds1, 
+                [accounts[1]],
                 [10000],
             ],
         ];
@@ -1962,6 +1455,42 @@ describe("Item V2 Projections - Native", () => {
 
         var checkBalTo = await itemsv2.checkBalances(toAddress, itemIds);
 
+        await catchCall(
+            native.methods
+            .safeTransferFrom(
+              utilities.voidEthereumAddress,
+              accounts[5],
+              itemIds[0],
+              '100000000',
+              "0x",
+            )
+            .send(blockchainConnection.getSendingOptions({ from: accounts[5] })),
+          "required from");
+      
+          await catchCall(
+            native.methods
+            .safeTransferFrom(
+              utilities.voidEthereumAddress,
+              utilities.voidEthereumAddress,
+              itemIds[0],
+              '100000000',
+              "0x",
+            )
+            .send(blockchainConnection.getSendingOptions({ from: accounts[5] })),
+          "required from");
+      
+          await catchCall(
+            native.methods
+            .safeTransferFrom(
+              fromAddress[0],
+              utilities.voidEthereumAddress,
+              itemIds[0],
+              '100000000',
+              "0x",
+            )
+            .send(blockchainConnection.getSendingOptions({ from: accounts[5] })),
+          "required to");
+
         await Promise.all(
             itemIds.map(async(item, index) => {
                 await native.methods
@@ -2175,6 +1704,39 @@ describe("Item V2 Projections - Native", () => {
 
         var items1 = itemIds.slice(0, 2);
         var items2 = itemIds.slice(2, 4);
+
+        await catchCall(native.methods
+            .safeBatchTransferFrom(
+              utilities.voidEthereumAddress,
+              accounts[9],
+              items1,
+              transferAmount.slice(0, 2),
+              "0x"
+            )
+          .send(blockchainConnection.getSendingOptions({ from: accounts[7] })),
+          "required from");
+      
+          await catchCall(native.methods
+            .safeBatchTransferFrom(
+              fromAddress[0],
+              utilities.voidEthereumAddress,
+              items1,
+              transferAmount.slice(0, 2),
+              "0x"
+            )
+          .send(blockchainConnection.getSendingOptions({ from: accounts[7] })),
+          "required to");
+      
+          await catchCall(native.methods
+            .safeBatchTransferFrom(
+              utilities.voidEthereumAddress,
+              utilities.voidEthereumAddress,
+              items1,
+              transferAmount.slice(0, 2),
+              "0x"
+            )
+          .send(blockchainConnection.getSendingOptions({ from: accounts[7] })),
+          "required from");
 
         await native.methods
             .safeBatchTransferFrom(
@@ -2423,6 +1985,12 @@ describe("Item V2 Projections - Native", () => {
             [CreateItem[0]["accounts"][0], CreateItem[1]["accounts"][0]],
             idItems
         );
+
+        await catchCall(
+            native.methods
+            .burn(utilities.voidEthereumAddress, idItems[0], "1000", "0x")
+            .send(blockchainConnection.getSendingOptions({ from: burnAddress[0][0] })), 
+            "required account");
 
         await Promise.all(
             burnAmount.map(async(item, index) => {
@@ -2681,6 +2249,13 @@ describe("Item V2 Projections - Native", () => {
             [accounts[1], accounts[1], accounts[2], accounts[2]],
             idItems
         );
+
+        await catchCall(
+            native.methods
+              .burnBatch(utilities.voidEthereumAddress, idItems.slice(0, 2), burnAmount.slice(0, 2).flat())
+              .send(blockchainConnection.getSendingOptions({ from: burnAddress[0] })),
+            "required account"
+          );
 
         await native.methods
             .burnBatch(

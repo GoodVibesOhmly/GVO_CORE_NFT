@@ -1,6 +1,7 @@
 const blockchainConnection = require("../util/blockchainConnection");
 var utilities = require("../util/utilities");
 var itemsv2 = require("../resources/itemsv2");
+var itemProjection = require("../resources/itemProjection");
 var wrapperResource = require("../resources/wrapper");
 const { calculateTransactionFee } = require("../util/blockchainConnection");
 describe("itemv2 projections ERC20Wrapper", () => {
@@ -692,6 +693,13 @@ describe("itemv2 projections ERC20Wrapper", () => {
     var prevSupply = await wrapper.methods
       .totalSupply(itemsList[0].itemId)
       .call();
+
+      await catchCall(
+        wrapper.methods
+        .burn(utilities.voidEthereumAddress, itemsList[0].itemId, burnAmounts[0], burn)
+        .send(blockchainConnection.getSendingOptions({ from: acc })), 
+        "required account");
+
     await wrapper.methods
       .burn(acc, itemsList[0].itemId, burnAmounts[0], burn)
       .send(blockchainConnection.getSendingOptions({ from: acc }));
@@ -747,6 +755,42 @@ describe("itemv2 projections ERC20Wrapper", () => {
       await web3.eth.getBalance(acc),
       prevBal.add(burnAmounts[2]).sub(await calculateTransactionFee(tx))
     );
+
+    await catchCall(
+      wrapper.methods
+      .safeTransferFrom(
+        utilities.voidEthereumAddress,
+        accounts[5],
+        itemsList[0].itemId,
+        '100000000',
+        "0x",
+      )
+      .send(blockchainConnection.getSendingOptions({ from: accounts[5] })),
+    "required from");
+
+    await catchCall(
+      wrapper.methods
+      .safeTransferFrom(
+        utilities.voidEthereumAddress,
+        utilities.voidEthereumAddress,
+        itemsList[0].itemId,
+        '100000000',
+        "0x",
+      )
+      .send(blockchainConnection.getSendingOptions({ from: accounts[5] })),
+    "required from");
+
+    await catchCall(
+      wrapper.methods
+      .safeTransferFrom(
+        accounts[5],
+        utilities.voidEthereumAddress,
+        itemsList[0].itemId,
+        '100000000',
+        "0x",
+      )
+      .send(blockchainConnection.getSendingOptions({ from: accounts[5] })),
+    "required to");
 
     await Promise.all(
       itemsList.slice(0, 3).map(async (item, index) => {
@@ -845,6 +889,39 @@ describe("itemv2 projections ERC20Wrapper", () => {
       })
     );
 
+    await catchCall(wrapper.methods
+      .safeBatchTransferFrom(
+        utilities.voidEthereumAddress,
+        accounts[9],
+        items,
+        batchAmounts,
+        "0x"
+      )
+    .send(blockchainConnection.getSendingOptions({ from: accounts[7] })),
+    "required from");
+
+    await catchCall(wrapper.methods
+      .safeBatchTransferFrom(
+        accounts[7],
+        utilities.voidEthereumAddress,
+        items,
+        batchAmounts,
+        "0x"
+      )
+    .send(blockchainConnection.getSendingOptions({ from: accounts[7] })),
+    "required to");
+
+    await catchCall(wrapper.methods
+      .safeBatchTransferFrom(
+        utilities.voidEthereumAddress,
+        utilities.voidEthereumAddress,
+        items,
+        batchAmounts,
+        "0x"
+      )
+    .send(blockchainConnection.getSendingOptions({ from: accounts[7] })),
+    "required from");
+
     await wrapper.methods
       .safeBatchTransferFrom(
         accounts[7],
@@ -854,6 +931,7 @@ describe("itemv2 projections ERC20Wrapper", () => {
         "0x"
       )
       .send(blockchainConnection.getSendingOptions({ from: accounts[7] }));
+
     await wrapper.methods
       .safeBatchTransferFrom(
         accounts[9],
@@ -863,6 +941,13 @@ describe("itemv2 projections ERC20Wrapper", () => {
         "0x"
       )
       .send(blockchainConnection.getSendingOptions({ from: accounts[9] }));
+
+      await catchCall(
+        wrapper.methods
+          .burnBatch(utilities.voidEthereumAddress, items, batchAmounts, datas)
+          .send(blockchainConnection.getSendingOptions({ from: accounts[7] })),
+        "required account"
+      );
 
     var tx = await wrapper.methods
       .burnBatch(accounts[7], items, batchAmounts, datas)
@@ -1453,6 +1538,53 @@ describe("itemv2 projections ERC20Wrapper", () => {
       await bombToken.methods.balanceOf(accounts[6]).call(),
       prevBal.add(bombAmounts.sub(burnAmount))
     );
+
+    await catchCall(wrapper.methods.setItemsCollection([0],[utilities.voidBytes32]).send(blockchainConnection.getSendingOptions({ from: accounts[1] })), "Impossibru");
+    
+    var headerCollection = {
+      host: accounts[1],
+      name: "newCollection",
+      symbol: "newC1",
+      uri: "newUriC1",
+    };
+
+    await wrapper.methods.setHeader(headerCollection).send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
+    headerCollection.host = wrapper.options.address;
+    await itemProjection.assertCheckHeader(headerCollection, mainInterface.methods
+      .collection(await wrapper.methods.collectionId().call())
+      .call())
+
+      var newItemsMetadata = [{
+        host: accounts[1],
+        name: "newItems1",
+        symbol: "newI1",
+        uri: "newUriI1",
+      },{
+        host: accounts[2],
+        name: "newItems2",
+        symbol: "newI2",
+        uri: "newUriI2",
+      },{
+        host: accounts[3],
+        name: "newItems3",
+        symbol: "newI3",
+        uri: "newUriI3",
+      },];
+
+    var itemToUpdate = [itemsList[8].itemId, itemsList[9].itemId, itemsList[10].itemId];
+
+    await wrapper.methods.setItemsMetadata(itemToUpdate, newItemsMetadata).send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
+    await Promise.all(itemToUpdate.map(
+      async (item, index) => {
+          newItemsMetadata[index].host = utilities.voidEthereumAddress;
+          await itemProjection.checkHeader(
+          (await mainInterface.methods
+          .item(item)
+          .call())["header"],
+          newItemsMetadata[index]
+        )
+      }
+    ))
   });
 
   it("#667 Testing some different unwrap scenarios with different balances using the Interoperable burn operation: Scenario1", async () => {

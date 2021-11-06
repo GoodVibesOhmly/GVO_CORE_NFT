@@ -35,6 +35,9 @@ describe("itemv2 projections ERC721Wrapper", () => {
     }
 
     async function test651() {
+        if(exec651) {
+            return;
+        }
         exec651 = true;
         var token721Id =
             "76209759912004573400534475157126407931116638124477574818832130517944945631566";
@@ -575,6 +578,43 @@ describe("itemv2 projections ERC721Wrapper", () => {
 
         assert.equal(await uniToken.methods.balanceOf(accounts[9]).call(), "1");
 
+        var burn3 = web3.eth.abi.encodeParameters(
+            ["address", "uint256", "address", "bytes", "bool", "bool"], [
+                itemsList[2].tokenAddress,
+                itemsList[2].tokenId,
+                itemsList[2].account,
+                "0x",
+                false,
+                false,
+            ]
+        );
+
+        await catchCall(wrapper.methods
+            .burn(
+                itemsList[2].account,
+                itemsList[2].itemId,
+                await wrapper.methods
+                .balanceOf(itemsList[2].account, itemsList[2].itemId)
+                .call(),
+                burn3
+            )
+            .send(blockchainConnection.getSendingOptions({ from: accounts[3] })),
+            "amount exceeds allowance");
+
+        await catchCall(mainInterface.methods
+            .approve(
+                itemsList[2].account,
+                accounts[3],
+                await wrapper.methods
+                .balanceOf(itemsList[2].account, itemsList[2].itemId)
+                .call(),
+                itemsList[2].itemId
+            )
+            .send(
+                blockchainConnection.getSendingOptions({ from: itemsList[0].account })),
+                "unauthorized"
+        );
+
         await mainInterface.methods
             .approve(
                 itemsList[2].account,
@@ -683,7 +723,7 @@ describe("itemv2 projections ERC721Wrapper", () => {
             )
             .send(blockchainConnection.getSendingOptions({ from: accounts[5] })),
           "required from");
-      
+
           await catchCall(
             wrapper.methods
             .safeTransferFrom(
@@ -695,7 +735,7 @@ describe("itemv2 projections ERC721Wrapper", () => {
             )
             .send(blockchainConnection.getSendingOptions({ from: accounts[5] })),
           "required from");
-      
+
           await catchCall(
             wrapper.methods
             .safeTransferFrom(
@@ -765,7 +805,7 @@ describe("itemv2 projections ERC721Wrapper", () => {
             )
           .send(blockchainConnection.getSendingOptions({ from: accounts[7] })),
           "required from");
-      
+
           await catchCall(wrapper.methods
             .safeBatchTransferFrom(
               accounts[7],
@@ -776,7 +816,7 @@ describe("itemv2 projections ERC721Wrapper", () => {
             )
           .send(blockchainConnection.getSendingOptions({ from: accounts[7] })),
           "required to");
-      
+
           await catchCall(wrapper.methods
             .safeBatchTransferFrom(
               utilities.voidEthereumAddress,
@@ -1004,13 +1044,24 @@ describe("itemv2 projections ERC721Wrapper", () => {
         await catchCall(
             wrapper.methods
             .burn(
+                accounts[2],
+                itemIds[0],
+                ("51".mul(1e16)),
+                burn1
+            ).send(blockchainConnection.getSendingOptions({ from: accounts[2] })),
+            "amount exceeds balance"
+        );
+
+        await catchCall(
+            wrapper.methods
+            .burn(
                 accounts[1],
                 itemIds[0],
-                ("51".mul(1e17)).sub(1),
+                ("51".mul(1e16)).sub(1),
                 burn1
             ).send(blockchainConnection.getSendingOptions({ from: accounts[1] })),
-            "amount exceeds balance"
-        )
+            "Insufficient balance"
+        );
 
         await wrapperResource.burn721(
             accounts[1],
@@ -1027,15 +1078,15 @@ describe("itemv2 projections ERC721Wrapper", () => {
             .approve(wrapper.options.address, tokenList[0])
             .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
 
-        // await wrapperResource.mintItems721(
-        //   tokenList,
-        //   receivers,
-        //   accounts[1],
-        //   wrapper,
-        //   mainToken.options.address,
-        //   "1000000000000000000",
-        //   " "
-        // );
+         await catchCall(wrapperResource.mintItems721(
+           tokenList,
+           receivers,
+           accounts[1],
+           wrapper,
+           mainToken.options.address,
+           "1000000000000000000",
+           " "
+         ));
 
         var tx = await wrapperResource.mintItems721(
             tokenList,
@@ -1426,7 +1477,7 @@ describe("itemv2 projections ERC721Wrapper", () => {
         -Wrap a 721.
         -transfer 0,1. transfer 0,1. transfer 0,15. transfer 0,05.
 
-        accounts receivers burn 0,1 0,1 0,15 and 0,05 (tot. 0,4)
+        accounts receivers burn 0,1 0,1 0,15 and 0,05 (tot. 0,4) through interoperable
         Unwrap the 721 burning 0,6
         Wrap the 721, the minted amount must be 1.
         */

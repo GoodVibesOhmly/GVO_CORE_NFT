@@ -269,7 +269,7 @@ async function mintMultiItems721(
   await catchCall(
     wrapper.methods
     .mintItems(itemList)
-    .send(blockchainConnection.getSendingOptions({ from: from })),
+    .send(blockchainConnection.getSendingOptions({ from })),
     revert
   )
 }

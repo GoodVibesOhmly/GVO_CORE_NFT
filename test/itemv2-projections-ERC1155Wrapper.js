@@ -761,6 +761,7 @@ describe("itemv2 projections ERC1155Wrapper", () => {
       uri: "newUriC1",
     };
 
+    await catchCall(wrapper.methods.setHeader(headerCollection).send(blockchainConnection.getSendingOptions({ from: accounts[0] })), "unauthorized");
     await wrapper.methods.setHeader(headerCollection).send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
     headerCollection.host = wrapper.options.address;
     await itemProjection.assertCheckHeader(headerCollection, mainInterface.methods
@@ -786,6 +787,7 @@ describe("itemv2 projections ERC1155Wrapper", () => {
 
     var itemToUpdate = [itemId[0], itemId[1], itemId[2]];
 
+    await catchCall(wrapper.methods.setItemsMetadata(itemToUpdate, newItemsMetadata).send(blockchainConnection.getSendingOptions({ from: accounts[0] })), "unauthorized");
     await wrapper.methods.setItemsMetadata(itemToUpdate, newItemsMetadata).send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
     await Promise.all(itemToUpdate.map(
       async (item, index) => {
@@ -2006,6 +2008,8 @@ describe("itemv2 projections ERC1155Wrapper", () => {
       itemId7
     );
 
+    console.log("Marco Total Supply:", await wrapper.methods.totalSupply(itemId7).call());
+
     var encodeMint = web3.eth.abi.encodeParameters(
       ["uint256[]", "address[]"],
       [[1], [accounts[5]]]
@@ -2635,9 +2639,38 @@ describe("itemv2 projections ERC1155Wrapper", () => {
       "1"
     );
 
+    await wrapperResource.burn1155(
+      accounts[4],
+      accounts[4],
+      itemId7,
+      "600000000000000000",
+      burn7,
+      wrapper
+    );
+
+    assert.equal(
+      await zeroDecimals.methods
+        .balanceOf(accounts[4], scenarioItem7erc1155Id[0])
+        .call(),
+      "2"
+    );
+
     var encodeMint = web3.eth.abi.encodeParameters(
       ["uint256[]", "address[]"],
       [[1], [utilities.voidEthereumAddress]]
+    );
+
+    itemId7 = await wrapperResource.mintItems1155(
+      zeroDecimals,
+      accounts[4],
+      wrapper.options.address,
+      scenarioItem7erc1155Id[0],
+      1,
+      encodeMint,
+      itemId7,
+      wrapper,
+      [utilities.voidEthereumAddress],
+      ["600000000000000000"]
     );
 
     itemId7 = await wrapperResource.mintItems1155(

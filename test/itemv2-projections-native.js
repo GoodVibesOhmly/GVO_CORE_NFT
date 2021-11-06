@@ -198,6 +198,12 @@ describe("Item V2 Projections - Native", () => {
             native.methods.uri().call(),
             "uri2"
         );
+
+        var CreateItem = await itemsv2.createMintStruct([await native.methods.collectionId().call()], [itemIds[0]], [accounts[1]], 3);
+
+        await catchCall(mainInterface.methods
+            .mintItems(CreateItem)
+            .send(blockchainConnection.getSendingOptions({ from: accounts[3] })), "Unauthorized");
     });
     
     it("#623 Change the Metadata of Items", async() => {

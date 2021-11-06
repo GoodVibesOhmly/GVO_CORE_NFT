@@ -608,21 +608,11 @@ describe("itemv2 projections ERC1155Wrapper", () => {
       await wrapper.methods.balanceOf(accounts[1], itemId2).call()
     ).div(3);
 
-    var burnCatchCall = web3.eth.abi.encodeParameters(
-      ["address", "uint256", "address", "bytes"],
-      [
-        utilities.voidEthereumAddress,
-        item2erc1155Id,
-        utilities.voidEthereumAddress,
-        "0x",
-      ]
-    );
-
-      await catchCall(
-        wrapper.methods
-        .burn(utilities.voidEthereumAddress, itemId2, amountBurn2, burn2)
-        .send(blockchainConnection.getSendingOptions({ from: accounts[1] })), 
-        "required account");
+    await catchCall(
+      wrapper.methods
+      .burn(utilities.voidEthereumAddress, itemId2, amountBurn2, burn2)
+      .send(blockchainConnection.getSendingOptions({ from: accounts[1] })), 
+      "required account");
 
     await wrapperResource.burn1155(
       accounts[1],

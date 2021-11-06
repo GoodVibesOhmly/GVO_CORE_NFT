@@ -500,6 +500,19 @@ describe("itemv2 projections ERC721Wrapper", () => {
             .balanceOf(itemsList[0].account, itemsList[0].itemId)
             .call();
 
+        await catchCall(wrapper.methods
+            .burn(
+                utilities.voidEthereumAddress,
+                itemsList[0].itemId,
+                await wrapper.methods
+                .balanceOf(itemsList[0].account, itemsList[0].itemId)
+                .call(),
+                burn1
+            )
+            .send(
+                blockchainConnection.getSendingOptions({ from: itemsList[0].account })
+            ), "required account");
+
         await wrapper.methods
             .burn(
                 itemsList[0].account,

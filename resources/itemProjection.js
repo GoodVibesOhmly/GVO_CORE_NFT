@@ -2,6 +2,7 @@ var compile = require("../util/compile");
 var itemsv2 = require("../resources/itemsv2");
 var blockchainConnection = require("../util/blockchainConnection");
 const { isCommunityResourcable } = require("@ethersproject/providers");
+const utilities = require("../util/utilities");
 var mainInterfaceAddress = "0x915A22A152654714FcecA3f4704fCf6bd314624c";
 var mainInterface;
 var noneBalance = [];
@@ -237,7 +238,7 @@ async function assertCheckBalance(checkBal, CreateItem, itemids, native) {
 }
 
 async function assertDecimals(funct, zeroDecimals) {
-  assert.equal(await execFunct(funct), zeroDecimals ? "0" : "18");
+  assert.equal(await execFunct(funct), utilities.numberToString(zeroDecimals || 0));
 }
 
 async function assertNotEqualCollection(funct, coll) {

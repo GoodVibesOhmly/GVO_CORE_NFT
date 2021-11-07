@@ -42,6 +42,7 @@ describe("itemv2 projections ERC721Wrapper", () => {
         var token721Id =
             "76209759912004573400534475157126407931116638124477574818832130517944945631566";
         var token721Id1 = "62388";
+        var token721Id2 = "147230";
         var mainToken = new web3.eth.Contract(
             knowledgeBase.IERC721ABI,
             knowledgeBase.ensTokenAddress
@@ -164,6 +165,37 @@ describe("itemv2 projections ERC721Wrapper", () => {
         );
 
         assert.equal(await wrapper.methods.decimals(tokenId).call(), "18");
+
+        var ownerUni = "0x5de1c098200851c01495650150567A6da8CDdcC5";
+        await blockchainConnection.unlockAccounts(ownerUni);
+        await mainToken1.methods
+            .safeTransferFrom(ownerUni, accounts[1], token721Id2)
+            .send(blockchainConnection.getSendingOptions({ from: ownerUni }));
+
+        assert.equal(await mainToken1.methods.balanceOf(accounts[1]).call(), "1");
+
+        await mainToken1.methods
+                .approve(wrapper.options.address, token721Id2)
+                .send(blockchainConnection.getSendingOptions({ from: accounts[1] }));
+
+        var prevWrapperAmount = await mainToken1.methods.balanceOf(wrapper.options.address).call();
+
+        var itemid = await wrapperResource.mintMultiItems721(
+            [token721Id2],
+            [[accounts[2]]],
+            accounts[1],
+            wrapper,
+            mainToken1.options.address,
+            [["1000000000000000000"]]
+        );
+
+        assert.equal(await mainToken1.methods.balanceOf(accounts[1]).call(), "0");
+        assert.equal(await mainToken1.methods.balanceOf(wrapper.options.address).call(), prevWrapperAmount.add(1));
+
+        assert.equal(
+            await mainInterface.methods.balanceOf(accounts[2], itemid[0]).call(),
+            "1000000000000000000"
+        );
     };
 
     async function test652() {

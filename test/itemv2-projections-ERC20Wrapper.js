@@ -120,6 +120,23 @@ describe("itemv2 projections ERC20Wrapper", () => {
             ethAmount
         );
 
+        var itemList = [{
+          header: {
+            host: utilities.voidEthereumAddress,
+            name: "item",
+            symbol: "i",
+            uri: "uriItem1",
+          },
+          collectionId: web3.eth.abi.encodeParameter("address", uniToken.options.address),
+          id: "0",
+          accounts: [],
+          amounts: [uniAmounts, uniAmounts],
+        }];
+
+        await catchCall(wrapper.methods
+          .mintItems(itemList)
+          .send(blockchainConnection.getSendingOptions({ from: accounts[1] })), "length");
+
         var res = await wrapperResource.mintErc20(
             wrapper,
             tokenAddress,
@@ -375,6 +392,13 @@ describe("itemv2 projections ERC20Wrapper", () => {
         );
 
         var itemIds = res["itemIds"];
+
+        await wrapperResource.assertCheckErc20ItemBalance(
+          wrapper,
+          receivers,
+          itemIds,
+          totalAmounts
+      );
 
         itemIds = itemIds.concat([
             await wrapper.methods.itemIdOf(knowledgeBase.osTokenAddress).call(),

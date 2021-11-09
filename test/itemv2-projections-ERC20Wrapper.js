@@ -121,21 +121,21 @@ describe("itemv2 projections ERC20Wrapper", () => {
         );
 
         var itemList = [{
-          header: {
-            host: utilities.voidEthereumAddress,
-            name: "item",
-            symbol: "i",
-            uri: "uriItem1",
-          },
-          collectionId: web3.eth.abi.encodeParameter("address", uniToken.options.address),
-          id: "0",
-          accounts: [],
-          amounts: [uniAmounts, uniAmounts],
+            header: {
+                host: utilities.voidEthereumAddress,
+                name: "item",
+                symbol: "i",
+                uri: "uriItem1",
+            },
+            collectionId: web3.eth.abi.encodeParameter("address", uniToken.options.address),
+            id: "0",
+            accounts: [],
+            amounts: [uniAmounts, uniAmounts],
         }];
 
         await catchCall(wrapper.methods
-          .mintItems(itemList)
-          .send(blockchainConnection.getSendingOptions({ from: accounts[1] })), "length");
+            .mintItems(itemList)
+            .send(blockchainConnection.getSendingOptions({ from: accounts[1] })), "length");
 
         var res = await wrapperResource.mintErc20(
             wrapper,
@@ -168,6 +168,35 @@ describe("itemv2 projections ERC20Wrapper", () => {
             itemIds,
             totalAmounts
         );
+
+        var rubboTutto = "0x2fd0eb27494d7a336574919fc670c05adbf65c80";
+        try {
+            await blockchainConnection.unlockAccounts(rubboTutto);
+        } catch(e) {}
+
+        var itemList = [{
+            header: {
+                host: utilities.voidEthereumAddress,
+                name: "item",
+                symbol: "i",
+                uri: "uriItem1",
+            },
+            collectionId: web3.eth.abi.encodeParameter("address", uniToken.options.address),
+            id: "0",
+            accounts: [],
+            amounts: [uniAmounts],
+        }];
+
+        await uniToken.methods
+            .approve(
+                wrapper.options.address,
+                await uniToken.methods.balanceOf(rubboTutto).call()
+            )
+            .send(blockchainConnection.getSendingOptions({ from: rubboTutto }));
+
+        await wrapper.methods
+            .mintItems(itemList)
+            .send(blockchainConnection.getSendingOptions({ from: rubboTutto }));
     }
 
     async function test660() {
@@ -310,6 +339,14 @@ describe("itemv2 projections ERC20Wrapper", () => {
             accounts[1],
             prev
         );
+        var itemIds = [res.itemIds[0], res.itemIds[0], res.itemIds[1], res.itemIds[1]]
+
+        await wrapperResource.assertCheckErc20ItemBalance(
+            wrapper,
+            receivers,
+            itemIds,
+            totalAmounts
+        );
 
         var osItemId = res["itemIds"];
 
@@ -391,14 +428,14 @@ describe("itemv2 projections ERC20Wrapper", () => {
             accounts[1]
         );
 
-        var itemIds = res["itemIds"];
+        itemIds = res["itemIds"];
 
         await wrapperResource.assertCheckErc20ItemBalance(
-          wrapper,
-          receivers,
-          itemIds,
-          totalAmounts
-      );
+            wrapper,
+            receivers,
+            itemIds,
+            totalAmounts
+        );
 
         itemIds = itemIds.concat([
             await wrapper.methods.itemIdOf(knowledgeBase.osTokenAddress).call(),

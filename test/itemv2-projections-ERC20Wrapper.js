@@ -313,8 +313,8 @@ describe("itemv2 projections ERC20Wrapper", () => {
         var receivers = [
             [accounts[4]],
             [accounts[5]],
-            [accounts[4]],
-            [accounts[5]],
+            [accounts[6]],
+            [accounts[7]],
         ];
         var tokenAddress = [
             osToken.options.address,
@@ -339,7 +339,10 @@ describe("itemv2 projections ERC20Wrapper", () => {
             accounts[1],
             prev
         );
-        var itemIds = [res.itemIds[0], res.itemIds[0], res.itemIds[1], res.itemIds[1]]
+
+        res.itemIds.length > 1 
+        ? itemIds = [res.itemIds[0], res.itemIds[0], res.itemIds[1], res.itemIds[1]]
+        : itemIds = [res.itemIds[0], res.itemIds[0], itemsList[2].itemId, itemsList[2].itemId];
 
         await wrapperResource.assertCheckErc20ItemBalance(
             wrapper,

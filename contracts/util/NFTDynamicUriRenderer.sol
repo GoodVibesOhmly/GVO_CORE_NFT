@@ -29,10 +29,9 @@ contract NFTDynamicUriRenderer is IDynamicUriRenderer {
 
     function render(address subject, string calldata, bytes calldata inputData, address, bytes calldata) external override view returns (string memory) {
         (bytes32 collectionId, uint256 itemId) = abi.decode(inputData, (bytes32, uint256));
-        if(collectionId != bytes32(0)) {
+        if(itemId == 0) {
             return uri;
         }
-        (collectionId,,,) = IItemMainInterface(subject).item(itemId);
         (address collectionHost,,,) = IItemMainInterface(subject).collection(collectionId);
         IERC1155Wrapper wrapper = IERC1155Wrapper(collectionHost);
         (address tokenAddress, uint256 tokenId) = wrapper.source(itemId);

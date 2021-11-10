@@ -6,6 +6,7 @@ import "./IERC20Wrapper.sol";
 import "@ethereansos/swissknife/contracts/dynamicMetadata/model/IDynamicUriRenderer.sol";
 import { Uint256Utilities, AddressUtilities } from "@ethereansos/swissknife/contracts/lib/GeneralUtilities.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import 'base64-sol/base64.sol';
 
 contract ERC20WrapperUriRenderer is IDynamicUriRenderer {
     using Uint256Utilities for uint256;
@@ -18,19 +19,24 @@ contract ERC20WrapperUriRenderer is IDynamicUriRenderer {
         IERC20Metadata token = IERC20Metadata(wrapper.source(itemId));
         string memory etherscanTokenURL = _getEtherscanTokenURL(address(token));
         return string(abi.encodePacked(
-            '{"name":"',
-            wrapper.name(itemId),
-            '","symbol":"',
-            wrapper.symbol(itemId),
-            '","decimals":',
-            wrapper.decimals(itemId),
-            ',"external_url":"',
-            etherscanTokenURL,
-            '","description":"',
-            _getDescription(token, etherscanTokenURL),
-            '","image":"',
-            _getTrustWalletImage(address(token)),
-            '"}'
+            'data:application/json;base64,',
+            Base64.encode(
+                abi.encodePacked(
+                    '{"name":"',
+                    wrapper.name(itemId),
+                    '","symbol":"',
+                    wrapper.symbol(itemId),
+                    '","decimals":',
+                    wrapper.decimals(itemId),
+                    ',"external_url":"',
+                    etherscanTokenURL,
+                    '","description":"',
+                    _getDescription(token, etherscanTokenURL),
+                    '","image":"',
+                    _getTrustWalletImage(address(token)),
+                    '"}'
+                )
+            )
         ));
     }
 
@@ -65,7 +71,8 @@ contract ERC20WrapperUriRenderer is IDynamicUriRenderer {
         return string(abi.encodePacked(
             'This Item wraps the original ERC20 Token ',
             token.name(),
-            ' (', token.symbol(), 
+            ' (',
+            token.symbol(),
             '), having decimals ',
             tokenDecimals.toString(),
             '.\n\n',

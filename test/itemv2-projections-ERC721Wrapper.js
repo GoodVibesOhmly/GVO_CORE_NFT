@@ -417,11 +417,16 @@ describe("itemv2 projections ERC721Wrapper", () => {
         itemInteroperableInterfaceAddress =
             itemInteroperableInterface.options.address;
 
+        var NFTDynamicUriRenderer = await compile('util/NFTDynamicUriRenderer');
+        var nftDynamicUriRenderer = await new web3.eth.Contract(NFTDynamicUriRenderer.abi).deploy({data : NFTDynamicUriRenderer.bin, arguments : [utilities.voidEthereumAddress, "myUri"]}).send(blockchainConnection.getSendingOptions());
+
+        var uri = web3.eth.abi.encodeParameters(["address", "bytes"], [nftDynamicUriRenderer.options.address, "0x"]);
+
         var headerCollection = {
             host: accounts[1],
             name: "Colection1",
             symbol: "C1",
-            uri: "uriC1",
+            uri
         };
 
         var items = [];
@@ -455,6 +460,9 @@ describe("itemv2 projections ERC721Wrapper", () => {
         var data = await itemsv2.createCollection(headerCollection.host, items, wrapperData, "0x", headerCollection);
 
         wrapper = new web3.eth.Contract(ERC721Wrapper.abi, data.projection.options.address);
+
+        console.log("Wrapper Uri", await wrapper.methods.uri().call());
+        assert.equal(await wrapper.methods.uri().call(), await mainInterface.methods.collectionUri(await wrapper.methods.collectionId().call()).call());
     });
 
     it("#651 Wrap using onERC721Received", async() => {

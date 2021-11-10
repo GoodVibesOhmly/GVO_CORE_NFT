@@ -431,13 +431,19 @@ describe("itemv2 projections ERC1155Wrapper", () => {
     )
       .deploy({ data: ItemInteroperableInterface.bin })
       .send(blockchainConnection.getSendingOptions());
-    itemInteroperableInterfaceAddress =
+    itemInteroperableInterfaceAddress = 
       itemInteroperableInterface.options.address;
+
+    var NFTDynamicUriRenderer = await compile('util/NFTDynamicUriRenderer');
+    var nftDynamicUriRenderer = await new web3.eth.Contract(NFTDynamicUriRenderer.abi).deploy({data : NFTDynamicUriRenderer.bin, arguments : [utilities.voidEthereumAddress, "myUri"]}).send(blockchainConnection.getSendingOptions());
+
+    var uri = web3.eth.abi.encodeParameters(["address", "bytes"], [nftDynamicUriRenderer.options.address, "0x"]);
+
     var headerCollection = {
       host: accounts[1],
       name: "Colection1",
       symbol: "C1",
-      uri: "uriC1",
+      uri
     };
 
     var items = [];
@@ -469,16 +475,17 @@ describe("itemv2 projections ERC1155Wrapper", () => {
 
     wrapper = new web3.eth.Contract(ERC1155Wrapper.abi, data.projection.options.address);
 
+    console.log("Wrapper Uri", await wrapper.methods.uri().call());
+    assert.equal(await wrapper.methods.uri().call(), await mainInterface.methods.collectionUri(await wrapper.methods.collectionId().call()).call());
+
     var ZeroDecimals = await compile("../resources/ERC1155ZeroDecimals");
     wrapperData = await new web3.eth.Contract(ZeroDecimals.abi)
       .deploy({ data: ZeroDecimals.bin, arguments: ["0x"] })
       .encodeABI();
 
-      var data = await itemsv2.createCollection(headerCollection.host, items, wrapperData, "0x", headerCollection);
+    data = await itemsv2.createCollection(headerCollection.host, items, wrapperData, "0x", headerCollection);
 
-      zeroDecimals = new web3.eth.Contract(ZeroDecimals.abi, data.projection.options.address);
-
-
+    zeroDecimals = new web3.eth.Contract(ZeroDecimals.abi, data.projection.options.address);
 
     token1 = new web3.eth.Contract(
       knowledgeBase.IERC1155ABI,

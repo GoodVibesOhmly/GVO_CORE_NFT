@@ -7,10 +7,34 @@ import "@ethereansos/swissknife/contracts/dynamicMetadata/model/IDynamicUriRende
 
 contract NFTDynamicUriRenderer is IDynamicUriRenderer {
 
+    address public host;
+    string public uri;
+
+    constructor(address _host, string memory _uri) {
+        host = _host;
+        uri = _uri;
+    }
+
+    function setHost(address newValue) external returns (address oldValue) {
+        require(msg.sender == host, "unauthorized");
+        oldValue = host;
+        host = newValue;
+    }
+
+    function setUri(string calldata newValue) external returns (string memory oldValue) {
+        require(msg.sender == host, "unauthorized");
+        oldValue = uri;
+        uri = newValue;
+    }
+
     function render(address subject, string calldata, bytes calldata inputData, address, bytes calldata) external override view returns (string memory) {
         (bytes32 collectionId, uint256 itemId) = abi.decode(inputData, (bytes32, uint256));
-        (address host,,,) = IItemMainInterface(subject).collection(collectionId);
-        IERC1155Wrapper wrapper = IERC1155Wrapper(host);
+        if(collectionId != bytes32(0)) {
+            return uri;
+        }
+        (collectionId,,,) = IItemMainInterface(subject).item(itemId);
+        (address collectionHost,,,) = IItemMainInterface(subject).collection(collectionId);
+        IERC1155Wrapper wrapper = IERC1155Wrapper(collectionHost);
         (address tokenAddress, uint256 tokenId) = wrapper.source(itemId);
         return Item(tokenAddress).uri(tokenId);
     }

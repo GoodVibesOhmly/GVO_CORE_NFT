@@ -148,6 +148,8 @@ describe("itemv2 projections ERC20Wrapper", () => {
 
         var itemIds = res["itemIds"];
 
+        await Promise.all(itemIds.map(async id => console.log(await mainInterface.methods.uri(id).call())));
+
         await Promise.all(
             itemIds.map(async(id, index) => {
                 itemsList.push({
@@ -639,11 +641,20 @@ describe("itemv2 projections ERC20Wrapper", () => {
             .send(blockchainConnection.getSendingOptions());
         itemInteroperableInterfaceAddress =
             itemInteroperableInterface.options.address;
+
+        var ERC20WrapperUriRenderer = await compile('projection/ERC20/ERC20WrapperUriRenderer');
+        var erc20WrapperUriRenderer = new web3.eth.Contract(ERC20WrapperUriRenderer.abi);
+        var deployRoutine = erc20WrapperUriRenderer.deploy({data : ERC20WrapperUriRenderer.bin, arguments : [utilities.voidEthereumAddress, "myUri"]});
+        deployRoutine = deployRoutine.send(blockchainConnection.getSendingOptions());
+        erc20WrapperUriRenderer = await deployRoutine;
+
+        var uri = web3.eth.abi.encodeParameters(["address", "bytes"], [erc20WrapperUriRenderer.options.address, "0x"]);
+
         var headerCollection = {
             host: accounts[1],
             name: "Colection1",
             symbol: "C1",
-            uri: "uriC1",
+            uri
         };
 
         var items = [];
@@ -673,6 +684,9 @@ describe("itemv2 projections ERC20Wrapper", () => {
         var data = await itemsv2.createCollection(headerCollection.host, items, wrapperData, "0x", headerCollection);
 
         wrapper = new web3.eth.Contract(ERC20Wrapper.abi, data.projection.options.address);
+
+        console.log("Wrapper Uri", await wrapper.methods.uri().call());
+        assert.equal(await wrapper.methods.uri().call(), await mainInterface.methods.collectionUri(await wrapper.methods.collectionId().call()).call());
     });
 
     it("#659 Wrap ERC20 (18 decimals) and ETH", async() => {

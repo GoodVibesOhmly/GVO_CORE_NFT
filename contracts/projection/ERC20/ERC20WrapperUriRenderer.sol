@@ -4,39 +4,62 @@ pragma solidity >=0.7.0;
 import "../../model/IItemMainInterface.sol";
 import "./IERC20Wrapper.sol";
 import "@ethereansos/swissknife/contracts/dynamicMetadata/model/IDynamicUriRenderer.sol";
-import { Uint256Utilities, AddressUtilities } from "@ethereansos/swissknife/contracts/lib/GeneralUtilities.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-import 'base64-sol/base64.sol';
+import { Base64 } from "base64-sol/base64.sol";
+import { Uint256Utilities, AddressUtilities } from "@ethereansos/swissknife/contracts/lib/GeneralUtilities.sol";
 
 contract ERC20WrapperUriRenderer is IDynamicUriRenderer {
     using Uint256Utilities for uint256;
     using AddressUtilities for address;
+    using Base64 for bytes;
+
+    address public host;
+    string public uri;
+
+    constructor(address _host, string memory _uri) {
+        host = _host;
+        uri = _uri;
+    }
+
+    function setHost(address newValue) external returns (address oldValue) {
+        require(msg.sender == host, "unauthorized");
+        oldValue = host;
+        host = newValue;
+    }
+
+    function setUri(string calldata newValue) external returns (string memory oldValue) {
+        require(msg.sender == host, "unauthorized");
+        oldValue = uri;
+        uri = newValue;
+    }
 
     function render(address subject, string calldata, bytes calldata inputData, address, bytes calldata) external override view returns (string memory) {
         (bytes32 collectionId, uint256 itemId) = abi.decode(inputData, (bytes32, uint256));
-        (address host,,,) = IItemMainInterface(subject).collection(collectionId);
-        IERC20Wrapper wrapper = IERC20Wrapper(host);
+        if(collectionId != bytes32(0)) {
+            return uri;
+        }
+        (collectionId,,,) = IItemMainInterface(subject).item(itemId);
+        (address collectionHost,,,) = IItemMainInterface(subject).collection(collectionId);
+        IERC20Wrapper wrapper = IERC20Wrapper(collectionHost);
         IERC20Metadata token = IERC20Metadata(wrapper.source(itemId));
         string memory externalURL = address(token) == address(0) ? "https://ethereum.org" : _getEtherscanTokenURL(address(token));
         return string(abi.encodePacked(
             'data:application/json;base64,',
-            Base64.encode(
-                abi.encodePacked(
-                    '{"name":"',
-                    wrapper.name(itemId),
-                    '","symbol":"',
-                    wrapper.symbol(itemId),
-                    '","decimals":',
-                    wrapper.decimals(itemId).toString(),
-                    ',"external_url":"',
-                    externalURL,
-                    '","description":"',
-                    _getDescription(token, externalURL),
-                    '","image":"',
-                    _getTrustWalletImage(address(token)),
-                    '"}'
-                )
-            )
+            abi.encodePacked(
+                '{"name":"',
+                wrapper.name(itemId),
+                '","symbol":"',
+                wrapper.symbol(itemId),
+                '","decimals":',
+                wrapper.decimals(itemId).toString(),
+                ',"external_url":"',
+                externalURL,
+                '","description":"',
+                _getDescription(token, externalURL),
+                '","image":"',
+                _getTrustWalletImage(address(token)),
+                '"}'
+            ).encode()
         ));
     }
 
@@ -87,11 +110,9 @@ contract ERC20WrapperUriRenderer is IDynamicUriRenderer {
             return string(
                 abi.encodePacked(
                     'data:image/svg+xml;base64,',
-                    Base64.encode(
-                        bytes(
-                            '<svg xmlns="http://www.w3.org/2000/svg" width="2500" height="2500" viewBox="0 0 32 32"><g fill="none" fill-rule="evenodd"><circle cx="16" cy="16" r="16" fill="#627EEA"/><g fill="#FFF" fill-rule="nonzero"><path fill-opacity=".602" d="M16.498 4v8.87l7.497 3.35z"/><path d="M16.498 4L9 16.22l7.498-3.35z"/><path fill-opacity=".602" d="M16.498 21.968v6.027L24 17.616z"/><path d="M16.498 27.995v-6.028L9 17.616z"/><path fill-opacity=".2" d="M16.498 20.573l7.497-4.353-7.497-3.348z"/><path fill-opacity=".602" d="M9 16.22l7.498 4.353v-7.701z"/></g></g></svg>'
-                        )
-                    )
+                    bytes(
+                        '<svg xmlns="http://www.w3.org/2000/svg" width="2500" height="2500" viewBox="0 0 32 32"><g fill="none" fill-rule="evenodd"><circle cx="16" cy="16" r="16" fill="#627EEA"/><g fill="#FFF" fill-rule="nonzero"><path fill-opacity=".602" d="M16.498 4v8.87l7.497 3.35z"/><path d="M16.498 4L9 16.22l7.498-3.35z"/><path fill-opacity=".602" d="M16.498 21.968v6.027L24 17.616z"/><path d="M16.498 27.995v-6.028L9 17.616z"/><path fill-opacity=".2" d="M16.498 20.573l7.497-4.353-7.497-3.348z"/><path fill-opacity=".602" d="M9 16.22l7.498 4.353v-7.701z"/></g></g></svg>'
+                    ).encode()
                 )
             );
         }

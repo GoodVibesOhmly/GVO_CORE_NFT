@@ -18,6 +18,8 @@ contract ERC20Wrapper is IERC20Wrapper, ItemProjection {
     mapping(address => uint256) public override itemIdOf;
     mapping(address => uint256) private _tokenDecimals;
 
+    mapping(uint256 => address) public override source;
+
     address[] private _tokenAddresses;
     mapping(address => uint256) private _originalAmount;
     mapping(address => address[]) private _accounts;
@@ -38,6 +40,7 @@ contract ERC20Wrapper is IERC20Wrapper, ItemProjection {
             if(loadedItemIds[i] == 0) {
                 address tokenAddress = _tokenAddresses[i];
                 itemIdOf[tokenAddress] = itemIds[i];
+                source[itemIds[i]] = tokenAddress;
                 emit Token(tokenAddress, itemIds[i]);
             }
             delete _tokenAddresses[i];

@@ -18,6 +18,9 @@ contract ERC1155Wrapper is IERC1155Wrapper, ItemProjection, IERC1155Receiver {
     mapping(bytes32 => uint256) private _itemIdOf;
     mapping(uint256 => uint256) private _tokenDecimals;
 
+    mapping(uint256 => address) private _sourceTokenAddress;
+    mapping(uint256 => uint256) private _sourceTokenId;
+
     uint256[] private _tokenIds;
     mapping(uint256 => uint256) private _originalAmount;
     mapping(uint256 => address[]) private _accounts;
@@ -31,6 +34,10 @@ contract ERC1155Wrapper is IERC1155Wrapper, ItemProjection, IERC1155Receiver {
 
     function itemIdOf(address tokenAddress, uint256 tokenId) override public view returns(uint256) {
         return _itemIdOf[_toItemKey(tokenAddress, tokenId)];
+    }
+
+    function source(uint256 itemId) external override view returns(address tokenAddress, uint256 tokenId) {
+        return (_sourceTokenAddress[itemId], _sourceTokenId[tokenId]);
     }
 
     function mintItems(CreateItem[] calldata createItemsInput) virtual override(Item, ItemProjection) public returns(uint256[] memory itemIds) {
@@ -51,6 +58,8 @@ contract ERC1155Wrapper is IERC1155Wrapper, ItemProjection, IERC1155Receiver {
                 address tokenAddress = address(uint160(uint256(createItemsInput[i].collectionId)));
                 uint256 tokenId = createItemsInput[i].id;
                 _itemIdOf[_toItemKey(tokenAddress, tokenId)] = itemIds[i];
+                _sourceTokenAddress[itemIds[i]] = tokenAddress;
+                _sourceTokenId[itemIds[i]] = tokenId;
                 emit Token(tokenAddress, tokenId, itemIds[i]);
             }
         }
@@ -134,6 +143,8 @@ contract ERC1155Wrapper is IERC1155Wrapper, ItemProjection, IERC1155Receiver {
         }
         _itemIdOf[_toItemKey(msg.sender, tokenId)] = createdItemId;
         _tokenDecimals[createdItemId] = tokenDecimals;
+        _sourceTokenAddress[createdItemId] = msg.sender;
+        _sourceTokenId[createdItemId] = tokenId;
         emit Token(msg.sender, tokenId, createdItemId);
     }
 

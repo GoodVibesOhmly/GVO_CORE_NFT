@@ -16,11 +16,18 @@ contract ERC721Wrapper is IERC721Wrapper, ItemProjection, IERC721Receiver {
 
     mapping(bytes32 => uint256) private _itemIdOf;
 
+    mapping(uint256 => address) private _sourceTokenAddress;
+    mapping(uint256 => uint256) private _sourceTokenId;
+
     constructor(bytes memory lazyInitData) ItemProjection(lazyInitData) {
     }
 
     function itemIdOf(address tokenAddress, uint256 tokenId) override public view returns(uint256) {
         return _itemIdOf[_toItemKey(tokenAddress, tokenId)];
+    }
+
+    function source(uint256 itemId) external override view returns(address tokenAddress, uint256 tokenId) {
+        return (_sourceTokenAddress[itemId], _sourceTokenId[tokenId]);
     }
 
     function mintItems(CreateItem[] calldata createItemsInput) virtual override(Item, ItemProjection) public returns(uint256[] memory itemIds) {
@@ -39,6 +46,8 @@ contract ERC721Wrapper is IERC721Wrapper, ItemProjection, IERC721Receiver {
                 address tokenAddress = address(uint160(uint256(createItemsInput[i].collectionId)));
                 uint256 tokenId = createItemsInput[i].id;
                 _itemIdOf[_toItemKey(tokenAddress, tokenId)] = itemIds[i];
+                _sourceTokenAddress[itemIds[i]] = tokenAddress;
+                _sourceTokenId[itemIds[i]] = tokenId;
                 emit Token(tokenAddress, tokenId, itemIds[i]);
             }
         }
@@ -74,6 +83,8 @@ contract ERC721Wrapper is IERC721Wrapper, ItemProjection, IERC721Receiver {
         uint256 createdItemId = IItemMainInterface(mainInterface).mintItems(createItems)[0];
         if(itemId == 0) {
             _itemIdOf[_toItemKey(msg.sender, tokenId)] = createdItemId;
+            _sourceTokenAddress[createdItemId] = msg.sender;
+            _sourceTokenId[createdItemId] = tokenId;
             emit Token(msg.sender, tokenId, createdItemId);
         }
         return this.onERC721Received.selector;

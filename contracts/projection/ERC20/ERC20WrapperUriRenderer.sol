@@ -17,7 +17,7 @@ contract ERC20WrapperUriRenderer is IDynamicUriRenderer {
         (address host,,,) = IItemMainInterface(subject).collection(collectionId);
         IERC20Wrapper wrapper = IERC20Wrapper(host);
         IERC20Metadata token = IERC20Metadata(wrapper.source(itemId));
-        string memory etherscanTokenURL = _getEtherscanTokenURL(address(token));
+        string memory externalURL = address(token) == address(0) ? "https://ethereum.org" : _getEtherscanTokenURL(address(token));
         return string(abi.encodePacked(
             'data:application/json;base64,',
             Base64.encode(
@@ -29,9 +29,9 @@ contract ERC20WrapperUriRenderer is IDynamicUriRenderer {
                     '","decimals":',
                     wrapper.decimals(itemId).toString(),
                     ',"external_url":"',
-                    etherscanTokenURL,
+                    externalURL,
                     '","description":"',
-                    _getDescription(token, etherscanTokenURL),
+                    _getDescription(token, externalURL),
                     '","image":"',
                     _getTrustWalletImage(address(token)),
                     '"}'
@@ -60,33 +60,76 @@ contract ERC20WrapperUriRenderer is IDynamicUriRenderer {
         }
         return string(abi.encodePacked(
             'https://',
-            chainId,
+            prefix,
             'etherscan.io/token/',
             tokenAddress.toString()
         ));
     }
 
-    function _getDescription(IERC20Metadata token, string memory etherscanTokenURL) private view returns (string memory) {
-        uint256 tokenDecimals = token.decimals();
+    function _getDescription(IERC20Metadata token, string memory externalURL) private view returns (string memory) {
+        uint256 tokenDecimals = address(token) == address(0) ? 18 : token.decimals();
         return string(abi.encodePacked(
             'This Item wraps the original ERC20 Token ',
-            token.name(),
+            address(token) == address(0) ? "Ethereum" : _stringValue(address(token), "name()", "NAME()"),
             ' (',
-            token.symbol(),
+            address(token) == address(0) ? "ETH" : _stringValue(address(token), "symbol()", "SYMBOL()"),
             '), having decimals ',
             tokenDecimals.toString(),
             '.\n\n',
             'For more info, visit ',
-            etherscanTokenURL,
+            externalURL,
             '.'
         ));
     }
 
     function _getTrustWalletImage(address tokenAddress) private pure returns (string memory) {
+        if(tokenAddress == address(0)) {
+            return string(
+                abi.encodePacked(
+                    'data:image/svg+xml;base64,',
+                    Base64.encode(
+                        bytes(
+                            '<svg xmlns="http://www.w3.org/2000/svg" width="2500" height="2500" viewBox="0 0 32 32"><g fill="none" fill-rule="evenodd"><circle cx="16" cy="16" r="16" fill="#627EEA"/><g fill="#FFF" fill-rule="nonzero"><path fill-opacity=".602" d="M16.498 4v8.87l7.497 3.35z"/><path d="M16.498 4L9 16.22l7.498-3.35z"/><path fill-opacity=".602" d="M16.498 21.968v6.027L24 17.616z"/><path d="M16.498 27.995v-6.028L9 17.616z"/><path fill-opacity=".2" d="M16.498 20.573l7.497-4.353-7.497-3.348z"/><path fill-opacity=".602" d="M9 16.22l7.498 4.353v-7.701z"/></g></g></svg>'
+                        )
+                    )
+                )
+            );
+        }
         return string(abi.encodePacked(
             'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/',
             tokenAddress.toString(),
             '/logo.png'
         ));
+    }
+
+    function _stringValue(address erc20TokenAddress, string memory firstTry, string memory secondTry) private view returns(string memory) {
+        (bool success, bytes memory data) = erc20TokenAddress.staticcall{ gas: 20000 }(abi.encodeWithSignature(firstTry));
+        if (!success) {
+            (success, data) = erc20TokenAddress.staticcall{ gas: 20000 }(abi.encodeWithSignature(secondTry));
+        }
+
+        if (success && data.length >= 96) {
+            (uint256 offset, uint256 len) = abi.decode(data, (uint256, uint256));
+            if (offset == 0x20 && len > 0 && len <= 256) {
+                return string(abi.decode(data, (bytes)));
+            }
+        }
+
+        if (success && data.length == 32) {
+            uint len = 0;
+            while (len < data.length && data[len] >= 0x20 && data[len] <= 0x7E) {
+                len++;
+            }
+
+            if (len > 0) {
+                bytes memory result = new bytes(len);
+                for (uint i = 0; i < len; i++) {
+                    result[i] = data[i];
+                }
+                return string(result);
+            }
+        }
+
+        return erc20TokenAddress.toString();
     }
 }

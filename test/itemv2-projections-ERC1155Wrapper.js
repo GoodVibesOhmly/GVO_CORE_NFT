@@ -1,8 +1,7 @@
 var itemsv2 = require("../resources/itemsv2");
 var itemProjection = require("../resources/itemProjection");
 var wrapperResource = require("../resources/wrapper");
-const blockchainConnection = require("../util/blockchainConnection");
-const utilities = require("../util/utilities");
+
 describe("itemv2 projections ERC1155Wrapper", () => {
   var wrapper;
   var MainInterface;

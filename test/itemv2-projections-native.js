@@ -1,9 +1,6 @@
 var itemsv2 = require("../resources/itemsv2");
 var itemProjection = require("../resources/itemProjection");
-const blockchainConnection = require("../util/blockchainConnection");
-const utilities = require("../util/utilities");
 
-var MainInterface;
 var mainInterface;
 
 describe("Item V2 Projections - Native", () => {

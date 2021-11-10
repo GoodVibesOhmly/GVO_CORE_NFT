@@ -1,9 +1,9 @@
-const blockchainConnection = require("../util/blockchainConnection");
 var utilities = require("../util/utilities");
 var itemsv2 = require("../resources/itemsv2");
 var itemProjection = require("../resources/itemProjection");
 var wrapperResource = require("../resources/wrapper");
-const { calculateTransactionFee } = require("../util/blockchainConnection");
+const blockchainConnection = require("../util/blockchainConnection");
+
 describe("itemv2 projections ERC20Wrapper", () => {
     var wrapper;
     var MainInterface;
@@ -643,6 +643,7 @@ describe("itemv2 projections ERC20Wrapper", () => {
             itemInteroperableInterface.options.address;
 
         var ERC20WrapperUriRenderer = await compile('projection/ERC20/ERC20WrapperUriRenderer');
+
         var erc20WrapperUriRenderer = new web3.eth.Contract(ERC20WrapperUriRenderer.abi);
         var deployRoutine = erc20WrapperUriRenderer.deploy({data : ERC20WrapperUriRenderer.bin, arguments : [utilities.voidEthereumAddress, "myUri"]});
         deployRoutine = deployRoutine.send(blockchainConnection.getSendingOptions());
@@ -842,7 +843,7 @@ describe("itemv2 projections ERC20Wrapper", () => {
             .send(blockchainConnection.getSendingOptions({ from: acc }));
         assert.equal(
             await web3.eth.getBalance(acc),
-            prevBal.add(burnAmounts[2]).sub(await calculateTransactionFee(tx))
+            prevBal.add(burnAmounts[2]).sub(await blockchainConnection.calculateTransactionFee(tx))
         );
 
         await catchCall(

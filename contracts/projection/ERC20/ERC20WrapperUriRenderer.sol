@@ -5,13 +5,11 @@ import "../../model/IItemMainInterface.sol";
 import "./IERC20Wrapper.sol";
 import "@ethereansos/swissknife/contracts/dynamicMetadata/model/IDynamicUriRenderer.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-import { Base64 } from "base64-sol/base64.sol";
-import { Uint256Utilities, AddressUtilities } from "@ethereansos/swissknife/contracts/lib/GeneralUtilities.sol";
 
 contract ERC20WrapperUriRenderer is IDynamicUriRenderer {
-    using Uint256Utilities for uint256;
-    using AddressUtilities for address;
-    using Base64 for bytes;
+
+    string internal constant TABLE_ENCODE = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+    bytes private constant ALPHABET = "0123456789abcdef";
 
     address public host;
     string public uri;
@@ -45,13 +43,13 @@ contract ERC20WrapperUriRenderer is IDynamicUriRenderer {
         string memory externalURL = address(token) == address(0) ? "https://ethereum.org" : _getEtherscanTokenURL(address(token));
         return string(abi.encodePacked(
             'data:application/json;base64,',
-            abi.encodePacked(
+            base64Encode(abi.encodePacked(
                 '{"name":"',
                 wrapper.name(itemId),
                 '","symbol":"',
                 wrapper.symbol(itemId),
                 '","decimals":',
-                wrapper.decimals(itemId).toString(),
+                toString(wrapper.decimals(itemId)),
                 ',"external_url":"',
                 externalURL,
                 '","description":"',
@@ -59,7 +57,7 @@ contract ERC20WrapperUriRenderer is IDynamicUriRenderer {
                 '","image":"',
                 _getTrustWalletImage(address(token)),
                 '"}'
-            ).encode()
+            ))
         ));
     }
 
@@ -85,7 +83,7 @@ contract ERC20WrapperUriRenderer is IDynamicUriRenderer {
             'https://',
             prefix,
             'etherscan.io/token/',
-            tokenAddress.toString()
+            toString(tokenAddress)
         ));
     }
 
@@ -97,7 +95,7 @@ contract ERC20WrapperUriRenderer is IDynamicUriRenderer {
             ' (',
             address(token) == address(0) ? "ETH" : _stringValue(address(token), "symbol()", "SYMBOL()"),
             '), having decimals ',
-            tokenDecimals.toString(),
+            toString(tokenDecimals),
             '.\n\n',
             'For more info, visit ',
             externalURL,
@@ -110,15 +108,15 @@ contract ERC20WrapperUriRenderer is IDynamicUriRenderer {
             return string(
                 abi.encodePacked(
                     'data:image/svg+xml;base64,',
-                    bytes(
+                    base64Encode(bytes(
                         '<svg xmlns="http://www.w3.org/2000/svg" width="2500" height="2500" viewBox="0 0 32 32"><g fill="none" fill-rule="evenodd"><circle cx="16" cy="16" r="16" fill="#627EEA"/><g fill="#FFF" fill-rule="nonzero"><path fill-opacity=".602" d="M16.498 4v8.87l7.497 3.35z"/><path d="M16.498 4L9 16.22l7.498-3.35z"/><path fill-opacity=".602" d="M16.498 21.968v6.027L24 17.616z"/><path d="M16.498 27.995v-6.028L9 17.616z"/><path fill-opacity=".2" d="M16.498 20.573l7.497-4.353-7.497-3.348z"/><path fill-opacity=".602" d="M9 16.22l7.498 4.353v-7.701z"/></g></g></svg>'
-                    ).encode()
+                    ))
                 )
             );
         }
         return string(abi.encodePacked(
             'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/',
-            tokenAddress.toString(),
+            toString(tokenAddress),
             '/logo.png'
         ));
     }
@@ -151,6 +149,96 @@ contract ERC20WrapperUriRenderer is IDynamicUriRenderer {
             }
         }
 
-        return erc20TokenAddress.toString();
+        return toString(erc20TokenAddress);
+    }
+
+    function base64Encode(bytes memory data) internal pure returns (string memory) {
+        if (data.length == 0) return '';
+
+        // load the table into memory
+        string memory table = TABLE_ENCODE;
+
+        // multiply by 4/3 rounded up
+        uint256 encodedLen = 4 * ((data.length + 2) / 3);
+
+        // add some extra buffer at the end required for the writing
+        string memory result = new string(encodedLen + 32);
+
+        assembly {
+            // set the actual output length
+            mstore(result, encodedLen)
+
+            // prepare the lookup table
+            let tablePtr := add(table, 1)
+
+            // input ptr
+            let dataPtr := data
+            let endPtr := add(dataPtr, mload(data))
+
+            // result ptr, jump over length
+            let resultPtr := add(result, 32)
+
+            // run over the input, 3 bytes at a time
+            for {} lt(dataPtr, endPtr) {}
+            {
+                // read 3 bytes
+                dataPtr := add(dataPtr, 3)
+                let input := mload(dataPtr)
+
+                // write 4 characters
+                mstore8(resultPtr, mload(add(tablePtr, and(shr(18, input), 0x3F))))
+                resultPtr := add(resultPtr, 1)
+                mstore8(resultPtr, mload(add(tablePtr, and(shr(12, input), 0x3F))))
+                resultPtr := add(resultPtr, 1)
+                mstore8(resultPtr, mload(add(tablePtr, and(shr( 6, input), 0x3F))))
+                resultPtr := add(resultPtr, 1)
+                mstore8(resultPtr, mload(add(tablePtr, and(        input,  0x3F))))
+                resultPtr := add(resultPtr, 1)
+            }
+
+            // padding with '='
+            switch mod(mload(data), 3)
+            case 1 { mstore(sub(resultPtr, 2), shl(240, 0x3d3d)) }
+            case 2 { mstore(sub(resultPtr, 1), shl(248, 0x3d)) }
+        }
+
+        return result;
+    }
+
+    function toString(uint256 _i) internal pure returns (string memory _uintAsString) {
+        if (_i == 0) {
+            return "0";
+        }
+        uint256 j = _i;
+        uint256 len;
+        while (j != 0) {
+            len++;
+            j /= 10;
+        }
+        bytes memory bstr = new bytes(len);
+        uint256 k = len;
+        while (_i != 0) {
+            k = k-1;
+            uint8 temp = (48 + uint8(_i - _i / 10 * 10));
+            bytes1 b1 = bytes1(temp);
+            bstr[k] = b1;
+            _i /= 10;
+        }
+        return string(bstr);
+    }
+
+    function toString(address _addr) internal pure returns (string memory) {
+        return _addr == address(0) ? "0x0000000000000000000000000000000000000000" : toString(abi.encodePacked(_addr));
+    }
+
+    function toString(bytes memory data) internal pure returns(string memory) {
+        bytes memory str = new bytes(2 + data.length * 2);
+        str[0] = "0";
+        str[1] = "x";
+        for (uint256 i = 0; i < data.length; i++) {
+            str[2+i*2] = ALPHABET[uint256(uint8(data[i] >> 4))];
+            str[3+i*2] = ALPHABET[uint256(uint8(data[i] & 0x0f))];
+        }
+        return string(str);
     }
 }

@@ -583,7 +583,7 @@ describe("itemv2 projections ERC1155Wrapper", () => {
       wrapper.methods
       .burn(accounts[1], itemId1, "1000000000000000000", burnCatchCall)
       .send(blockchainConnection.getSendingOptions({ from: accounts[1] })),
-      "Wrong ERC1155"
+      "token"
     );
 
     await wrapperResource.burn1155(
@@ -719,7 +719,7 @@ describe("itemv2 projections ERC1155Wrapper", () => {
       wrapper.methods
         .burnBatch(accounts[9], itemId, amounts, datas)
         .send(blockchainConnection.getSendingOptions({ from: accounts[9] })),
-      "wrong amount"
+      "amount"
     );
 
     amounts = [
@@ -1152,7 +1152,7 @@ describe("itemv2 projections ERC1155Wrapper", () => {
       wrapper.methods
         .burn(accounts[5], item3, "500000000000000000", burn3)
         .send(blockchainConnection.getSendingOptions({ from: accounts[5] })),
-      "wrong amount"
+      "amount"
     );
   });
 
@@ -1250,21 +1250,21 @@ describe("itemv2 projections ERC1155Wrapper", () => {
       wrapper.methods
         .burn(accounts[4], item3, "100000000000000000", burnCatchCall)
         .send(blockchainConnection.getSendingOptions({ from: accounts[4] })),
-      "wrong amount"
+      "amount"
     );
 
     await catchCall(
       wrapper.methods
         .burn(accounts[6], item3, "190000000000000000", burnCatchCall)
         .send(blockchainConnection.getSendingOptions({ from: accounts[6] })),
-      "wrong amount"
+      "amount"
     );
 
     await catchCall(
       wrapper.methods
         .burn(accounts[7], item3, "200000000000000000", burnCatchCall)
         .send(blockchainConnection.getSendingOptions({ from: accounts[7] })),
-      "wrong amount"
+      "amount"
     );
 
     var burn3 = web3.eth.abi.encodeParameters(
@@ -1376,7 +1376,7 @@ describe("itemv2 projections ERC1155Wrapper", () => {
       wrapper.methods
         .burn(accounts[4], itemId7, "400000000000000000", burnCatchCall)
         .send(blockchainConnection.getSendingOptions({ from: accounts[4] })),
-      "wrong amount"
+      "amount"
     );
 
     var burn7 = web3.eth.abi.encodeParameters(
@@ -1521,7 +1521,7 @@ describe("itemv2 projections ERC1155Wrapper", () => {
       wrapper.methods
         .burn(accounts[5], itemId7, "600000000000000000", burn7)
         .send(blockchainConnection.getSendingOptions({ from: accounts[5] })),
-      "wrong amount"
+      "amount"
     );
 
     await wrapperResource.burn1155(
@@ -1558,7 +1558,7 @@ describe("itemv2 projections ERC1155Wrapper", () => {
       wrapper.methods
         .burn(accounts[4], itemId7, "1400000000000000000", burn7)
         .send(blockchainConnection.getSendingOptions({ from: accounts[4] })),
-      "wrong amount"
+      "amount"
     );
 
     await wrapperResource.burn1155(
@@ -1666,14 +1666,14 @@ describe("itemv2 projections ERC1155Wrapper", () => {
       wrapper.methods
         .burn(accounts[5], itemId7, "2500000000000000000", burn7)
         .send(blockchainConnection.getSendingOptions({ from: accounts[5] })),
-      "wrong amount"
+      "amount"
     );
 
     await catchCall(
       wrapper.methods
         .burn(accounts[4], itemId7, "3500000000000000000", burn7)
         .send(blockchainConnection.getSendingOptions({ from: accounts[4] })),
-      "wrong amount"
+      "amount"
     );
 
     await wrapperResource.burn1155(
@@ -1851,7 +1851,7 @@ describe("itemv2 projections ERC1155Wrapper", () => {
       wrapper.methods
         .burn(accounts[5], itemId7, "600000000000000000", burn7)
         .send(blockchainConnection.getSendingOptions({ from: accounts[5] })),
-      "wrong amount"
+      "amount"
     );
 
     await wrapperResource.burn1155(
@@ -2032,7 +2032,7 @@ describe("itemv2 projections ERC1155Wrapper", () => {
       wrapper.methods
         .burn(accounts[5], itemId7, "600000000000000000", burn7)
         .send(blockchainConnection.getSendingOptions({ from: accounts[5] })),
-      "wrong amount"
+      "amount"
     );
 
     await wrapperResource.burn1155(
@@ -2210,7 +2210,7 @@ describe("itemv2 projections ERC1155Wrapper", () => {
       wrapper.methods
         .burn(accounts[5], itemId7, "600000000000000000", burn7)
         .send(blockchainConnection.getSendingOptions({ from: accounts[5] })),
-      "wrong amount"
+      "amount"
     );
 
     await wrapperResource.burn1155(
@@ -2418,7 +2418,7 @@ describe("itemv2 projections ERC1155Wrapper", () => {
       wrapper.methods
         .burn(accounts[5], item3, "500000000000000000", burn3)
         .send(blockchainConnection.getSendingOptions({ from: accounts[5] })),
-      "wrong amount"
+      "amount"
     );
   });
 
@@ -2492,7 +2492,7 @@ describe("itemv2 projections ERC1155Wrapper", () => {
       wrapper.methods
         .burn(accounts[5], itemId7, "4000000000000000000", burn7)
         .send(blockchainConnection.getSendingOptions({ from: accounts[5] })),
-      "Insufficient amount"
+      "insuff"
     );
 
     await wrapperResource.burn1155(
@@ -2603,7 +2603,7 @@ describe("itemv2 projections ERC1155Wrapper", () => {
       wrapper.methods
         .burn(accounts[5], itemId7, "1200000000000000000", burn7)
         .send(blockchainConnection.getSendingOptions({ from: accounts[5] })),
-      "wrong amount"
+      "amount"
     );
 
     await wrapperResource.burn1155(

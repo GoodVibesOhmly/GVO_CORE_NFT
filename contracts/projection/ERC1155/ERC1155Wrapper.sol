@@ -7,13 +7,14 @@ import "./IERC1155Wrapper.sol";
 import "../ItemProjection.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
-import { Uint256Utilities } from "@ethereansos/swissknife/contracts/lib/GeneralUtilities.sol";
+import { Uint256Utilities, StringUtilities } from "@ethereansos/swissknife/contracts/lib/GeneralUtilities.sol";
 
 contract ERC1155Wrapper is IERC1155Wrapper, ItemProjection, IERC1155Receiver {
     using AddressUtilities for address;
     using Uint256Utilities for uint256;
     using Uint256Utilities for uint256[];
     using BytesUtilities for bytes;
+    using StringUtilities for string;
 
     mapping(bytes32 => uint256) private _itemIdOf;
     mapping(uint256 => uint256) private _tokenDecimals;
@@ -193,7 +194,7 @@ contract ERC1155Wrapper is IERC1155Wrapper, ItemProjection, IERC1155Receiver {
             values[i] = _convertAmount(i, tokenDecimals, values[i], itemId);
             realReceivers[i] = (realReceivers[i] = i < receivers.length ? receivers[i] : from) != address(0) ? realReceivers[i] : from;
         }
-        require(totalAmount == amount, "inconsistent amount");
+        require(totalAmount == amount, "amount");
         (string memory name, string memory symbol) = itemId != 0 ? ("", "") : _tryRecoveryMetadata(tokenAddress, tokenId);
         createItem = CreateItem(Header(address(0), name, symbol, uri), collectionId, itemId, realReceivers, values);
     }
@@ -216,22 +217,22 @@ contract ERC1155Wrapper is IERC1155Wrapper, ItemProjection, IERC1155Receiver {
             symbol = s;
         } catch {
         }
-        if(keccak256(bytes(name)) == keccak256("")) {
+        if(name.isEmpty()) {
             try nft.name() returns(string memory n) {
                 name = n;
             } catch {
             }
         }
-        if(keccak256(bytes(symbol)) == keccak256("")) {
+        if(symbol.isEmpty()) {
             try nft.symbol() returns(string memory s) {
                 symbol = s;
             } catch {
             }
         }
-        if(keccak256(bytes(name)) == keccak256("")) {
+        if(name.isEmpty()) {
             name = source.toString();
         }
-        if(keccak256(bytes(symbol)) == keccak256("")) {
+        if(symbol.isEmpty()) {
             symbol = source.toString();
         }
     }
@@ -249,7 +250,7 @@ contract ERC1155Wrapper is IERC1155Wrapper, ItemProjection, IERC1155Receiver {
                 dec = abi.decode(response, (uint256));
             }
         }
-        require(dec == 0 || dec == 18, "decimals");
+        require(dec == 0 || dec == 18, "dec");
     }
 
     function _toItemKey(address tokenAddress, uint256 tokenId) private pure returns(bytes32) {
@@ -257,24 +258,24 @@ contract ERC1155Wrapper is IERC1155Wrapper, ItemProjection, IERC1155Receiver {
     }
 
     function _unwrap(address from, uint256 itemId, uint256 amount, bytes memory data) private returns (uint256 interoperableAmount) {
-        require(amount > 0, "burn zero");
+        require(amount > 0, "zero");
         (address tokenAddress, uint256 tokenId, address receiver, bytes memory payload) = abi.decode(data, (address, uint256, address, bytes));
         receiver = receiver != address(0) ? receiver : from;
-        require(itemIdOf(tokenAddress, tokenId) == itemId, "Wrong ERC1155");
+        require(itemIdOf(tokenAddress, tokenId) == itemId, "token");
         uint256 converter = 10**(18 - _tokenDecimals[itemId]);
         uint256 tokenAmount = amount / converter;
         interoperableAmount = amount;
-        require(interoperableAmount > 0, "Wrong conversion");
+        require(interoperableAmount > 0);
         uint256 balanceOf = IItemMainInterface(mainInterface).balanceOf(from, itemId);
-        require(balanceOf > 0 && balanceOf >= interoperableAmount, "Insufficient amount");
+        require(balanceOf > 0 && balanceOf >= interoperableAmount, "insuff");
         uint256 totalSupply = IItemMainInterface(mainInterface).totalSupply(itemId);
         bool isUnity = interoperableAmount >= (51*1e16);
         if(totalSupply <= 1e18 && isUnity) {
             tokenAmount = 1;
         } else {
-            require(amount == tokenAmount * converter, "wrong amount");
+            require(amount == tokenAmount * converter, "amount");
         }
-        require(_tokenDecimals[itemId] == 18 || totalSupply > 1e18 || isUnity, "Insufficient balance");
+        require(_tokenDecimals[itemId] == 18 || totalSupply > 1e18 || isUnity, "balance");
         IERC1155(tokenAddress).safeTransferFrom(address(this), receiver, tokenId, tokenAmount, payload);
     }
 }

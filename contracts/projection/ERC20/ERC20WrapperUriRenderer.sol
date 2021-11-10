@@ -27,7 +27,7 @@ contract ERC20WrapperUriRenderer is IDynamicUriRenderer {
                     '","symbol":"',
                     wrapper.symbol(itemId),
                     '","decimals":',
-                    wrapper.decimals(itemId),
+                    wrapper.decimals(itemId).toString(),
                     ',"external_url":"',
                     etherscanTokenURL,
                     '","description":"',

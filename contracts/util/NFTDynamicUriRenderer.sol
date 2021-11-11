@@ -4,6 +4,7 @@ pragma solidity >=0.7.0;
 import "../model/IItemMainInterface.sol";
 import "../projection/ERC1155/IERC1155Wrapper.sol";
 import "@ethereansos/swissknife/contracts/dynamicMetadata/model/IDynamicUriRenderer.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/IERC721Metadata.sol";
 
 contract NFTDynamicUriRenderer is IDynamicUriRenderer {
 
@@ -35,6 +36,10 @@ contract NFTDynamicUriRenderer is IDynamicUriRenderer {
         (address collectionHost,,,) = IItemMainInterface(subject).collection(collectionId);
         IERC1155Wrapper wrapper = IERC1155Wrapper(collectionHost);
         (address tokenAddress, uint256 tokenId) = wrapper.source(itemId);
-        return Item(tokenAddress).uri(tokenId);
+        try Item(tokenAddress).uri(tokenId) returns (string memory u) {
+            return u;
+        } catch {
+            return IERC721Metadata(tokenAddress).tokenURI(tokenId);
+        }
     }
 }

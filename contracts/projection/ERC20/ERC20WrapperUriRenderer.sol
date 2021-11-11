@@ -2,6 +2,7 @@
 pragma solidity >=0.7.0;
 
 import "../../model/IItemMainInterface.sol";
+import "../../model/IItemInteroperableInterface.sol";
 import "./IERC20Wrapper.sol";
 import "@ethereansos/swissknife/contracts/dynamicMetadata/model/IDynamicUriRenderer.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
@@ -39,6 +40,9 @@ contract ERC20WrapperUriRenderer is IDynamicUriRenderer {
         (address collectionHost,,,) = IItemMainInterface(subject).collection(collectionId);
         IERC20Wrapper wrapper = IERC20Wrapper(collectionHost);
         IERC20Metadata token = IERC20Metadata(wrapper.source(itemId));
+        try IItemInteroperableInterface(address(token)).mainInterface() returns (address mi) {
+            return Item(mi).uri(IItemInteroperableInterface(address(token)).itemId());
+        } catch {}
         string memory externalURL = address(token) == address(0) ? "https://ethereum.org" : _getEtherscanTokenURL(address(token));
         return string(abi.encodePacked(
             'data:application/json;base64,',

@@ -40,9 +40,11 @@ contract ERC20WrapperUriRenderer is IDynamicUriRenderer {
         (address collectionHost,,,) = IItemMainInterface(subject).collection(collectionId);
         IERC20Wrapper wrapper = IERC20Wrapper(collectionHost);
         IERC20Metadata token = IERC20Metadata(wrapper.source(itemId));
-        try IItemInteroperableInterface(address(token)).mainInterface() returns (address mi) {
-            return Item(mi).uri(IItemInteroperableInterface(address(token)).itemId());
-        } catch {}
+        if(address(token) != address(0)) {
+            try IItemInteroperableInterface(address(token)).mainInterface() returns (address mi) {
+                return Item(mi).uri(IItemInteroperableInterface(address(token)).itemId());
+            } catch {}
+        }
         string memory externalURL = address(token) == address(0) ? "https://ethereum.org" : _getEtherscanTokenURL(address(token));
         return string(abi.encodePacked(
             'data:application/json;base64,',

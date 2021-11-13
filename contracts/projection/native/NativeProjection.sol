@@ -9,11 +9,13 @@ contract NativeProjection is ItemProjection {
 
     mapping(uint256 => bool) public isFinalized;
 
+    address public metadataHost;
+
     constructor(bytes memory lazyInitData) ItemProjection(lazyInitData) {
     }
 
     function _lazyInit(bytes memory lazyInitParams) override virtual internal returns(bytes memory lazyInitResponse) {
-        (mainInterface, lazyInitResponse) = abi.decode(lazyInitParams, (address, bytes));
+        (mainInterface, metadataHost, lazyInitResponse) = abi.decode(lazyInitParams, (address, address, bytes));
         Header memory header;
         CreateItem[] memory items;
         (collectionId, header, items, lazyInitResponse) = abi.decode(lazyInitResponse, (bytes32, Header, CreateItem[], bytes));
@@ -33,6 +35,12 @@ contract NativeProjection is ItemProjection {
             }
         }
         lazyInitResponse = _projectionLazyInit(lazyInitResponse);
+    }
+
+    function setMetadataHost(address newValue) external returns(address oldValue) {
+        require(msg.sender == metadataHost, "unauthorized");
+        oldValue = metadataHost;
+        metadataHost = newValue;
     }
 
     function mintItems(CreateItem[] calldata items, bool[] memory finalized) authorizedOnly public returns(uint256[] memory itemIds) {
@@ -56,13 +64,19 @@ contract NativeProjection is ItemProjection {
         return mintItems(items, new bool[](items.length));
     }
 
-    function setHeader(Header calldata value) authorizedOnly override external virtual returns(Header memory oldValue) {
+    function setHeader(Header calldata value) override external virtual returns(Header memory oldValue) {
+        require(msg.sender == metadataHost, "unauthorized");
         Header[] memory values = new Header[](1);
         values[0] = value;
         values[0].host = address(this);
         bytes32[] memory collectionIds = new bytes32[](1);
         collectionIds[0] = collectionId;
         return IItemMainInterface(mainInterface).setCollectionsMetadata(collectionIds, values)[0];
+    }
+
+    function setItemsMetadata(uint256[] calldata itemIds, Header[] calldata values) override external virtual returns(Header[] memory oldValues) {
+        require(msg.sender == metadataHost, "unauthorized");
+        return IItemMainInterface(mainInterface).setItemsMetadata(itemIds, values);
     }
 
     function setItemsCollection(uint256[] calldata, bytes32[] calldata) authorizedOnly virtual override external returns(bytes32[] memory) {

@@ -38,7 +38,7 @@ contract ERC1155Wrapper is IERC1155Wrapper, ItemProjection, IERC1155Receiver {
     }
 
     function source(uint256 itemId) external override view returns(address tokenAddress, uint256 tokenId) {
-        return (_sourceTokenAddress[itemId], _sourceTokenId[tokenId]);
+        return (_sourceTokenAddress[itemId], _sourceTokenId[itemId]);
     }
 
     function mintItems(CreateItem[] calldata createItemsInput) virtual override(Item, ItemProjection) public returns(uint256[] memory itemIds) {

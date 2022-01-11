@@ -598,5 +598,272 @@ describe("itemv2 ERC721DeckWrapper", () => {
 
         // #UW_DGods_1_2.1 END
     });
+
+    it("#2", async () => {
+
+        var tokenHolderENS = "0xcfB586d08633fC36953be8083B63a7d96D50265B";
+
+        var ENSTokenAddresss =
+            "0x57f1887a8bf19b14fc0df6fd9b2acc9af147ea85";
+
+        var ENSTokenId = ["76209759912004573400534475157126407931116638124477574818832130517944945631566", "101180787059894841371179306178306111501534425305686398917862181098735580637363"];
+
+        var ens = new web3.eth.Contract(
+            knowledgeBase.IERC721ABI,
+            ENSTokenAddresss
+        );
+
+        // await blockchainConnection.unlockAccounts(ENSTokenAddresss);
+
+// 76209759912004573400534475157126407931116638124477574818832130517944945631566
+        // await ens.methods
+        //         .safeTransferFrom("0xcfB586d08633fC36953be8083B63a7d96D50265B", accounts[1], "76209759912004573400534475157126407931116638124477574818832130517944945631566")
+        //         .send(
+        //             blockchainConnection.getSendingOptions({
+        //                 from: "0xcfB586d08633fC36953be8083B63a7d96D50265B",
+        //             })
+        //         );
+
+        await blockchainConnection.unlockAccounts(tokenHolderENS);
+
+        ENSTokenId.map(async (id, index) => {
+            await ens.methods
+                .safeTransferFrom(tokenHolderENS, accounts[1], id)
+                .send(
+                    blockchainConnection.getSendingOptions({
+                        from: tokenHolderENS,
+                    })
+                );
+        });
+
+        ENSTokenId.map(async (id, index) => {
+            await ens.methods.approve(wrapper.options.address, id).send(
+                blockchainConnection.getSendingOptions({
+                    from: accounts[1],
+                })
+            );
+        });
+
+        var createItem = await wrapperResource.generateCreateItem(
+            ENSTokenId,
+            [accounts[1], accounts[3]],
+            ENSTokenAddresss,
+            [
+                "1000000000000000000",
+                "1000000000000000000",
+            ]
+        );
+
+        var tx = await wrapper.methods
+            .mintItems(createItem, [true, false])
+            .send(
+                blockchainConnection.getSendingOptions({ from: accounts[1] })
+            );
+
+        var logs = (await web3.eth.getTransactionReceipt(tx.transactionHash))
+            .logs;
+
+        var ENSItemIds = logs
+            .filter(
+                (it) =>
+                    it.topics[0] ===
+                    web3.utils.sha3("Token(address,uint256,uint256)")
+            )
+            .map((it) => web3.eth.abi.decodeParameter("uint256", it.topics[3]));
+
+
+        await wrapperResource.checkBalance( //TODO: fix
+            tx,
+            accounts[1],
+            wrapper.options.address,
+            "2",
+            ens
+        );
+
+        await wrapperResource.checkBalanceItem(
+            tx,
+            accounts[1],
+            "1000000000000000000",
+            ENSItemIds[0],
+            wrapper
+        );
+
+        await wrapperResource.checkBalanceItem(
+            tx,
+            accounts[3],
+            "1000000000000000000",
+            ENSItemIds[0],
+            wrapper
+        );
+
+        await wrapperResource.checkSupply(
+            tx,
+            "2000000000000000000",
+            ENSItemIds[0],
+            wrapper
+        );
+
+
+        var tokenHolderUni = "0x6dd91bdab368282dc4ea4f4befc831b78a7c38c0";
+
+        var uniTokenAddresss = "0xc36442b4a4522e871399cd717abdd847ab11fe88";
+
+        var uniTokenId = ["179846", "179826", "179819"];
+
+        var uni = new web3.eth.Contract(
+            knowledgeBase.IERC721ABI,
+            uniTokenAddresss
+        );
+
+        await blockchainConnection.unlockAccounts(tokenHolderUni);
+
+        uniTokenId.map(async (id, index) => {
+            await uni.methods
+                .safeTransferFrom(tokenHolderUni, accounts[3], id)
+                .send(
+                    blockchainConnection.getSendingOptions({
+                        from: tokenHolderUni,
+                    })
+                );
+        });
+
+        uniTokenId.map(async (id, index) => {
+            await uni.methods
+            .approve(wrapper.options.address, id)
+            .send(
+                blockchainConnection.getSendingOptions({ from: accounts[3] })
+            );
+        });
+
+        var createItem = await wrapperResource.generateCreateItem(
+            [uniTokenId[0], uniTokenId[1]],
+            [accounts[3], accounts[3]],
+            uniTokenAddresss,
+            ["1000000000000000000", "1000000000000000000"]
+        );
+
+        var tx = await wrapper.methods
+            .mintItems(createItem, [true, false])
+            .send(
+                blockchainConnection.getSendingOptions({ from: accounts[3] })
+            );
+
+        var logs = (await web3.eth.getTransactionReceipt(tx.transactionHash))
+            .logs;
+
+        var uniItemIds = logs
+            .filter(
+                (it) =>
+                    it.topics[0] ===
+                    web3.utils.sha3("Token(address,uint256,uint256)")
+            )
+            .map((it) => web3.eth.abi.decodeParameter("uint256", it.topics[3]));
+
+        await wrapperResource.checkBalance(
+            tx,
+            accounts[3],
+            wrapper.options.address,
+            "2",
+            uni
+        );
+
+        await wrapperResource.checkBalanceItem(
+            tx,
+            accounts[3],
+            "2000000000000000000",
+            uniItemIds[0],
+            wrapper
+        );
+
+        await wrapperResource.checkSupply(
+            tx,
+            "2000000000000000000",
+            uniItemIds[0],
+            wrapper
+        );
+
+        var data = abi.encode(
+            ["uint256[]", "address[]", "bool"],
+            [["1000000000000000000"], [accounts[1]], false]
+        );
+
+        tx = await uni.methods
+            .safeTransferFrom(
+                accounts[3],
+                wrapper.options.address,
+                uniTokenId[2],
+                data
+            )
+            .send(
+                blockchainConnection.getSendingOptions({ from: accounts[3] })
+            );
+
+        await wrapperResource.checkBalance(
+            tx,
+            accounts[3],
+            wrapper.options.address,
+            "1",
+            uni
+        );
+
+        await wrapperResource.checkBalanceItem(
+            tx,
+            accounts[1],
+            "1000000000000000000",
+            uniItemIds[0],
+            wrapper
+        );
+
+        await wrapperResource.checkSupply(
+            tx,
+            "1000000000000000000",
+            uniItemIds[0],
+            wrapper
+        );
+
+        var datas = [];
+
+        datas[0] = web3.eth.abi.encodeParameters(
+            ["address", "uint256", "address", "bytes", "bool", "bool"],
+            [
+                ENSTokenAddresss,
+                ENSTokenId[0],
+                accounts[2],
+                "0x",
+                false,
+                false,
+            ]
+        );
+        datas[1] = web3.eth.abi.encodeParameters(
+            ["address", "uint256", "address", "bytes", "bool", "bool"],
+            [
+                uniTokenAddresss,
+                uniTokenId[0],
+                accounts[2],
+                "0x",
+                false,
+                false,
+            ]
+        );
+
+        var encodeDatas = web3.eth.abi.encodeParameters(["bytes[]"], [datas]);
+
+        await catchCall(wrapper.methods
+            .burnBatch(
+                accounts[1],
+                [ENSItemIds[0], uniItemIds[0]],
+                [
+                    "1000000000000000000",
+                    "1000000000000000000",
+                ],
+                encodeDatas
+            )
+            .send(
+                blockchainConnection.getSendingOptions({
+                    from: accounts[1],
+                })
+            ), "Cannot unlock");
+
+    });
 });
 

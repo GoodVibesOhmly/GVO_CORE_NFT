@@ -220,6 +220,34 @@ async function mintItems721(
   return tx;
 }
 
+async function generateCreateItem(
+  tokenList,
+  receivers,
+  nftTokenAddress,
+  amount,
+){
+  var itemList = [];
+
+  await Promise.all(
+    receivers.map(async (address, index) =>
+      itemList.push({
+        header: {
+          host: utilities.voidEthereumAddress,
+          name: "",
+          symbol: "",
+          uri: "",
+        },
+        collectionId: web3.eth.abi.encodeParameter("address", nftTokenAddress),
+        id: tokenList[index],
+        accounts: [address],
+        amounts: [amount[index]],
+      })
+    )
+  );
+
+  return itemList;
+}
+
 async function mintMultiItems721(
   tokenList,
   receivers,
@@ -510,6 +538,64 @@ async function burn1155(
   )
 }
 
+async function checkBalance(transaction, fromAddress, toAddress, amount, tokenInstance) {
+    var blockNumber = transaction.blockNumber || (await web3.eth.getTransactionReceipt(transaction.transactionHash || transaction)).blockNumber
+    blockNumber = parseInt(blockNumber) - 1
+
+    function balanceOf(token, subject, fromBlock) {
+      return token.methods.balanceOf(subject).call({}, fromBlock)
+    }
+
+    var fromBefore = await balanceOf(tokenInstance, fromAddress, blockNumber)
+    var toBefore = await balanceOf(tokenInstance, toAddress, blockNumber)
+
+    var fromAfter = await balanceOf(tokenInstance, fromAddress)
+    var toAfter = await balanceOf(tokenInstance, toAddress)
+
+    console.log(fromBefore)
+    console.log(fromAfter)
+    console.log(toBefore)
+    console.log(toAfter)
+
+    assert.equal(fromBefore.sub(amount), fromAfter)
+    assert.equal(toBefore.add(amount), toAfter)
+};
+
+async function checkBalanceItem(transaction, toAddress, amount, item, tokenInstance) {
+  var blockNumber = transaction.blockNumber || (await web3.eth.getTransactionReceipt(transaction.transactionHash || transaction)).blockNumber
+  blockNumber = parseInt(blockNumber) - 1
+
+  function balanceOf(token, subject, item, fromBlock) {
+    return token.methods.balanceOf(subject, item).call({}, fromBlock)
+  }
+
+  // var fromBefore = await balanceOf(tokenInstance, fromAddress, item, blockNumber)
+  var toBefore = await balanceOf(tokenInstance, toAddress, item, blockNumber)
+
+  // var fromAfter = await balanceOf(tokenInstance, fromAddress, item)
+  var toAfter = await balanceOf(tokenInstance, toAddress, item)
+
+  console.log("toAfter " + toAfter);
+  console.log("toBefore " + toBefore);
+
+  // assert.equal(fromBefore.sub(amount), fromAfter)
+  assert.equal(toBefore.add(amount), toAfter)
+};
+
+async function checkSupply(transaction, amount, itemId, tokenInstance) {
+  var blockNumber = transaction.blockNumber || (await web3.eth.getTransactionReceipt(transaction.transactionHash || transaction)).blockNumber
+  blockNumber = parseInt(blockNumber) - 1
+
+  var supplyBefore = await tokenInstance.methods.totalSupply(itemId).call({}, blockNumber)
+
+  var supplyAfter = await tokenInstance.methods.totalSupply(itemId).call()
+
+  console.log("supplyAfter " + supplyAfter);
+  console.log("supplyBefore " + supplyBefore);
+
+  assert.equal(supplyBefore.add(amount), supplyAfter)
+};
+
 module.exports = {
   mintErc20Wrapper,
   assertDecimals,
@@ -526,4 +612,8 @@ module.exports = {
   safeBatchTransfer1155,
   burn721,
   burn1155,
+  generateCreateItem,
+  checkBalance,
+  checkBalanceItem,
+  checkSupply
 };

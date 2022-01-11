@@ -211,20 +211,20 @@ describe("itemv2 ERC721DeckWrapper", () => {
             boredApe
         );
 
-        // await wrapperResource.checkBalanceItem(
-        //     tx,
-        //     accounts[1],
-        //     "3000000000000000000",
-        //     boredApeItemIds[2],
-        //     wrapper
-        // );
+        await wrapperResource.checkBalanceItem(
+            tx,
+            accounts[1],
+            "3000000000000000000",
+            boredApeItemIds[2],
+            wrapper
+        );
 
-        // await wrapperResource.checkSupply(
-        //     tx,
-        //     "3000000000000000000",
-        //     boredApeItemIds[2],
-        //     wrapper
-        // );
+        await wrapperResource.checkSupply(
+            tx,
+            "3000000000000000000",
+            boredApeItemIds[2],
+            wrapper
+        );
 
         // #W_BA_1_1.1 END
 
@@ -312,7 +312,7 @@ describe("itemv2 ERC721DeckWrapper", () => {
 
         var data = abi.encode(
             ["uint256[]", "address[]", "bool"],
-            [["1000000000000000000"], [accounts[2]], true]
+            [["1000000000000000000"], [accounts[3]], true]
         );
 
         tx = await gods.methods
@@ -336,7 +336,7 @@ describe("itemv2 ERC721DeckWrapper", () => {
 
         await wrapperResource.checkBalanceItem(
             tx,
-            accounts[2],
+            accounts[3],
             "1000000000000000000",
             godsItemIds[0],
             wrapper
@@ -353,115 +353,140 @@ describe("itemv2 ERC721DeckWrapper", () => {
 
         // #UW_DBA_1_1.5 START
 
-        // var data = web3.eth.abi.encodeParameters(
-        //     ["address", "uint256", "address", "bytes", "bool", "bool"],
-        //     [
-        //         boredApeTokenAddresss,
-        //         boredApeTokenId[0],
-        //         accounts[3],
-        //         "0x",
-        //         false,
-        //         false,
-        //     ]
-        // );
+        var data = web3.eth.abi.encodeParameters(
+            ["address", "uint256", "address", "bytes", "bool", "bool"],
+            [
+                boredApeTokenAddresss,
+                boredApeTokenId[0],
+                accounts[3],
+                "0x",
+                false,
+                false,
+            ]
+        );
 
-        // await
-        //     wrapper.methods
-        //         .burn(
-        //             accounts[1],
-        //             boredApeItemIds[2],
-        //             "510000000000000000",
-        //             data
-        //         )
-        //         .send(
-        //             blockchainConnection.getSendingOptions({
-        //                 from: accounts[1],
-        //             })
+        await catchCall(
+            wrapper.methods
+                .burn(
+                    accounts[1],
+                    boredApeItemIds[2],
+                    "510000000000000000",
+                    data
+                )
+                .send(
+                    blockchainConnection.getSendingOptions({
+                        from: accounts[1],
+                    })), "Invalid amount"
 
-        // );
+        );
 
         // #UW_DBA_1_1.5 END
 
         // #UW_DBA_1_1.6 START
 
-        // data = web3.eth.abi.encodeParameters(
-        //     ["address", "uint256", "address", "bytes", "bool", "bool"],
-        //     [
-        //         boredApeTokenAddresss,
-        //         boredApeTokenId[2],
-        //         accounts[3],
-        //         "0x",
-        //         false,
-        //         false,
-        //     ]
-        // );
+        data = web3.eth.abi.encodeParameters(
+            ["address", "uint256", "address", "bytes", "bool", "bool"],
+            [
+                boredApeTokenAddresss,
+                boredApeTokenId[2],
+                accounts[3],
+                "0x",
+                false,
+                false,
+            ]
+        );
 
-        // await wrapper.methods
-        //     .burn(accounts[1], boredApeItemIds[2], "510000000000000000", data)
-        //     .send(
-        //         blockchainConnection.getSendingOptions({
-        //             from: accounts[1],
-        //         })
-        //     );
+        await catchCall(
+            wrapper.methods
+            .burn(accounts[1], boredApeItemIds[2], "510000000000000000", data)
+            .send(
+                blockchainConnection.getSendingOptions({
+                    from: accounts[1],
+                })
+            ), "Invalid amount"
+            );
 
         // #UW_DBA_1_1.6 END
 
         // #UWB_DGODS_1_1.7 START
 
-        // var datas = [];
+        var datas = [];
 
-        // datas[0] = web3.eth.abi.encodeParameters(
-        //     ["address", "uint256", "address", "bytes", "bool", "bool"],
-        //     [
-        //         boredApeTokenAddresss,
-        //         boredApeTokenId[0],
-        //         accounts[4],
-        //         "0x",
-        //         false,
-        //         false,
-        //     ]
-        // );
-        // datas[1] = web3.eth.abi.encodeParameters(
-        //     ["address", "uint256", "address", "bytes", "bool", "bool"],
-        //     [
-        //         boredApeTokenAddresss,
-        //         boredApeTokenId[1],
-        //         accounts[4],
-        //         "0x",
-        //         false,
-        //         false,
-        //     ]
-        // );
-        // datas[2] = web3.eth.abi.encodeParameters(
-        //     ["address", "uint256", "address", "bytes", "bool", "bool"],
-        //     [
-        //         boredApeTokenAddresss,
-        //         boredApeTokenId[2],
-        //         accounts[4],
-        //         "0x",
-        //         false,
-        //         false,
-        //     ]
-        // );
+        datas[0] = web3.eth.abi.encodeParameters(
+            ["address", "uint256", "address", "bytes", "bool", "bool"],
+            [
+                boredApeTokenAddresss,
+                boredApeTokenId[0],
+                accounts[4],
+                "0x",
+                false,
+                false,
+            ]
+        );
+        datas[1] = web3.eth.abi.encodeParameters(
+            ["address", "uint256", "address", "bytes", "bool", "bool"],
+            [
+                boredApeTokenAddresss,
+                boredApeTokenId[1],
+                accounts[4],
+                "0x",
+                false,
+                false,
+            ]
+        );
+        datas[2] = web3.eth.abi.encodeParameters(
+            ["address", "uint256", "address", "bytes", "bool", "bool"],
+            [
+                boredApeTokenAddresss,
+                boredApeTokenId[2],
+                accounts[4],
+                "0x",
+                false,
+                false,
+            ]
+        );
 
-        // var encodeDatas = web3.eth.abi.encodeParameters(["bytes[]"], [datas]);
+        var encodeDatas = web3.eth.abi.encodeParameters(["bytes[]"], [datas]);
 
-        // await wrapper.methods
-        //     .burnBatch(
-        //         accounts[1],
-        //         [boredApeItemIds[0], boredApeItemIds[1], boredApeItemIds[2]],
-        //         [
-        //             "1000000000000000000",
-        //             "1000000000000000000",
-        //             "1000000000000000000",
-        //         ],
-        //         encodeDatas
-        //     )
-        //     .send(
-        //         blockchainConnection.getSendingOptions({
-        //             from: accounts[1],
-        //         })
-        //     );
+        await wrapper.methods
+            .burnBatch(
+                accounts[1],
+                [boredApeItemIds[0], boredApeItemIds[1], boredApeItemIds[2]],
+                [
+                    "1000000000000000000",
+                    "1000000000000000000",
+                    "1000000000000000000",
+                ],
+                encodeDatas
+            )
+            .send(
+                blockchainConnection.getSendingOptions({
+                    from: accounts[1],
+                })
+            );
+
+            await wrapperResource.checkBalance(
+                tx,
+                wrapper.options.address,
+                accounts[4],
+                "3",
+                boredApe
+            );
+    
+            await wrapperResource.checkBalanceItem(
+                tx,
+                accounts[1],
+                "-3000000000000000000",
+                boredApeItemIds[0],
+                wrapper
+            );
+    
+            await wrapperResource.checkSupply(
+                tx,
+                "-3000000000000000000",
+                boredApeItemIds[0],
+                wrapper
+            );
 
         // #UWB_DGODS_1_1.7 END
 
@@ -518,7 +543,7 @@ describe("itemv2 ERC721DeckWrapper", () => {
 
         // await wrapperResource.checkSupply(
         //     tx,
-        //     "0",
+        //     "-1000000000000000000",
         //     godsItemIds[0],
         //     wrapper
         // );
@@ -533,6 +558,8 @@ describe("itemv2 ERC721DeckWrapper", () => {
 
         // #UW_DGods_1_2.1 START
 
+        console.log(await wrapper.methods.balanceOf(accounts[3], godsItemIds[0]).call())
+
         data = web3.eth.abi.encodeParameters(
             ["address", "uint256", "address", "bytes", "bool", "bool"],
             [godsTokenAddresss, godsTokenId[1], accounts[2], "0x", false, false]
@@ -546,6 +573,30 @@ describe("itemv2 ERC721DeckWrapper", () => {
                 })
             );
 
+        await wrapperResource.checkBalance(
+            tx,
+            wrapper.options.address,
+            accounts[2],
+            "1",
+            gods
+        );
+
+        await wrapperResource.checkBalanceItem(
+            tx,
+            accounts[3],
+            "-1000000000000000000",
+            godsItemIds[0],
+            wrapper
+        );
+
+        await wrapperResource.checkSupply(
+            tx,
+            "-1000000000000000000",
+            godsItemIds[0],
+            wrapper
+        );
+
         // #UW_DGods_1_2.1 END
     });
 });
+

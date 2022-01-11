@@ -237,7 +237,7 @@ async function generateCreateItem(
           symbol: "",
           uri: "",
         },
-        collectionId: web3.eth.abi.encodeParameter("address", nftTokenAddress),
+        collectionId: web3.eth.abi.encodeParameter("address", nftTokenAddress[index]),
         id: tokenList[index],
         accounts: [address],
         amounts: [amount[index]],

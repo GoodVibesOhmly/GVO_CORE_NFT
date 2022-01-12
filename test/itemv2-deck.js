@@ -3,6 +3,7 @@ var itemsv2 = require("../resources/itemsv2");
 var itemProjection = require("../resources/itemProjection");
 var wrapperResource = require("../resources/wrapper");
 const blockchainConnection = require("../util/blockchainConnection");
+var erc20Contract;
 
 describe("itemv2 ERC721DeckWrapper", () => {
     var blockToSkip = 30;
@@ -616,21 +617,10 @@ describe("itemv2 ERC721DeckWrapper", () => {
 
         // #UW_DGods_1_2.1 START
 
-        console.log(
-            await wrapper.methods.balanceOf(accounts[3], godsItemIds[0]).call()
-        );
-
         data = web3.eth.abi.encodeParameters(
             ["address", "uint256", "address", "bytes", "bool", "bool"],
             [godsTokenAddresss, godsTokenId[1], accounts[2], "0x", false, false]
         );
-
-        console.log("-----------------------post----------------------");
-        console.log(await gods.methods.balanceOf(accounts[2]).call());
-        console.log(
-            await gods.methods.balanceOf(wrapper.options.address).call()
-        );
-        console.log("-----------------------end post----------------------");
 
         var tx = await wrapper.methods
             .burn(accounts[3], godsItemIds[0], "1000000000000000000", data)
@@ -639,15 +629,6 @@ describe("itemv2 ERC721DeckWrapper", () => {
                     from: accounts[3],
                 })
             );
-
-            console.log("-----------------------post----------------------");
-            console.log(await gods.methods.balanceOf(accounts[2]).call());
-            console.log(
-                await gods.methods.balanceOf(wrapper.options.address).call()
-            );
-    
-            console.log(await gods.methods.ownerOf(godsTokenId[1]).call());
-            console.log("-----------------------end post----------------------");
 
         await wrapperResource.checkBalance(
             tx,
@@ -676,6 +657,21 @@ describe("itemv2 ERC721DeckWrapper", () => {
     });
 
     it("#2", async () => {
+        /**
+         * Label            ||   Operation      || Token         || From || Receiver address || amount    || Token Reference    || Lock
+         * #W_ENS_1_1.1          Wrap              ENS              Acc1        Acc1,Acc3          2          A,B                  yes,no
+         * #W_UNI_1_1.2          Wrap              UNI v3           Acc3        Acc3               2          C, D                 yes, no
+         * #W_UNI_1_1.3          Wrap              UNI v3           Acc3        Acc1               1          E                    no
+         *
+         * #UWB_DENS_DUNI_1_1.4  MF: Unwrap batch  DENS, DUNI       Acc1        Acc2               1+1        A, C                 yes, yes
+         * #UWB_DENS_DUNI_1_1.5  MF: Unwrap batch  DENS, DUNI       Acc3        Acc3               1+1        A, E                 yes, no
+         * #UWB_DENS_DUNI_1_1.6  Unwrap Batch      DENS, DUNI       Acc1        Acc2               1+1        B,E                  yes, no
+         * JumpToBlock ---------------------------------------------------------------------------------------------------------------------------
+         * #UWB_DENS_DUNI_1_1.7  MF: Unwrap batch  DENS, DUNI       Acc3        Acc3           0.51+0.51+1    A,C,D                yes, yes, no
+         * #UWB_DENS_DUNI_1_1.8  Unwrap Batch      DENS, DUNI       Acc3        Acc3           0.51+1+0.51    A,C,D                yes, yes, no
+         * #W_ENS_UNI_1_1.9      Wrap              ENS, UNI         Acc3        Acc3            1+1           A+, C+               no, no
+         */
+
         var tokenHolderENS = "0xcfB586d08633fC36953be8083B63a7d96D50265B";
 
         var ENSTokenAddresss = "0x57f1887a8bf19b14fc0df6fd9b2acc9af147ea85";
@@ -689,20 +685,6 @@ describe("itemv2 ERC721DeckWrapper", () => {
             knowledgeBase.IERC721ABI,
             ENSTokenAddresss
         );
-
-        // var tokenHolderENS = "0x7891f796a5d43466fc29f102069092aef497a290";
-
-        // var ENSTokenAddresss = "0x0e3a2a1f2146d86a604adc220b4967a898d7fe07";
-
-        // var ENSTokenId = [
-        //     "81046035",
-        //     "81046037",
-        // ];
-
-        // var ens = new web3.eth.Contract(
-        //     knowledgeBase.IERC721ABI,
-        //     ENSTokenAddresss
-        // );
 
         await blockchainConnection.unlockAccounts(tokenHolderENS);
 
@@ -730,6 +712,8 @@ describe("itemv2 ERC721DeckWrapper", () => {
         //     [ENSTokenAddresss, ENSTokenAddresss],
         //     ["1000000000000000000", "1000000000000000000"]
         // );
+
+        // #W_ENS_1_1.1 START
 
         var createItem = await wrapperResource.generateCreateItem(
             [ENSTokenId[0]],
@@ -791,7 +775,7 @@ describe("itemv2 ERC721DeckWrapper", () => {
             )
             .map((it) => web3.eth.abi.decodeParameter("uint256", it.topics[3]));
 
-        // await wrapperResource.checkBalance( //TODO: fix
+        // await wrapperResource.checkBalance(
         //     tx,
         //     accounts[1],
         //     wrapper.options.address,
@@ -822,6 +806,8 @@ describe("itemv2 ERC721DeckWrapper", () => {
         //     wrapper
         // );
 
+        // #W_ENS_1_1.1 END
+
         var tokenHolderUni = "0x6dd91bdab368282dc4ea4f4befc831b78a7c38c0";
 
         var uniTokenAddresss = "0xc36442b4a4522e871399cd717abdd847ab11fe88";
@@ -844,6 +830,8 @@ describe("itemv2 ERC721DeckWrapper", () => {
                     })
                 );
         });
+
+        // #W_UNI_1_1.2 START
 
         uniTokenId.map(async (id, index) => {
             await uni.methods.approve(wrapper.options.address, id).send(
@@ -900,6 +888,10 @@ describe("itemv2 ERC721DeckWrapper", () => {
             wrapper
         );
 
+        // #W_UNI_1_1.2 END
+
+        // #W_UNI_1_1.3 START
+
         var data = abi.encode(
             ["uint256[]", "address[]", "bool"],
             [["1000000000000000000"], [accounts[1]], false]
@@ -939,6 +931,10 @@ describe("itemv2 ERC721DeckWrapper", () => {
             wrapper
         );
 
+        // #W_UNI_1_1.3 END
+
+        // #UWB_DENS_DUNI_1_1.4 START
+
         var datas = [];
 
         datas[0] = web3.eth.abi.encodeParameters(
@@ -952,21 +948,25 @@ describe("itemv2 ERC721DeckWrapper", () => {
 
         var encodeDatas = web3.eth.abi.encodeParameters(["bytes[]"], [datas]);
 
-        // await catchCall(
-        //     wrapper.methods
-        //         .burnBatch(
-        //             accounts[1],
-        //             [ENSItemIds[0], uniItemIds[0]],
-        //             ["1000000000000000000", "1000000000000000000"],
-        //             encodeDatas
-        //         )
-        //         .send(
-        //             blockchainConnection.getSendingOptions({
-        //                 from: accounts[1],
-        //             })
-        //         ),
-        //     "Cannot unlock"
-        // );
+        await catchCall(
+            wrapper.methods
+                .burnBatch(
+                    accounts[1],
+                    [ENSItemIds[0], uniItemIds[0]],
+                    ["1000000000000000000", "1000000000000000000"],
+                    encodeDatas
+                )
+                .send(
+                    blockchainConnection.getSendingOptions({
+                        from: accounts[1],
+                    })
+                ),
+            "Cannot unlock"
+        );
+
+        // #UWB_DENS_DUNI_1_1.4 END
+
+        // #UWB_DENS_DUNI_1_1.5 START
 
         datas[0] = web3.eth.abi.encodeParameters(
             ["address", "uint256", "address", "bytes", "bool", "bool"],
@@ -996,6 +996,10 @@ describe("itemv2 ERC721DeckWrapper", () => {
             "Cannot unlock"
         );
 
+        // #UWB_DENS_DUNI_1_1.5 END
+
+        // #UWB_DENS_DUNI_1_1.6 START
+
         datas[0] = web3.eth.abi.encodeParameters(
             ["address", "uint256", "address", "bytes", "bool", "bool"],
             [ENSTokenAddresss, ENSTokenId[1], accounts[2], "0x", false, false]
@@ -1008,7 +1012,7 @@ describe("itemv2 ERC721DeckWrapper", () => {
 
         var encodeDatas = web3.eth.abi.encodeParameters(["bytes[]"], [datas]);
 
-        await wrapper.methods
+        var tx = await wrapper.methods
             .burnBatch(
                 accounts[1],
                 [ENSItemIds[0], uniItemIds[0]],
@@ -1021,13 +1025,13 @@ describe("itemv2 ERC721DeckWrapper", () => {
                 })
             );
 
-        // await wrapperResource.checkBalance(
-        //     tx,
-        //     wrapper.options.address,
-        //     accounts[2],
-        //     "1",
-        //     uni
-        // );
+        await wrapperResource.checkBalance(
+            tx,
+            wrapper.options.address,
+            accounts[2],
+            "1",
+            uni
+        );
 
         await wrapperResource.checkBalance(
             tx,
@@ -1037,13 +1041,13 @@ describe("itemv2 ERC721DeckWrapper", () => {
             ens
         );
 
-        // await wrapperResource.checkBalanceItem(
-        //     tx,
-        //     accounts[1],
-        //     "-1000000000000000000",
-        //     uniItemIds[0],
-        //     wrapper
-        // );
+        await wrapperResource.checkBalanceItem(
+            tx,
+            accounts[1],
+            "-1000000000000000000",
+            uniItemIds[0],
+            wrapper
+        );
 
         await wrapperResource.checkBalanceItem(
             tx,
@@ -1053,12 +1057,12 @@ describe("itemv2 ERC721DeckWrapper", () => {
             wrapper
         );
 
-        // await wrapperResource.checkSupply(
-        //     tx,
-        //     "-1000000000000000000",
-        //     uniItemIds[0],
-        //     wrapper
-        // );
+        await wrapperResource.checkSupply(
+            tx,
+            "-1000000000000000000",
+            uniItemIds[0],
+            wrapper
+        );
 
         await wrapperResource.checkSupply(
             tx,
@@ -1067,7 +1071,15 @@ describe("itemv2 ERC721DeckWrapper", () => {
             wrapper
         );
 
+        // #UWB_DENS_DUNI_1_1.6 END
+
+        // JumpToBlock START
+
         await blockchainConnection.fastForward(blockToSkip);
+
+        // JumpToBlock END
+
+        // #UWB_DENS_DUNI_1_1.7 START
 
         datas[0] = web3.eth.abi.encodeParameters(
             ["address", "uint256", "address", "bytes", "bool", "bool"],
@@ -1104,6 +1116,10 @@ describe("itemv2 ERC721DeckWrapper", () => {
             "Invalid amount"
         );
 
+        // #UWB_DENS_DUNI_1_1.7 END
+
+        // #UWB_DENS_DUNI_1_1.8 START
+
         await wrapper.methods
             .burnBatch(
                 accounts[3],
@@ -1121,17 +1137,846 @@ describe("itemv2 ERC721DeckWrapper", () => {
                 })
             );
 
+        // #UWB_DENS_DUNI_1_1.8 END
+
+        // #W_ENS_UNI_1_1.9 START
+
+        await uni.methods.approve(wrapper.options.address, uniTokenId[0]).send(
+            blockchainConnection.getSendingOptions({
+                from: accounts[3],
+            })
+        );
+
+        await ens.methods.approve(wrapper.options.address, ENSTokenId[0]).send(
+            blockchainConnection.getSendingOptions({
+                from: accounts[3],
+            })
+        );
+
         var createItem = await wrapperResource.generateCreateItem(
-            [ENSTokenId[0], uniTokenId[0], uniTokenId[1]],
-            [accounts[3], accounts[3], accounts[3]],
-            [ENSTokenAddresss, uniTokenAddresss, uniTokenAddresss],
-            ["510000000000000000", "510000000000000000", "510000000000000000"]
+            [ENSTokenId[0], uniTokenId[0]],
+            [accounts[3], accounts[3]],
+            [ENSTokenAddresss, uniTokenAddresss],
+            ["510000000000000000", "510000000000000000"]
         );
 
         var tx = await wrapper.methods
-            .mintItems(createItem, [false, false, false])
+            .mintItems(createItem, [false, false])
             .send(
                 blockchainConnection.getSendingOptions({ from: accounts[3] })
             );
+
+        await wrapperResource.checkBalance(
+            tx,
+            accounts[3],
+            wrapper.options.address,
+            "1",
+            ens
+        );
+
+        await wrapperResource.checkBalance(
+            tx,
+            accounts[3],
+            wrapper.options.address,
+            "1",
+            uni
+        );
+
+        await wrapperResource.checkBalanceItem(
+            tx,
+            accounts[3],
+            "510000000000000000",
+            uniItemIds[0],
+            wrapper
+        );
+
+        await wrapperResource.checkBalanceItem(
+            tx,
+            accounts[3],
+            "510000000000000000",
+            ENSItemIds[0],
+            wrapper
+        );
+
+        await wrapperResource.checkSupply(
+            tx,
+            "510000000000000000",
+            uniItemIds[0],
+            wrapper
+        );
+
+        await wrapperResource.checkSupply(
+            tx,
+            "510000000000000000",
+            ENSItemIds[0],
+            wrapper
+        );
+
+        // #W_ENS_UNI_1_1.9 END
+    });
+
+    it("#3", async () => {
+        /**
+         * Label            ||   Operation      || Token         || From || Receiver address || amount    || Token Reference    || Lock
+         * #W_GODS_1_1.1          Wrap              GODS            Acc3        Acc3              2            A,B                  yes,yes
+         * #W_BA_1_1.2            Wrap              BORED APE       Acc4        Acc4              1            C                    no
+         * #W_BA_1_1.3            Wrap              BORED APE       Acc4        Acc4              1            D                    yes
+         *
+         * #UW_DGODS_1_1.4        MF: Unwrap        DGODS           Acc3        Acc3              0.51         A                    yes
+         * #BRN_DGODS_1_1.5       Burn(Interop.)    DGODS           Acc3        //                0.8          //                   //
+         * #UW_DGODS_1_1.6        Unwrap            DGODS           Acc3        Acc3              1            A                    yes
+         * #W_GODS_1_1.7          Wrap              GODS            Acc3        Acc3              1            A+                   no
+         * #UW_DGODS_1_1.8        Unwrap            DGODS           Acc3        Acc3              0.6          A+                   no
+         * #UW_DGODS_1_1.9        MF: Unwrap        DGODS           Acc3        Acc3              0.4          B                    yes
+         * #W_GODS_1_2.1          Wrap              GODS            Acc2        Acc2              1            A++                  no
+         * #UW_DGODS_1_2.2        Unwrap            DGODS           Acc3        Acc3              0.51         B                    yes
+         * #BRN_DBA_1_2.3         Burn(Interop.)    DBA             Acc4        //                1.4          //                   //
+         * #UW_DBA_1_2.4          Unwrap            DBA             Acc3        Acc3              0.6          C                    no
+         * #W_BA_1_2.5            Wrap              BORED APE       Acc4        Acc4              1            C+                   no
+         * #UW_DBA_1_2.6          Unwrap            DBA             Acc4        Acc4              0.6          D                    yes
+         * #W_BA_1_2.7            Wrap              BORED APE       Acc4        Acc5              1            D+                   no
+         * #UW_DBA_1_2.6          Unwrap            DBA             Acc5        Acc4              1            D+                   no
+         */
+
+        var tokenHolderGods = "0x7891f796a5d43466fC29F102069092aEF497a290";
+
+        var godsTokenAddresss = "0x0e3a2a1f2146d86a604adc220b4967a898d7fe07";
+
+        var godsTokenId = ["83257853", "83257854"];
+
+        var gods = new web3.eth.Contract(
+            knowledgeBase.IERC721ABI,
+            godsTokenAddresss
+        );
+
+        await blockchainConnection.unlockAccounts(tokenHolderGods);
+
+        godsTokenId.map(async (id, index) => {
+            await gods.methods
+                .safeTransferFrom(tokenHolderGods, accounts[3], id)
+                .send(
+                    blockchainConnection.getSendingOptions({
+                        from: tokenHolderGods,
+                    })
+                );
+        });
+
+        // #W_GODS_1_1.1 START
+
+        godsTokenId.map(async (id, index) => {
+            await gods.methods.approve(wrapper.options.address, id).send(
+                blockchainConnection.getSendingOptions({
+                    from: accounts[3],
+                })
+            );
+        });
+
+        var createItem = await wrapperResource.generateCreateItem(
+            godsTokenId,
+            [accounts[3], accounts[3]],
+            [godsTokenAddresss, godsTokenAddresss],
+            ["1000000000000000000", "1000000000000000000"]
+        );
+
+        var tx = await wrapper.methods
+            .mintItems(createItem, [true, true])
+            .send(
+                blockchainConnection.getSendingOptions({ from: accounts[3] })
+            );
+
+        var logs = (await web3.eth.getTransactionReceipt(tx.transactionHash))
+            .logs;
+
+        var godsItemIds = logs
+            .filter(
+                (it) =>
+                    it.topics[0] ===
+                    web3.utils.sha3("Token(address,uint256,uint256)")
+            )
+            .map((it) => web3.eth.abi.decodeParameter("uint256", it.topics[3]));
+
+        await wrapperResource.checkBalance(
+            tx,
+            accounts[3],
+            wrapper.options.address,
+            "2",
+            gods
+        );
+
+        await wrapperResource.checkBalanceItem(
+            tx,
+            accounts[3],
+            "2000000000000000000",
+            godsItemIds[0],
+            wrapper
+        );
+
+        await wrapperResource.checkSupply(
+            tx,
+            "2000000000000000000",
+            godsItemIds[0],
+            wrapper
+        );
+
+        // #W_GODS_1_1.1 END
+
+        var tokenHolderBoredApe = "0x1b523DC90A79cF5ee5d095825e586e33780f7188";
+
+        var boredApeTokenAddresss =
+            "0xbc4ca0eda7647a8ab7c2061c2e118a18a936f13d";
+
+        var boredApeTokenId = ["8188", "8187"];
+
+        var boredApe = new web3.eth.Contract(
+            knowledgeBase.IERC721ABI,
+            boredApeTokenAddresss
+        );
+
+        await blockchainConnection.unlockAccounts(tokenHolderBoredApe);
+
+        boredApeTokenId.map(async (id, index) => {
+            await boredApe.methods
+                .safeTransferFrom(tokenHolderBoredApe, accounts[4], id)
+                .send(
+                    blockchainConnection.getSendingOptions({
+                        from: tokenHolderBoredApe,
+                    })
+                );
+        });
+
+        // #W_BA_1_1.2 START
+
+        boredApeTokenId.map(async (id, index) => {
+            await boredApe.methods.approve(wrapper.options.address, id).send(
+                blockchainConnection.getSendingOptions({
+                    from: accounts[4],
+                })
+            );
+        });
+
+        var createItem = await wrapperResource.generateCreateItem(
+            [boredApeTokenId[0]],
+            [accounts[4]],
+            [boredApeTokenAddresss],
+            ["1000000000000000000"]
+        );
+
+        var tx = await wrapper.methods
+            .mintItems(createItem, [false])
+            .send(
+                blockchainConnection.getSendingOptions({ from: accounts[4] })
+            );
+
+        var logs = (await web3.eth.getTransactionReceipt(tx.transactionHash))
+            .logs;
+
+        var boredApeItemIds = logs
+            .filter(
+                (it) =>
+                    it.topics[0] ===
+                    web3.utils.sha3("Token(address,uint256,uint256)")
+            )
+            .map((it) => web3.eth.abi.decodeParameter("uint256", it.topics[3]));
+
+        await wrapperResource.checkBalance(
+            tx,
+            accounts[4],
+            wrapper.options.address,
+            "1",
+            boredApe
+        );
+
+        await wrapperResource.checkBalanceItem(
+            tx,
+            accounts[4],
+            "1000000000000000000",
+            boredApeItemIds[0],
+            wrapper
+        );
+
+        await wrapperResource.checkSupply(
+            tx,
+            "1000000000000000000",
+            boredApeItemIds[0],
+            wrapper
+        );
+
+        // #W_BA_1_1.2 END
+
+        // #W_BA_1_1.3 START
+
+        var data = abi.encode(
+            ["uint256[]", "address[]", "bool"],
+            [["1000000000000000000"], [accounts[4]], true]
+        );
+
+        tx = await boredApe.methods
+            .safeTransferFrom(
+                accounts[4],
+                wrapper.options.address,
+                boredApeTokenId[1],
+                data
+            )
+            .send(
+                blockchainConnection.getSendingOptions({ from: accounts[4] })
+            );
+
+        await wrapperResource.checkBalance(
+            tx,
+            accounts[4],
+            wrapper.options.address,
+            "1",
+            boredApe
+        );
+
+        await wrapperResource.checkBalanceItem(
+            tx,
+            accounts[4],
+            "1000000000000000000",
+            boredApeItemIds[0],
+            wrapper
+        );
+
+        await wrapperResource.checkSupply(
+            tx,
+            "1000000000000000000",
+            boredApeItemIds[0],
+            wrapper
+        );
+
+        // #W_BA_1_1.3 END
+
+        // #UW_DGODS_1_1.4 START
+
+        var data = web3.eth.abi.encodeParameters(
+            ["address", "uint256", "address", "bytes", "bool", "bool"],
+            [godsTokenAddresss, godsTokenId[0], accounts[3], "0x", false, false]
+        );
+
+        await catchCall(
+            wrapper.methods
+                .burn(accounts[3], godsItemIds[0], "510000000000000000", data)
+                .send(
+                    blockchainConnection.getSendingOptions({
+                        from: accounts[3],
+                    })
+                ),
+            "Invalid amount"
+        );
+
+        // #UW_DGODS_1_1.4 END
+
+        // #BRN_DGODS_1_1.5 START
+
+        var burnValue = "800000000000000000";
+
+        erc20Contract = await asInteroperableInterface(godsItemIds[0]);
+        await erc20Contract.methods
+            .burn(burnValue)
+            .send(
+                blockchainConnection.getSendingOptions({ from: accounts[3] })
+            );
+
+        await wrapperResource.checkSupply(
+            tx,
+            burnValue.mul(-1),
+            godsItemIds[0],
+            wrapper
+        );
+
+        // #BRN_DGODS_1_1.5 END
+
+        // #UW_DGODS_1_1.6 START
+
+        var data = web3.eth.abi.encodeParameters(
+            ["address", "uint256", "address", "bytes", "bool", "bool"],
+            [godsTokenAddresss, godsTokenId[0], accounts[3], "0x", false, false]
+        );
+
+        var tx = await wrapper.methods
+            .burn(accounts[3], godsItemIds[0], "1000000000000000000", data)
+            .send(
+                blockchainConnection.getSendingOptions({
+                    from: accounts[3],
+                })
+            );
+
+        await wrapperResource.checkBalance(
+            tx,
+            wrapper.options.address,
+            accounts[3],
+            "1",
+            gods
+        );
+
+        await wrapperResource.checkBalanceItem(
+            tx,
+            accounts[3],
+            "-1000000000000000000",
+            godsItemIds[0],
+            wrapper
+        );
+
+        await wrapperResource.checkSupply(
+            tx,
+            "-1000000000000000000",
+            godsItemIds[0],
+            wrapper
+        );
+
+        // #UW_DGODS_1_1.6 END
+
+        // #W_GODS_1_1.7 START
+
+        await gods.methods
+            .approve(wrapper.options.address, godsTokenId[0])
+            .send(
+                blockchainConnection.getSendingOptions({
+                    from: accounts[3],
+                })
+            );
+
+        var createItem = await wrapperResource.generateCreateItem(
+            [godsTokenId[0]],
+            [accounts[3]],
+            [godsTokenAddresss],
+            ["800000000000000000"]
+        );
+
+        var tx = await wrapper.methods
+            .mintItems(createItem, [false])
+            .send(
+                blockchainConnection.getSendingOptions({ from: accounts[3] })
+            );
+
+        await wrapperResource.checkBalance(
+            tx,
+            accounts[3],
+            wrapper.options.address,
+            "1",
+            gods
+        );
+
+        await wrapperResource.checkBalanceItem(
+            tx,
+            accounts[3],
+            "800000000000000000",
+            godsItemIds[0],
+            wrapper
+        );
+
+        await wrapperResource.checkSupply(
+            tx,
+            "800000000000000000",
+            godsItemIds[0],
+            wrapper
+        );
+
+        // #W_GODS_1_1.7 END
+
+        // #UW_DGODS_1_1.8 START
+
+        var data = web3.eth.abi.encodeParameters(
+            ["address", "uint256", "address", "bytes", "bool", "bool"],
+            [godsTokenAddresss, godsTokenId[0], accounts[3], "0x", false, false]
+        );
+
+        var tx = await wrapper.methods
+            .burn(accounts[3], godsItemIds[0], "600000000000000000", data)
+            .send(
+                blockchainConnection.getSendingOptions({
+                    from: accounts[3],
+                })
+            );
+
+        await wrapperResource.checkBalance(
+            tx,
+            wrapper.options.address,
+            accounts[3],
+            "1",
+            gods
+        );
+
+        await wrapperResource.checkBalanceItem(
+            tx,
+            accounts[3],
+            "-600000000000000000",
+            godsItemIds[0],
+            wrapper
+        );
+
+        await wrapperResource.checkSupply(
+            tx,
+            "-600000000000000000",
+            godsItemIds[0],
+            wrapper
+        );
+
+        // #UW_DGODS_1_1.8 END
+
+        // #UW_DGODS_1_1.9 START
+
+        var data = web3.eth.abi.encodeParameters(
+            ["address", "uint256", "address", "bytes", "bool", "bool"],
+            [godsTokenAddresss, godsTokenId[1], accounts[3], "0x", false, false]
+        );
+
+        await catchCall(
+            wrapper.methods
+                .burn(accounts[3], godsItemIds[0], "400000000000000000", data)
+                .send(
+                    blockchainConnection.getSendingOptions({
+                        from: accounts[3],
+                    })
+                ),
+            "Invalid amount"
+        );
+
+        // #UW_DGODS_1_1.9 END
+
+        // #W_GODS_1_2.1 START
+
+        await gods.methods
+            .approve(wrapper.options.address, godsTokenId[0])
+            .send(
+                blockchainConnection.getSendingOptions({
+                    from: accounts[3],
+                })
+            );
+
+        var createItem = await wrapperResource.generateCreateItem(
+            [godsTokenId[0]],
+            [accounts[2]],
+            [godsTokenAddresss],
+            ["600000000000000000"]
+        );
+
+        var tx = await wrapper.methods
+            .mintItems(createItem, [false])
+            .send(
+                blockchainConnection.getSendingOptions({ from: accounts[3] })
+            );
+
+        await wrapperResource.checkBalance(
+            tx,
+            accounts[3],
+            wrapper.options.address,
+            "1",
+            gods
+        );
+
+        await wrapperResource.checkBalanceItem(
+            tx,
+            accounts[2],
+            "600000000000000000",
+            godsItemIds[0],
+            wrapper
+        );
+
+        await wrapperResource.checkSupply(
+            tx,
+            "600000000000000000",
+            godsItemIds[0],
+            wrapper
+        );
+
+        // #W_GODS_1_2.1 END
+
+        // #UW_DGODS_1_2.2 START
+
+        // var data = web3.eth.abi.encodeParameters(
+        //     ["address", "uint256", "address", "bytes", "bool", "bool"],
+        //     [godsTokenAddresss, godsTokenId[1], accounts[3], "0x", false, false]
+        // );
+
+        // var tx = await wrapper.methods //FIXME: balance 0.4
+        //     .burn(accounts[3], godsItemIds[0], "510000000000000000", data)
+        //     .send(
+        //         blockchainConnection.getSendingOptions({
+        //             from: accounts[3],
+        //         })
+        //     );
+
+        // await wrapperResource.checkBalance(
+        //     tx,
+        //     wrapper.options.address,
+        //     accounts[3],
+        //     "1",
+        //     gods
+        // );
+
+        // await wrapperResource.checkBalanceItem(
+        //     tx,
+        //     accounts[3],
+        //     "-510000000000000000",
+        //     godsItemIds[0],
+        //     wrapper
+        // );
+
+        // await wrapperResource.checkSupply(
+        //     tx,
+        //     "-510000000000000000",
+        //     godsItemIds[0],
+        //     wrapper
+        // );
+
+        // #UW_DGODS_1_2.2 END
+
+        // #BRN_DBA_1_2.3 START
+
+        var burnValue = "1400000000000000000";
+
+        erc20Contract = await asInteroperableInterface(boredApeItemIds[0]);
+        var tx = await erc20Contract.methods
+            .burn(burnValue)
+            .send(
+                blockchainConnection.getSendingOptions({ from: accounts[4] })
+            );
+
+        await wrapperResource.checkSupply(
+            tx,
+            burnValue.mul(-1),
+            boredApeItemIds[0],
+            wrapper
+        );
+
+        // #BRN_DBA_1_2.3 END
+
+        // #UW_DBA_1_2.4 START
+
+        var data = web3.eth.abi.encodeParameters(
+            ["address", "uint256", "address", "bytes", "bool", "bool"],
+            [
+                boredApeTokenAddresss,
+                boredApeTokenId[0],
+                accounts[4],
+                "0x",
+                false,
+                false,
+            ]
+        );
+
+        var tx = await wrapper.methods
+            .burn(accounts[4], boredApeItemIds[0], "600000000000000000", data)
+            .send(
+                blockchainConnection.getSendingOptions({
+                    from: accounts[4],
+                })
+            );
+
+        await wrapperResource.checkBalance(
+            tx,
+            wrapper.options.address,
+            accounts[4],
+            "1",
+            boredApe
+        );
+
+        await wrapperResource.checkBalanceItem(
+            tx,
+            accounts[4],
+            "-600000000000000000",
+            boredApeItemIds[0],
+            wrapper
+        );
+
+        await wrapperResource.checkSupply(
+            tx,
+            "-600000000000000000",
+            boredApeItemIds[0],
+            wrapper
+        );
+
+        // #UW_DBA_1_2.4 END
+
+        // #W_BA_1_2.5 START
+
+        await boredApe.methods
+            .approve(wrapper.options.address, boredApeTokenId[0])
+            .send(
+                blockchainConnection.getSendingOptions({
+                    from: accounts[4],
+                })
+            );
+
+        var createItem = await wrapperResource.generateCreateItem(
+            [boredApeTokenId[0]],
+            [accounts[4]],
+            [boredApeTokenAddresss],
+            ["1000000000000000000"]
+        );
+
+        var tx = await wrapper.methods
+            .mintItems(createItem, [false])
+            .send(
+                blockchainConnection.getSendingOptions({ from: accounts[4] })
+            );
+
+        await wrapperResource.checkBalance(
+            tx,
+            accounts[4],
+            wrapper.options.address,
+            "1",
+            boredApe
+        );
+
+        await wrapperResource.checkBalanceItem(
+            tx,
+            accounts[4],
+            "1000000000000000000",
+            boredApeItemIds[0],
+            wrapper
+        );
+
+        await wrapperResource.checkSupply(
+            tx,
+            "1000000000000000000",
+            boredApeItemIds[0],
+            wrapper
+        );
+
+        // #W_BA_1_2.5 END
+
+        // #UW_DBA_1_2.6 START
+
+        var data = web3.eth.abi.encodeParameters(
+            ["address", "uint256", "address", "bytes", "bool", "bool"],
+            [
+                boredApeTokenAddresss,
+                boredApeTokenId[1],
+                accounts[4],
+                "0x",
+                false,
+                false,
+            ]
+        );
+
+        var tx = await wrapper.methods
+            .burn(accounts[4], boredApeItemIds[0], "600000000000000000", data)
+            .send(
+                blockchainConnection.getSendingOptions({
+                    from: accounts[4],
+                })
+            );
+
+        await wrapperResource.checkBalance(
+            tx,
+            wrapper.options.address,
+            accounts[4],
+            "1",
+            boredApe
+        );
+
+        await wrapperResource.checkBalanceItem(
+            tx,
+            accounts[4],
+            "-600000000000000000",
+            boredApeItemIds[0],
+            wrapper
+        );
+
+        await wrapperResource.checkSupply(
+            tx,
+            "-600000000000000000",
+            boredApeItemIds[0],
+            wrapper
+        );
+
+        // #UW_DBA_1_2.6 END
+
+        // #W_BA_1_2.7 START
+
+        await boredApe.methods
+            .approve(wrapper.options.address, boredApeTokenId[1])
+            .send(
+                blockchainConnection.getSendingOptions({
+                    from: accounts[4],
+                })
+            );
+
+        var createItem = await wrapperResource.generateCreateItem(
+            [boredApeTokenId[1]],
+            [accounts[5]],
+            [boredApeTokenAddresss],
+            ["600000000000000000"]
+        );
+
+        var tx = await wrapper.methods
+            .mintItems(createItem, [false])
+            .send(
+                blockchainConnection.getSendingOptions({ from: accounts[4] })
+            );
+
+        await wrapperResource.checkBalance(
+            tx,
+            accounts[4],
+            wrapper.options.address,
+            "1",
+            boredApe
+        );
+
+        await wrapperResource.checkBalanceItem(
+            tx,
+            accounts[5],
+            "600000000000000000",
+            boredApeItemIds[0],
+            wrapper
+        );
+
+        await wrapperResource.checkSupply(
+            tx,
+            "600000000000000000",
+            boredApeItemIds[0],
+            wrapper
+        );
+
+        // #W_BA_1_2.7 END
+
+        // #UW_DBA_1_2.6 START
+
+        var data = web3.eth.abi.encodeParameters(
+            ["address", "uint256", "address", "bytes", "bool", "bool"],
+            [
+                boredApeTokenAddresss,
+                boredApeTokenId[1],
+                accounts[4],
+                "0x",
+                false,
+                false,
+            ]
+        );
+
+        var tx = await wrapper.methods
+            .burn(accounts[5], boredApeItemIds[0], "600000000000000000", data)
+            .send(
+                blockchainConnection.getSendingOptions({
+                    from: accounts[5],
+                })
+            );
+
+        await wrapperResource.checkBalance(
+            tx,
+            wrapper.options.address,
+            accounts[4],
+            "1",
+            boredApe
+        );
+
+        await wrapperResource.checkBalanceItem(
+            tx,
+            accounts[5],
+            "-600000000000000000",
+            boredApeItemIds[0],
+            wrapper
+        );
+
+        await wrapperResource.checkSupply(
+            tx,
+            "-600000000000000000",
+            boredApeItemIds[0],
+            wrapper
+        );
+
+        // #UW_DBA_1_2.6 END
     });
 });

@@ -1578,7 +1578,7 @@ describe("itemv2 ERC721DeckWrapper", () => {
 
         var data = web3.eth.abi.encodeParameters(
             ["address", "uint256", "address", "bytes", "bool", "bool"],
-            [godsTokenAddresss, godsTokenId[0], accounts[3], "0x", false, false]
+            [godsTokenAddresss, godsTokenId[0], accounts[2], "0x", false, false]
         );
 
         var tx = await wrapper.methods
@@ -1592,7 +1592,7 @@ describe("itemv2 ERC721DeckWrapper", () => {
         await wrapperResource.checkBalance(
             tx,
             wrapper.options.address,
-            accounts[3],
+            accounts[2],
             "1",
             gods
         );
@@ -1640,13 +1640,13 @@ describe("itemv2 ERC721DeckWrapper", () => {
             .approve(wrapper.options.address, godsTokenId[0])
             .send(
                 blockchainConnection.getSendingOptions({
-                    from: accounts[3],
+                    from: accounts[2],
                 })
             );
 
         var createItem = await wrapperResource.generateCreateItem(
             [godsTokenId[0]],
-            [accounts[2]],
+            [accounts[3]],
             [godsTokenAddresss],
             ["600000000000000000"]
         );
@@ -1654,12 +1654,12 @@ describe("itemv2 ERC721DeckWrapper", () => {
         var tx = await wrapper.methods
             .mintItems(createItem, [false])
             .send(
-                blockchainConnection.getSendingOptions({ from: accounts[3] })
+                blockchainConnection.getSendingOptions({ from: accounts[2] })
             );
 
         await wrapperResource.checkBalance(
             tx,
-            accounts[3],
+            accounts[2],
             wrapper.options.address,
             "1",
             gods
@@ -1667,7 +1667,7 @@ describe("itemv2 ERC721DeckWrapper", () => {
 
         await wrapperResource.checkBalanceItem(
             tx,
-            accounts[2],
+            accounts[3],
             "600000000000000000",
             godsItemIds[0],
             wrapper
@@ -1684,41 +1684,41 @@ describe("itemv2 ERC721DeckWrapper", () => {
 
         // #UW_DGODS_1_2.2 START
 
-        // var data = web3.eth.abi.encodeParameters(
-        //     ["address", "uint256", "address", "bytes", "bool", "bool"],
-        //     [godsTokenAddresss, godsTokenId[1], accounts[3], "0x", false, false]
-        // );
+        var data = web3.eth.abi.encodeParameters(
+            ["address", "uint256", "address", "bytes", "bool", "bool"],
+            [godsTokenAddresss, godsTokenId[1], accounts[3], "0x", false, false]
+        );
 
-        // var tx = await wrapper.methods //FIXME: balance 0.4
-        //     .burn(accounts[3], godsItemIds[0], "510000000000000000", data)
-        //     .send(
-        //         blockchainConnection.getSendingOptions({
-        //             from: accounts[3],
-        //         })
-        //     );
+        var tx = await wrapper.methods
+            .burn(accounts[3], godsItemIds[0], "510000000000000000", data)
+            .send(
+                blockchainConnection.getSendingOptions({
+                    from: accounts[3],
+                })
+            );
 
-        // await wrapperResource.checkBalance(
-        //     tx,
-        //     wrapper.options.address,
-        //     accounts[3],
-        //     "1",
-        //     gods
-        // );
+        await wrapperResource.checkBalance(
+            tx,
+            wrapper.options.address,
+            accounts[3],
+            "1",
+            gods
+        );
 
-        // await wrapperResource.checkBalanceItem(
-        //     tx,
-        //     accounts[3],
-        //     "-510000000000000000",
-        //     godsItemIds[0],
-        //     wrapper
-        // );
+        await wrapperResource.checkBalanceItem(
+            tx,
+            accounts[3],
+            "-510000000000000000",
+            godsItemIds[0],
+            wrapper
+        );
 
-        // await wrapperResource.checkSupply(
-        //     tx,
-        //     "-510000000000000000",
-        //     godsItemIds[0],
-        //     wrapper
-        // );
+        await wrapperResource.checkSupply(
+            tx,
+            "-510000000000000000",
+            godsItemIds[0],
+            wrapper
+        );
 
         // #UW_DGODS_1_2.2 END
 

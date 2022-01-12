@@ -1930,6 +1930,17 @@ describe("itemv2 ERC721DeckWrapper", () => {
     });
 
     it("#4", async () => {
+        /**
+         * Label            ||   Operation      || Token         || From || Receiver address || amount    || Token Reference    || Lock
+         * #W_CS_4_1.1           Wrap              Crypto Skulls    Acc1        Acc1               1          A                    no
+         *
+         * #TRA_DCS_4_1.2        Transfer          DCS              Acc1        Acc2               1          //                   //
+         * #UW_DCS_4_1.3         Unwrap            DCS              Acc2        Acc2               0.55       A                    no
+         * #W_CS_4_1.4           Wrap              CS               Acc2        Acc1               1          A+                   yes    
+         * #UW_DCS_4_1.5         MF: Unwrap        DCS              Acc1        Acc2               1          A+                   yes
+         * JumpToBlock ---------------------------------------------------------------------------------------------------------------------------
+         * #UW_DCS_4_1.6         Unwrap            DCS              Acc1        Acc2               0.55       A+                   yes
+         */
         var tokenHolderCryptoSkulls =
             "0x9aaf2f84afb2162a1efa57018bd4b1ae0da28cce";
 
@@ -1964,6 +1975,8 @@ describe("itemv2 ERC721DeckWrapper", () => {
                     })
                 );
         });
+
+        // #W_CS_4_1.1 START
 
         var createItem = await wrapperResource.generateCreateItem(
             cryptoSkullsTokenId,
@@ -2012,6 +2025,10 @@ describe("itemv2 ERC721DeckWrapper", () => {
             wrapper
         );
 
+        // #W_CS_4_1.1 END
+
+        // #TRA_DCS_4_1.2 START
+
         var tx = await wrapper.methods
             .safeTransferFrom(
                 accounts[1],
@@ -2023,6 +2040,10 @@ describe("itemv2 ERC721DeckWrapper", () => {
             .send(
                 blockchainConnection.getSendingOptions({ from: accounts[1] })
             );
+
+        // #TRA_DCS_4_1.2 END
+
+        // #UW_DCS_4_1.3 START
 
         var data = web3.eth.abi.encodeParameters(
             ["address", "uint256", "address", "bytes", "bool", "bool"],
@@ -2069,6 +2090,10 @@ describe("itemv2 ERC721DeckWrapper", () => {
             wrapper
         );
 
+        // #UW_DCS_4_1.3 END
+
+        // #W_CS_4_1.4 START
+
         await cryptoSkulls.methods
             .approve(wrapper.options.address, cryptoSkullsTokenId[0])
             .send(
@@ -2113,6 +2138,10 @@ describe("itemv2 ERC721DeckWrapper", () => {
             wrapper
         );
 
+        // #W_CS_4_1.4 END
+
+        // #UW_DCS_4_1.5 START
+
         var data = web3.eth.abi.encodeParameters(
             ["address", "uint256", "address", "bytes", "bool", "bool"],
             [
@@ -2141,7 +2170,15 @@ describe("itemv2 ERC721DeckWrapper", () => {
             "Cannot unlock"
         );
 
+        // #UW_DCS_4_1.5 END
+
+        // JumpToBlock START
+
         await blockchainConnection.fastForward(blockToSkip);
+
+        // JumpToBlock END
+
+        // #UW_DCS_4_1.6 START
 
         var tx = await wrapper.methods
             .burn(
@@ -2179,6 +2216,19 @@ describe("itemv2 ERC721DeckWrapper", () => {
             wrapper
         );
 
+        // #UW_DCS_4_1.6 END
+    });
+
+    it("#5", async () => {
+        /**
+         * Label            ||   Operation      || Token         || From || Receiver address || amount    || Token Reference    || Lock
+         * #W_EP_5_1.1           Wrap              Ether Pirates    Acc1        Acc1               1          A                    yes
+         *
+         * #UW_DEP_5_1.2         Unwrap            DEP              Acc1        Acc2               0.6        A                    yes
+         * #W_EP_5_1.3           Wrap              Ether Pirates    Acc2        Acc1               1          A+                   no    
+         * #UW_DEP_5_1.4         Unwrap            DEP              Acc1        Acc2               0.7        A+                   no
+         */
+
         var tokenHolderEtherPirates =
             "0x43cf525d63987d17052d9891587bcfb9592c3ee2";
 
@@ -2213,6 +2263,8 @@ describe("itemv2 ERC721DeckWrapper", () => {
                     })
                 );
         });
+
+        // #W_EP_5_1.1 START
 
         var amountToWrap = "1000000000000000000";
 
@@ -2263,6 +2315,10 @@ describe("itemv2 ERC721DeckWrapper", () => {
             wrapper
         );
 
+        // #W_EP_5_1.1 END
+
+        // #UW_DEP_5_1.2 START
+        
         var data = web3.eth.abi.encodeParameters(
             ["address", "uint256", "address", "bytes", "bool", "bool"],
             [
@@ -2307,6 +2363,10 @@ describe("itemv2 ERC721DeckWrapper", () => {
             etherPiratesItemIds[0],
             wrapper
         );
+
+        // #UW_DEP_5_1.2 END
+
+        // #W_EP_5_1.3 START
 
         await etherPirates.methods
             .approve(wrapper.options.address, etherPiratesTokenId[0])
@@ -2354,6 +2414,10 @@ describe("itemv2 ERC721DeckWrapper", () => {
             wrapper
         );
 
+        // #W_EP_5_1.3 END
+
+        // #UW_DEP_5_1.4 START
+
         var data = web3.eth.abi.encodeParameters(
             ["address", "uint256", "address", "bytes", "bool", "bool"],
             [
@@ -2398,9 +2462,26 @@ describe("itemv2 ERC721DeckWrapper", () => {
             etherPiratesItemIds[0],
             wrapper
         );
+
+        // #UW_DEP_5_1.4 START
     });
 
-    it("#5", async () => {
+    it("#6", async () => {
+        /**
+         * Label                ||   Operation        || Token              || From  || Receiver address                  || amount               || Token Reference       || Lock
+         * #W_VOX_SB_NFF_6_1.1       Wrap                VOX, Sandbox, Fungi    Acc1    Acc2, Acc3,Acc2, Acc3,Acc2, Acc3    1+1+1+1+1+1                 A, B, C, D, E, F      yes, no, yes, no, yes,no
+         *
+         * #UW_DVOX_DSB_DNFF_6_1.2   MF: Unwrap Batch    DVOX,DSB,DNFF          Acc2        Acc2                            1+1+1                       A, C, E               yes, yes, yes
+         * #UW_DVOX_DSB_DNFF_6_1.3   MF: Unwrap Batch    DVOX,DSB,DNFF          Acc3        Acc3                            0.51+0.51+0.51              B,D,F                 no, no, no
+         * JumpToBlock -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+         * #UW_DVOX_DSB_DNFF_6_1.4   Unwrap Batch        DVOX,DSB,DNFF          Acc2        Acc2                            1+1+1                       A, C, E               yes, yes, yes
+         * #W_VOX_SB_NFF_6_1.5       Wrap                VOX, Sandbox, Fungi    Acc2        Acc3                            1+1+1+1+1+1                 A+,C+,E+,G,H,I        yes, yes, yes,yes, yes, yes
+         * #UW_DVOX_DSB_DNFF_6_1.6   MF: Unwrap Batch    DVOX,DSB,DNFF          Acc3        Acc2                            1+1+1+1+1+1+1+1+1           A+,B,G,C+,D,H,E+,F,I  yes, no, yes, no, yes,no, yes, yes, yes
+         * JumpToBlock -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+         * #UW_DVOX_DSB_DNFF_6_1.7   MF: Unwrap Batch    DVOX,DSB,DNFF          Acc3        Acc2                            1+0.51+1+1+1+0.51+1+1+0.51  A+,B,G,C+,D,H,E+,F,I  yes, no, yes, no, yes,no, yes, yes, yes
+         * #UW_DVOX_DSB_DNFF_6_1.8   Unwrap Batch        DVOX,DSB,DNFF          Acc3        Acc2                            1+1+0.51+1+1+0.51+1+1+0.51  A+,B,G,C+,D,H,E+,F,I  yes, no, yes, no, yes,no, yes, yes, yes
+         */
+
         var tokenHolderVox = "0xe995a353a97a33e2dbac9e70ba6778db86728f4e";
 
         var voxTokenAddresss = "0xad9fd7cb4fc7a0fbce08d64068f60cbde22ed34c";
@@ -2493,6 +2574,8 @@ describe("itemv2 ERC721DeckWrapper", () => {
                 })
             );
         });
+
+        // #W_VOX_SB_NFF_6_1.1 START
 
         var createItem = await wrapperResource.generateCreateItem(
             [
@@ -2639,6 +2722,10 @@ describe("itemv2 ERC721DeckWrapper", () => {
             wrapper
         );
 
+        // #W_VOX_SB_NFF_6_1.1 END
+
+        // #UW_DVOX_DSB_DNFF_6_1.2 START
+
         var datas = [];
 
         datas[0] = web3.eth.abi.encodeParameters(
@@ -2690,6 +2777,10 @@ describe("itemv2 ERC721DeckWrapper", () => {
             "Cannot unlock"
         );
 
+        // #UW_DVOX_DSB_DNFF_6_1.2 END
+
+        // #UW_DVOX_DSB_DNFF_6_1.3 START
+
         datas[0] = web3.eth.abi.encodeParameters(
             ["address", "uint256", "address", "bytes", "bool", "bool"],
             [voxTokenAddresss, voxTokenId[1], accounts[3], "0x", false, false]
@@ -2739,7 +2830,13 @@ describe("itemv2 ERC721DeckWrapper", () => {
             "Invalid amount"
         );
 
+        // #UW_DVOX_DSB_DNFF_6_1.3 END
+
+        // JumpToBlock START
         await blockchainConnection.fastForward(blockToSkip);
+        // JumpToBlock END
+
+        // #UW_DVOX_DSB_DNFF_6_1.4 START
 
         datas[0] = web3.eth.abi.encodeParameters(
             ["address", "uint256", "address", "bytes", "bool", "bool"],
@@ -2864,6 +2961,8 @@ describe("itemv2 ERC721DeckWrapper", () => {
             wrapper
         );
 
+        // #UW_DVOX_DSB_DNFF_6_1.4 END
+
         await sandbox.methods
             .safeTransferFrom(accounts[1], accounts[2], sandboxTokenId[2])
             .send(
@@ -2931,6 +3030,8 @@ describe("itemv2 ERC721DeckWrapper", () => {
                     from: accounts[2],
                 })
             );
+
+        // #W_VOX_SB_NFF_6_1.5 START
 
         var createItem = await wrapperResource.generateCreateItem(
             [
@@ -3041,6 +3142,10 @@ describe("itemv2 ERC721DeckWrapper", () => {
             itemIds[4],
             wrapper
         );
+
+        // #W_VOX_SB_NFF_6_1.5 END
+
+        // #UW_DVOX_DSB_DNFF_6_1.6 START
 
         datas[0] = web3.eth.abi.encodeParameters(
             ["address", "uint256", "address", "bytes", "bool", "bool"],
@@ -3159,7 +3264,15 @@ describe("itemv2 ERC721DeckWrapper", () => {
             "Cannot unlock"
         );
 
+        // #UW_DVOX_DSB_DNFF_6_1.6 END
+
+        // JumpToBlock START
+
         await blockchainConnection.fastForward(blockToSkip);
+
+        // JumpToBlock END
+
+        // #UW_DVOX_DSB_DNFF_6_1.7 START
 
         await catchCall(
             wrapper.methods
@@ -3196,6 +3309,10 @@ describe("itemv2 ERC721DeckWrapper", () => {
                 ),
             "Invalid amount"
         );
+
+        // #UW_DVOX_DSB_DNFF_6_1.7 END
+
+        // #UW_DVOX_DSB_DNFF_6_1.8 START
 
         var tx = await wrapper.methods
             .burnBatch(
@@ -3298,5 +3415,7 @@ describe("itemv2 ERC721DeckWrapper", () => {
             itemIds[4],
             wrapper
         );
+
+        // #UW_DVOX_DSB_DNFF_6_1.8 END
     });
 });

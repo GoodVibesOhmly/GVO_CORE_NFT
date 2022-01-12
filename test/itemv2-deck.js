@@ -607,15 +607,7 @@ describe("itemv2 ERC721DeckWrapper", () => {
             wrapper
         );
 
-        // #UW_DGODS_1_1.9 END
-
-        // JumpToBlock START
-
         await blockchainConnection.fastForward(blockToSkip);
-
-        // JumpToBlock END
-
-        // #UW_DGods_1_2.1 START
 
         data = web3.eth.abi.encodeParameters(
             ["address", "uint256", "address", "bytes", "bool", "bool"],
@@ -715,54 +707,11 @@ describe("itemv2 ERC721DeckWrapper", () => {
 
         // #W_ENS_1_1.1 START
 
-        /*var createItem = await wrapperResource.generateCreateItem(
-            [ENSTokenId[0]],
-            [accounts[1]],
-            [ENSTokenAddresss],
-            ["1000000000000000000"]
-        );
-
-        var createItem1 = await wrapperResource.generateCreateItem(
-            [ENSTokenId[1]],
-            [accounts[3]],
-            [ENSTokenAddresss],
-            ["1000000000000000000"]
-        );*/
-
-        console.log("-----------------------pre----------------------");
-        console.log(await ens.methods.balanceOf(accounts[1]).call());
-        console.log(
-            await ens.methods.balanceOf(wrapper.options.address).call()
-        );
-        console.log("-----------------------end pre----------------------");
-
         var tx = await wrapper.methods
             .mintItems(createItem, [true, false])
             .send(
                 blockchainConnection.getSendingOptions({ from: accounts[1] })
             );
-
-        /*var tx = await wrapper.methods
-            .mintItems(createItem, [true])
-            .send(
-                blockchainConnection.getSendingOptions({ from: accounts[1] })
-            );
-
-        var tx = await wrapper.methods
-            .mintItems(createItem1, [false])
-            .send(
-                blockchainConnection.getSendingOptions({ from: accounts[1] })
-            );*/
-
-        console.log("-----------------------post----------------------");
-        console.log(await ens.methods.balanceOf(accounts[1]).call());
-        console.log(
-            await ens.methods.balanceOf(wrapper.options.address).call()
-        );
-
-        console.log(await ens.methods.ownerOf(ENSTokenId[0]).call());
-        console.log(await ens.methods.ownerOf(ENSTokenId[1]).call());
-        console.log("-----------------------end post----------------------");
 
         var logs = (await web3.eth.getTransactionReceipt(tx.transactionHash))
             .logs;
@@ -775,36 +724,36 @@ describe("itemv2 ERC721DeckWrapper", () => {
             )
             .map((it) => web3.eth.abi.decodeParameter("uint256", it.topics[3]));
 
-        // await wrapperResource.checkBalance(
-        //     tx,
-        //     accounts[1],
-        //     wrapper.options.address,
-        //     "2",
-        //     ens
-        // );
+        await wrapperResource.checkBalance(
+            tx,
+            accounts[1],
+            wrapper.options.address,
+            "2",
+            ens
+        );
 
-        // await wrapperResource.checkBalanceItem(
-        //     tx,
-        //     accounts[1],
-        //     "1000000000000000000",
-        //     ENSItemIds[0],
-        //     wrapper
-        // );
+        await wrapperResource.checkBalanceItem(
+            tx,
+            accounts[1],
+            "1000000000000000000",
+            ENSItemIds[0],
+            wrapper
+        );
 
-        // await wrapperResource.checkBalanceItem(
-        //     tx,
-        //     accounts[3],
-        //     "1000000000000000000",
-        //     ENSItemIds[0],
-        //     wrapper
-        // );
+        await wrapperResource.checkBalanceItem(
+            tx,
+            accounts[3],
+            "1000000000000000000",
+            ENSItemIds[0],
+            wrapper
+        );
 
-        // await wrapperResource.checkSupply(
-        //     tx,
-        //     "2000000000000000000",
-        //     ENSItemIds[0],
-        //     wrapper
-        // );
+        await wrapperResource.checkSupply(
+            tx,
+            "2000000000000000000",
+            ENSItemIds[0],
+            wrapper
+        );
 
         // #W_ENS_1_1.1 END
 
@@ -2447,6 +2396,906 @@ describe("itemv2 ERC721DeckWrapper", () => {
             tx,
             amountToUnwrap.mul(-1),
             etherPiratesItemIds[0],
+            wrapper
+        );
+    });
+
+    it("#5", async () => {
+        var tokenHolderVox = "0xe995a353a97a33e2dbac9e70ba6778db86728f4e";
+
+        var voxTokenAddresss = "0xad9fd7cb4fc7a0fbce08d64068f60cbde22ed34c";
+
+        var voxTokenId = ["4160", "4161", "4162"];
+
+        var vox = new web3.eth.Contract(
+            knowledgeBase.IERC721ABI,
+            voxTokenAddresss
+        );
+
+        await blockchainConnection.unlockAccounts(tokenHolderVox);
+
+        voxTokenId.map(async (id, index) => {
+            await vox.methods
+                .safeTransferFrom(tokenHolderVox, accounts[1], id)
+                .send(
+                    blockchainConnection.getSendingOptions({
+                        from: tokenHolderVox,
+                    })
+                );
+        });
+
+        voxTokenId.map(async (id, index) => {
+            await vox.methods.approve(wrapper.options.address, id).send(
+                blockchainConnection.getSendingOptions({
+                    from: accounts[1],
+                })
+            );
+        });
+
+        var tokenHolderSandbox = "0x9cfA73B8d300Ec5Bf204e4de4A58e5ee6B7dC93C";
+
+        var sandboxTokenAddresss = "0x50f5474724e0ee42d9a4e711ccfb275809fd6d4a";
+
+        var sandboxTokenId = ["19200", "19201", "19203"];
+
+        var sandbox = new web3.eth.Contract(
+            knowledgeBase.IERC721ABI,
+            sandboxTokenAddresss
+        );
+
+        await blockchainConnection.unlockAccounts(tokenHolderSandbox);
+
+        sandboxTokenId.map(async (id, index) => {
+            await sandbox.methods
+                .safeTransferFrom(tokenHolderSandbox, accounts[1], id)
+                .send(
+                    blockchainConnection.getSendingOptions({
+                        from: tokenHolderSandbox,
+                    })
+                );
+        });
+
+        sandboxTokenId.map(async (id, index) => {
+            await sandbox.methods.approve(wrapper.options.address, id).send(
+                blockchainConnection.getSendingOptions({
+                    from: accounts[1],
+                })
+            );
+        });
+
+        var tokenHolderFunghi = "0x1d2c4cd9bee9dfe088430b95d274e765151c32db";
+
+        var funghiTokenAddresss = "0x5f47079d0e45d95f5d5167a480b695883c4e47d9";
+
+        var funghiTokenId = ["18", "97", "20"];
+
+        var funghi = new web3.eth.Contract(
+            knowledgeBase.IERC721ABI,
+            funghiTokenAddresss
+        );
+
+        await blockchainConnection.unlockAccounts(tokenHolderFunghi);
+
+        funghiTokenId.map(async (id, index) => {
+            await funghi.methods
+                .safeTransferFrom(tokenHolderFunghi, accounts[1], id)
+                .send(
+                    blockchainConnection.getSendingOptions({
+                        from: tokenHolderFunghi,
+                    })
+                );
+        });
+
+        funghiTokenId.map(async (id, index) => {
+            await funghi.methods.approve(wrapper.options.address, id).send(
+                blockchainConnection.getSendingOptions({
+                    from: accounts[1],
+                })
+            );
+        });
+
+        var createItem = await wrapperResource.generateCreateItem(
+            [
+                voxTokenId[0],
+                voxTokenId[1],
+                sandboxTokenId[0],
+                sandboxTokenId[1],
+                funghiTokenId[0],
+                funghiTokenId[1],
+            ],
+            [
+                accounts[2],
+                accounts[3],
+                accounts[2],
+                accounts[3],
+                accounts[2],
+                accounts[3],
+            ],
+            [
+                voxTokenAddresss,
+                voxTokenAddresss,
+                sandboxTokenAddresss,
+                sandboxTokenAddresss,
+                funghiTokenAddresss,
+                funghiTokenAddresss,
+            ],
+            [
+                "1000000000000000000",
+                "1000000000000000000",
+                "1000000000000000000",
+                "1000000000000000000",
+                "1000000000000000000",
+                "1000000000000000000",
+            ]
+        );
+
+        var tx = await wrapper.methods
+            .mintItems(createItem, [true, false, true, false, true, false])
+            .send(
+                blockchainConnection.getSendingOptions({ from: accounts[1] })
+            );
+
+        var logs = (await web3.eth.getTransactionReceipt(tx.transactionHash))
+            .logs;
+
+        var itemIds = logs
+            .filter(
+                (it) =>
+                    it.topics[0] ===
+                    web3.utils.sha3("Token(address,uint256,uint256)")
+            )
+            .map((it) => web3.eth.abi.decodeParameter("uint256", it.topics[3]));
+
+        await wrapperResource.checkBalance(
+            tx,
+            accounts[1],
+            wrapper.options.address,
+            "2",
+            vox
+        );
+
+        await wrapperResource.checkBalance(
+            tx,
+            accounts[1],
+            wrapper.options.address,
+            "2",
+            sandbox
+        );
+
+        await wrapperResource.checkBalance(
+            tx,
+            accounts[1],
+            wrapper.options.address,
+            "2",
+            funghi
+        );
+
+        await wrapperResource.checkBalanceItem(
+            tx,
+            accounts[2],
+            "1000000000000000000",
+            itemIds[0],
+            wrapper
+        );
+
+        await wrapperResource.checkBalanceItem(
+            tx,
+            accounts[3],
+            "1000000000000000000",
+            itemIds[0],
+            wrapper
+        );
+
+        await wrapperResource.checkBalanceItem(
+            tx,
+            accounts[2],
+            "1000000000000000000",
+            itemIds[2],
+            wrapper
+        );
+
+        await wrapperResource.checkBalanceItem(
+            tx,
+            accounts[3],
+            "1000000000000000000",
+            itemIds[2],
+            wrapper
+        );
+
+        await wrapperResource.checkBalanceItem(
+            tx,
+            accounts[2],
+            "1000000000000000000",
+            itemIds[4],
+            wrapper
+        );
+
+        await wrapperResource.checkBalanceItem(
+            tx,
+            accounts[3],
+            "1000000000000000000",
+            itemIds[4],
+            wrapper
+        );
+
+        await wrapperResource.checkSupply(
+            tx,
+            "2000000000000000000",
+            itemIds[0],
+            wrapper
+        );
+
+        await wrapperResource.checkSupply(
+            tx,
+            "2000000000000000000",
+            itemIds[2],
+            wrapper
+        );
+
+        await wrapperResource.checkSupply(
+            tx,
+            "2000000000000000000",
+            itemIds[4],
+            wrapper
+        );
+
+        var datas = [];
+
+        datas[0] = web3.eth.abi.encodeParameters(
+            ["address", "uint256", "address", "bytes", "bool", "bool"],
+            [voxTokenAddresss, voxTokenId[0], accounts[3], "0x", false, false]
+        );
+        datas[1] = web3.eth.abi.encodeParameters(
+            ["address", "uint256", "address", "bytes", "bool", "bool"],
+            [
+                sandboxTokenAddresss,
+                sandboxTokenId[0],
+                accounts[3],
+                "0x",
+                false,
+                false,
+            ]
+        );
+        datas[2] = web3.eth.abi.encodeParameters(
+            ["address", "uint256", "address", "bytes", "bool", "bool"],
+            [
+                funghiTokenAddresss,
+                funghiTokenId[0],
+                accounts[3],
+                "0x",
+                false,
+                false,
+            ]
+        );
+
+        var encodeDatas = web3.eth.abi.encodeParameters(["bytes[]"], [datas]);
+
+        await catchCall(
+            wrapper.methods
+                .burnBatch(
+                    accounts[2],
+                    [itemIds[0], itemIds[2], itemIds[4]],
+                    [
+                        "1000000000000000000",
+                        "1000000000000000000",
+                        "1000000000000000000",
+                    ],
+                    encodeDatas
+                )
+                .send(
+                    blockchainConnection.getSendingOptions({
+                        from: accounts[2],
+                    })
+                ),
+            "Cannot unlock"
+        );
+
+        datas[0] = web3.eth.abi.encodeParameters(
+            ["address", "uint256", "address", "bytes", "bool", "bool"],
+            [voxTokenAddresss, voxTokenId[1], accounts[3], "0x", false, false]
+        );
+        datas[1] = web3.eth.abi.encodeParameters(
+            ["address", "uint256", "address", "bytes", "bool", "bool"],
+            [
+                sandboxTokenAddresss,
+                sandboxTokenId[1],
+                accounts[3],
+                "0x",
+                false,
+                false,
+            ]
+        );
+        datas[2] = web3.eth.abi.encodeParameters(
+            ["address", "uint256", "address", "bytes", "bool", "bool"],
+            [
+                funghiTokenAddresss,
+                funghiTokenId[1],
+                accounts[3],
+                "0x",
+                false,
+                false,
+            ]
+        );
+
+        var encodeDatas = web3.eth.abi.encodeParameters(["bytes[]"], [datas]);
+
+        await catchCall(
+            wrapper.methods
+                .burnBatch(
+                    accounts[3],
+                    [itemIds[0], itemIds[2], itemIds[4]],
+                    [
+                        "510000000000000000",
+                        "510000000000000000",
+                        "510000000000000000",
+                    ],
+                    encodeDatas
+                )
+                .send(
+                    blockchainConnection.getSendingOptions({
+                        from: accounts[3],
+                    })
+                ),
+            "Invalid amount"
+        );
+
+        await blockchainConnection.fastForward(blockToSkip);
+
+        datas[0] = web3.eth.abi.encodeParameters(
+            ["address", "uint256", "address", "bytes", "bool", "bool"],
+            [voxTokenAddresss, voxTokenId[0], accounts[2], "0x", false, false]
+        );
+        datas[1] = web3.eth.abi.encodeParameters(
+            ["address", "uint256", "address", "bytes", "bool", "bool"],
+            [
+                sandboxTokenAddresss,
+                sandboxTokenId[0],
+                accounts[2],
+                "0x",
+                false,
+                false,
+            ]
+        );
+        datas[2] = web3.eth.abi.encodeParameters(
+            ["address", "uint256", "address", "bytes", "bool", "bool"],
+            [
+                funghiTokenAddresss,
+                funghiTokenId[0],
+                accounts[2],
+                "0x",
+                false,
+                false,
+            ]
+        );
+
+        var encodeDatas = web3.eth.abi.encodeParameters(["bytes[]"], [datas]);
+
+        var tx = await wrapper.methods
+            .burnBatch(
+                accounts[2],
+                [itemIds[0], itemIds[2], itemIds[4]],
+                [
+                    "1000000000000000000",
+                    "1000000000000000000",
+                    "1000000000000000000",
+                ],
+                encodeDatas
+            )
+            .send(
+                blockchainConnection.getSendingOptions({
+                    from: accounts[2],
+                })
+            );
+
+        await wrapperResource.checkBalance(
+            tx,
+            wrapper.options.address,
+            accounts[2],
+            "1",
+            vox
+        );
+
+        await wrapperResource.checkBalance(
+            tx,
+            wrapper.options.address,
+            accounts[2],
+            "1",
+            sandbox
+        );
+
+        await wrapperResource.checkBalance(
+            tx,
+            wrapper.options.address,
+            accounts[2],
+            "1",
+            funghi
+        );
+
+        await wrapperResource.checkBalance(
+            tx,
+            wrapper.options.address,
+            accounts[2],
+            "1",
+            vox
+        );
+
+        await wrapperResource.checkBalanceItem(
+            tx,
+            accounts[2],
+            "-1000000000000000000",
+            itemIds[0],
+            wrapper
+        );
+
+        await wrapperResource.checkBalanceItem(
+            tx,
+            accounts[2],
+            "-1000000000000000000",
+            itemIds[2],
+            wrapper
+        );
+
+        await wrapperResource.checkBalanceItem(
+            tx,
+            accounts[2],
+            "-1000000000000000000",
+            itemIds[4],
+            wrapper
+        );
+
+        await wrapperResource.checkSupply(
+            tx,
+            "-1000000000000000000",
+            itemIds[0],
+            wrapper
+        );
+
+        await wrapperResource.checkSupply(
+            tx,
+            "-1000000000000000000",
+            itemIds[2],
+            wrapper
+        );
+
+        await wrapperResource.checkSupply(
+            tx,
+            "-1000000000000000000",
+            itemIds[4],
+            wrapper
+        );
+
+        await sandbox.methods
+            .safeTransferFrom(accounts[1], accounts[2], sandboxTokenId[2])
+            .send(
+                blockchainConnection.getSendingOptions({
+                    from: accounts[1],
+                })
+            );
+
+        await vox.methods
+            .safeTransferFrom(accounts[1], accounts[2], voxTokenId[2])
+            .send(
+                blockchainConnection.getSendingOptions({
+                    from: accounts[1],
+                })
+            );
+
+        await funghi.methods
+            .safeTransferFrom(accounts[1], accounts[2], funghiTokenId[2])
+            .send(
+                blockchainConnection.getSendingOptions({
+                    from: accounts[1],
+                })
+            );
+
+        await funghi.methods
+            .approve(wrapper.options.address, funghiTokenId[0])
+            .send(
+                blockchainConnection.getSendingOptions({
+                    from: accounts[2],
+                })
+            );
+
+        await funghi.methods
+            .approve(wrapper.options.address, funghiTokenId[2])
+            .send(
+                blockchainConnection.getSendingOptions({
+                    from: accounts[2],
+                })
+            );
+
+        await vox.methods.approve(wrapper.options.address, voxTokenId[0]).send(
+            blockchainConnection.getSendingOptions({
+                from: accounts[2],
+            })
+        );
+
+        await vox.methods.approve(wrapper.options.address, voxTokenId[2]).send(
+            blockchainConnection.getSendingOptions({
+                from: accounts[2],
+            })
+        );
+
+        await sandbox.methods
+            .approve(wrapper.options.address, sandboxTokenId[0])
+            .send(
+                blockchainConnection.getSendingOptions({
+                    from: accounts[2],
+                })
+            );
+
+        await sandbox.methods
+            .approve(wrapper.options.address, sandboxTokenId[2])
+            .send(
+                blockchainConnection.getSendingOptions({
+                    from: accounts[2],
+                })
+            );
+
+        var createItem = await wrapperResource.generateCreateItem(
+            [
+                voxTokenId[0],
+                sandboxTokenId[0],
+                funghiTokenId[0],
+                voxTokenId[2],
+                sandboxTokenId[2],
+                funghiTokenId[2],
+            ],
+            [
+                accounts[3],
+                accounts[3],
+                accounts[3],
+                accounts[3],
+                accounts[3],
+                accounts[3],
+            ],
+            [
+                voxTokenAddresss,
+                sandboxTokenAddresss,
+                funghiTokenAddresss,
+                voxTokenAddresss,
+                sandboxTokenAddresss,
+                funghiTokenAddresss,
+            ],
+            [
+                "1000000000000000000",
+                "1000000000000000000",
+                "1000000000000000000",
+                "1000000000000000000",
+                "1000000000000000000",
+                "1000000000000000000",
+            ]
+        );
+
+        var tx = await wrapper.methods
+            .mintItems(createItem, [true, true, true, true, true, true])
+            .send(
+                blockchainConnection.getSendingOptions({ from: accounts[2] })
+            );
+
+        await wrapperResource.checkBalance(
+            tx,
+            accounts[2],
+            wrapper.options.address,
+            "2",
+            vox
+        );
+
+        await wrapperResource.checkBalance(
+            tx,
+            accounts[2],
+            wrapper.options.address,
+            "2",
+            sandbox
+        );
+
+        await wrapperResource.checkBalance(
+            tx,
+            accounts[2],
+            wrapper.options.address,
+            "2",
+            funghi
+        );
+
+        await wrapperResource.checkBalanceItem(
+            tx,
+            accounts[3],
+            "2000000000000000000",
+            itemIds[0],
+            wrapper
+        );
+
+        await wrapperResource.checkBalanceItem(
+            tx,
+            accounts[3],
+            "2000000000000000000",
+            itemIds[2],
+            wrapper
+        );
+
+        await wrapperResource.checkBalanceItem(
+            tx,
+            accounts[3],
+            "2000000000000000000",
+            itemIds[4],
+            wrapper
+        );
+
+        await wrapperResource.checkSupply(
+            tx,
+            "2000000000000000000",
+            itemIds[0],
+            wrapper
+        );
+
+        await wrapperResource.checkSupply(
+            tx,
+            "2000000000000000000",
+            itemIds[2],
+            wrapper
+        );
+
+        await wrapperResource.checkSupply(
+            tx,
+            "2000000000000000000",
+            itemIds[4],
+            wrapper
+        );
+
+        datas[0] = web3.eth.abi.encodeParameters(
+            ["address", "uint256", "address", "bytes", "bool", "bool"],
+            [voxTokenAddresss, voxTokenId[0], accounts[2], "0x", false, false]
+        );
+        datas[1] = web3.eth.abi.encodeParameters(
+            ["address", "uint256", "address", "bytes", "bool", "bool"],
+            [voxTokenAddresss, voxTokenId[1], accounts[2], "0x", false, false]
+        );
+        datas[2] = web3.eth.abi.encodeParameters(
+            ["address", "uint256", "address", "bytes", "bool", "bool"],
+            [voxTokenAddresss, voxTokenId[2], accounts[2], "0x", false, false]
+        );
+        datas[3] = web3.eth.abi.encodeParameters(
+            ["address", "uint256", "address", "bytes", "bool", "bool"],
+            [
+                sandboxTokenAddresss,
+                sandboxTokenId[0],
+                accounts[2],
+                "0x",
+                false,
+                false,
+            ]
+        );
+        datas[4] = web3.eth.abi.encodeParameters(
+            ["address", "uint256", "address", "bytes", "bool", "bool"],
+            [
+                sandboxTokenAddresss,
+                sandboxTokenId[1],
+                accounts[2],
+                "0x",
+                false,
+                false,
+            ]
+        );
+        datas[5] = web3.eth.abi.encodeParameters(
+            ["address", "uint256", "address", "bytes", "bool", "bool"],
+            [
+                sandboxTokenAddresss,
+                sandboxTokenId[2],
+                accounts[2],
+                "0x",
+                false,
+                false,
+            ]
+        );
+        datas[6] = web3.eth.abi.encodeParameters(
+            ["address", "uint256", "address", "bytes", "bool", "bool"],
+            [
+                funghiTokenAddresss,
+                funghiTokenId[0],
+                accounts[2],
+                "0x",
+                false,
+                false,
+            ]
+        );
+        datas[7] = web3.eth.abi.encodeParameters(
+            ["address", "uint256", "address", "bytes", "bool", "bool"],
+            [
+                funghiTokenAddresss,
+                funghiTokenId[1],
+                accounts[2],
+                "0x",
+                false,
+                false,
+            ]
+        );
+        datas[8] = web3.eth.abi.encodeParameters(
+            ["address", "uint256", "address", "bytes", "bool", "bool"],
+            [
+                funghiTokenAddresss,
+                funghiTokenId[2],
+                accounts[2],
+                "0x",
+                false,
+                false,
+            ]
+        );
+
+        var encodeDatas = web3.eth.abi.encodeParameters(["bytes[]"], [datas]);
+
+        await catchCall(
+            wrapper.methods
+                .burnBatch(
+                    accounts[3],
+                    [
+                        itemIds[0],
+                        itemIds[0],
+                        itemIds[0],
+                        itemIds[2],
+                        itemIds[2],
+                        itemIds[2],
+                        itemIds[4],
+                        itemIds[4],
+                        itemIds[4],
+                    ],
+                    [
+                        "1000000000000000000",
+                        "1000000000000000000",
+                        "1000000000000000000",
+                        "1000000000000000000",
+                        "1000000000000000000",
+                        "1000000000000000000",
+                        "1000000000000000000",
+                        "1000000000000000000",
+                        "1000000000000000000",
+                    ],
+                    encodeDatas
+                )
+                .send(
+                    blockchainConnection.getSendingOptions({
+                        from: accounts[3],
+                    })
+                ),
+            "Cannot unlock"
+        );
+
+        await blockchainConnection.fastForward(blockToSkip);
+
+        await catchCall(
+            wrapper.methods
+                .burnBatch(
+                    accounts[3],
+                    [
+                        itemIds[0],
+                        itemIds[0],
+                        itemIds[0],
+                        itemIds[2],
+                        itemIds[2],
+                        itemIds[2],
+                        itemIds[4],
+                        itemIds[4],
+                        itemIds[4],
+                    ],
+                    [
+                        "1000000000000000000",
+                        "510000000000000000",
+                        "1000000000000000000",
+                        "1000000000000000000",
+                        "1000000000000000000",
+                        "510000000000000000",
+                        "1000000000000000000",
+                        "1000000000000000000",
+                        "510000000000000000",
+                    ],
+                    encodeDatas
+                )
+                .send(
+                    blockchainConnection.getSendingOptions({
+                        from: accounts[3],
+                    })
+                ),
+            "Invalid amount"
+        );
+
+        var tx = await wrapper.methods
+            .burnBatch(
+                accounts[3],
+                [
+                    itemIds[0],
+                    itemIds[0],
+                    itemIds[0],
+                    itemIds[2],
+                    itemIds[2],
+                    itemIds[2],
+                    itemIds[4],
+                    itemIds[4],
+                    itemIds[4],
+                ],
+                [
+                    "1000000000000000000",
+                    "1000000000000000000",
+                    "510000000000000000",
+                    "1000000000000000000",
+                    "1000000000000000000",
+                    "510000000000000000",
+                    "1000000000000000000",
+                    "1000000000000000000",
+                    "510000000000000000",
+                ],
+                encodeDatas
+            )
+            .send(
+                blockchainConnection.getSendingOptions({
+                    from: accounts[3],
+                })
+            );
+
+        await wrapperResource.checkBalance(
+            tx,
+            wrapper.options.address,
+            accounts[2],
+            "3",
+            vox
+        );
+
+        await wrapperResource.checkBalance(
+            tx,
+            wrapper.options.address,
+            accounts[2],
+            "3",
+            sandbox
+        );
+
+        await wrapperResource.checkBalance(
+            tx,
+            wrapper.options.address,
+            accounts[2],
+            "3",
+            funghi
+        );
+
+        await wrapperResource.checkBalanceItem(
+            tx,
+            accounts[3],
+            "-2510000000000000000",
+            itemIds[0],
+            wrapper
+        );
+
+        await wrapperResource.checkBalanceItem(
+            tx,
+            accounts[3],
+            "-2510000000000000000",
+            itemIds[2],
+            wrapper
+        );
+
+        await wrapperResource.checkBalanceItem(
+            tx,
+            accounts[3],
+            "-2510000000000000000",
+            itemIds[4],
+            wrapper
+        );
+
+        await wrapperResource.checkSupply(
+            tx,
+            "-2510000000000000000",
+            itemIds[0],
+            wrapper
+        );
+
+        await wrapperResource.checkSupply(
+            tx,
+            "-2510000000000000000",
+            itemIds[2],
+            wrapper
+        );
+
+        await wrapperResource.checkSupply(
+            tx,
+            "-2510000000000000000",
+            itemIds[4],
             wrapper
         );
     });

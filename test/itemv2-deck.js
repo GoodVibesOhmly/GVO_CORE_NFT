@@ -706,16 +706,16 @@ describe("itemv2 ERC721DeckWrapper", () => {
             );
         });
 
-        // var createItem = await wrapperResource.generateCreateItem(
-        //     ENSTokenId,
-        //     [accounts[1], accounts[3]],
-        //     [ENSTokenAddresss, ENSTokenAddresss],
-        //     ["1000000000000000000", "1000000000000000000"]
-        // );
+        var createItem = await wrapperResource.generateCreateItem(
+            ENSTokenId,
+            [accounts[1], accounts[3]],
+            [ENSTokenAddresss, ENSTokenAddresss],
+            ["1000000000000000000", "1000000000000000000"]
+        );
 
         // #W_ENS_1_1.1 START
 
-        var createItem = await wrapperResource.generateCreateItem(
+        /*var createItem = await wrapperResource.generateCreateItem(
             [ENSTokenId[0]],
             [accounts[1]],
             [ENSTokenAddresss],
@@ -727,7 +727,7 @@ describe("itemv2 ERC721DeckWrapper", () => {
             [accounts[3]],
             [ENSTokenAddresss],
             ["1000000000000000000"]
-        );
+        );*/
 
         console.log("-----------------------pre----------------------");
         console.log(await ens.methods.balanceOf(accounts[1]).call());
@@ -736,13 +736,13 @@ describe("itemv2 ERC721DeckWrapper", () => {
         );
         console.log("-----------------------end pre----------------------");
 
-        // var tx = await wrapper.methods
-        //     .mintItems(createItem, [true, false])
-        //     .send(
-        //         blockchainConnection.getSendingOptions({ from: accounts[1] })
-        //     );
-
         var tx = await wrapper.methods
+            .mintItems(createItem, [true, false])
+            .send(
+                blockchainConnection.getSendingOptions({ from: accounts[1] })
+            );
+
+        /*var tx = await wrapper.methods
             .mintItems(createItem, [true])
             .send(
                 blockchainConnection.getSendingOptions({ from: accounts[1] })
@@ -752,7 +752,7 @@ describe("itemv2 ERC721DeckWrapper", () => {
             .mintItems(createItem1, [false])
             .send(
                 blockchainConnection.getSendingOptions({ from: accounts[1] })
-            );
+            );*/
 
         console.log("-----------------------post----------------------");
         console.log(await ens.methods.balanceOf(accounts[1]).call());

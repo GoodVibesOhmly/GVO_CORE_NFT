@@ -272,7 +272,7 @@ describe("itemv2 ERC721DeckWrapper", () => {
         // #W_GODS_1_1.2 START
 
         var tx = await wrapper.methods
-            .mintItems(createItem, [false])
+            .mintItems(createItem)
             .send(
                 blockchainConnection.getSendingOptions({ from: accounts[2] })
             );
@@ -1362,7 +1362,7 @@ describe("itemv2 ERC721DeckWrapper", () => {
         );
 
         var tx = await wrapper.methods
-            .mintItems(createItem, [false])
+            .mintItems(createItem)
             .send(
                 blockchainConnection.getSendingOptions({ from: accounts[4] })
             );
@@ -1978,5 +1978,476 @@ describe("itemv2 ERC721DeckWrapper", () => {
         );
 
         // #UW_DBA_1_2.6 END
+    });
+
+    it("#4", async () => {
+        var tokenHolderCryptoSkulls =
+            "0x9aaf2f84afb2162a1efa57018bd4b1ae0da28cce";
+
+        var cryptoSkullsTokenAddresss =
+            "0xc1caf0c19a8ac28c41fe59ba6c754e4b9bd54de9";
+
+        var cryptoSkullsTokenId = ["2344"];
+
+        var cryptoSkulls = new web3.eth.Contract(
+            knowledgeBase.IERC721ABI,
+            cryptoSkullsTokenAddresss
+        );
+
+        await blockchainConnection.unlockAccounts(tokenHolderCryptoSkulls);
+
+        cryptoSkullsTokenId.map(async (id, index) => {
+            await cryptoSkulls.methods
+                .safeTransferFrom(tokenHolderCryptoSkulls, accounts[1], id)
+                .send(
+                    blockchainConnection.getSendingOptions({
+                        from: tokenHolderCryptoSkulls,
+                    })
+                );
+        });
+
+        cryptoSkullsTokenId.map(async (id, index) => {
+            await cryptoSkulls.methods
+                .approve(wrapper.options.address, id)
+                .send(
+                    blockchainConnection.getSendingOptions({
+                        from: accounts[1],
+                    })
+                );
+        });
+
+        var createItem = await wrapperResource.generateCreateItem(
+            cryptoSkullsTokenId,
+            [accounts[1]],
+            [cryptoSkullsTokenAddresss],
+            ["1000000000000000000"]
+        );
+
+        var tx = await wrapper.methods
+            .mintItems(createItem, [false])
+            .send(
+                blockchainConnection.getSendingOptions({ from: accounts[1] })
+            );
+
+        var logs = (await web3.eth.getTransactionReceipt(tx.transactionHash))
+            .logs;
+
+        var cryptoSkullsItemIds = logs
+            .filter(
+                (it) =>
+                    it.topics[0] ===
+                    web3.utils.sha3("Token(address,uint256,uint256)")
+            )
+            .map((it) => web3.eth.abi.decodeParameter("uint256", it.topics[3]));
+
+        await wrapperResource.checkBalance(
+            tx,
+            accounts[1],
+            wrapper.options.address,
+            "1",
+            cryptoSkulls
+        );
+
+        await wrapperResource.checkBalanceItem(
+            tx,
+            accounts[1],
+            "1000000000000000000",
+            cryptoSkullsItemIds[0],
+            wrapper
+        );
+
+        await wrapperResource.checkSupply(
+            tx,
+            "1000000000000000000",
+            cryptoSkullsItemIds[0],
+            wrapper
+        );
+
+        var tx = await wrapper.methods
+            .safeTransferFrom(
+                accounts[1],
+                accounts[2],
+                cryptoSkullsItemIds[0],
+                "1000000000000000000",
+                "0x"
+            )
+            .send(
+                blockchainConnection.getSendingOptions({ from: accounts[1] })
+            );
+
+        var data = web3.eth.abi.encodeParameters(
+            ["address", "uint256", "address", "bytes", "bool", "bool"],
+            [
+                cryptoSkullsTokenAddresss,
+                cryptoSkullsTokenId[0],
+                accounts[2],
+                "0x",
+                false,
+                false,
+            ]
+        );
+
+        var amountToUnwrap = "550000000000000000";
+
+        var tx = await wrapper.methods
+            .burn(accounts[2], cryptoSkullsItemIds[0], amountToUnwrap, data)
+            .send(
+                blockchainConnection.getSendingOptions({
+                    from: accounts[2],
+                })
+            );
+
+        await wrapperResource.checkBalance(
+            tx,
+            wrapper.options.address,
+            accounts[2],
+            "1",
+            cryptoSkulls
+        );
+
+        await wrapperResource.checkBalanceItem(
+            tx,
+            accounts[2],
+            amountToUnwrap.mul(-1),
+            cryptoSkullsItemIds[0],
+            wrapper
+        );
+
+        await wrapperResource.checkSupply(
+            tx,
+            amountToUnwrap.mul(-1),
+            cryptoSkullsItemIds[0],
+            wrapper
+        );
+
+        await cryptoSkulls.methods
+            .approve(wrapper.options.address, cryptoSkullsTokenId[0])
+            .send(
+                blockchainConnection.getSendingOptions({
+                    from: accounts[2],
+                })
+            );
+
+        var createItem = await wrapperResource.generateCreateItem(
+            cryptoSkullsTokenId,
+            [accounts[1]],
+            [cryptoSkullsTokenAddresss],
+            ["550000000000000000"]
+        );
+
+        var tx = await wrapper.methods
+            .mintItems(createItem, [true])
+            .send(
+                blockchainConnection.getSendingOptions({ from: accounts[2] })
+            );
+
+        await wrapperResource.checkBalance(
+            tx,
+            accounts[2],
+            wrapper.options.address,
+            "1",
+            cryptoSkulls
+        );
+
+        await wrapperResource.checkBalanceItem(
+            tx,
+            accounts[1],
+            "550000000000000000",
+            cryptoSkullsItemIds[0],
+            wrapper
+        );
+
+        await wrapperResource.checkSupply(
+            tx,
+            "550000000000000000",
+            cryptoSkullsItemIds[0],
+            wrapper
+        );
+
+        var data = web3.eth.abi.encodeParameters(
+            ["address", "uint256", "address", "bytes", "bool", "bool"],
+            [
+                cryptoSkullsTokenAddresss,
+                cryptoSkullsTokenId[0],
+                accounts[2],
+                "0x",
+                false,
+                false,
+            ]
+        );
+
+        await catchCall(
+            wrapper.methods
+                .burn(
+                    accounts[1],
+                    cryptoSkullsItemIds[0],
+                    "1000000000000000000",
+                    data
+                )
+                .send(
+                    blockchainConnection.getSendingOptions({
+                        from: accounts[1],
+                    })
+                ),
+            "Cannot unlock"
+        );
+
+        await blockchainConnection.fastForward(blockToSkip);
+
+        var tx = await wrapper.methods
+            .burn(
+                accounts[1],
+                cryptoSkullsItemIds[0],
+                "550000000000000000",
+                data
+            )
+            .send(
+                blockchainConnection.getSendingOptions({
+                    from: accounts[1],
+                })
+            );
+
+        await wrapperResource.checkBalance(
+            tx,
+            wrapper.options.address,
+            accounts[2],
+            "1",
+            cryptoSkulls
+        );
+
+        await wrapperResource.checkBalanceItem(
+            tx,
+            accounts[1],
+            "-550000000000000000",
+            cryptoSkullsItemIds[0],
+            wrapper
+        );
+
+        await wrapperResource.checkSupply(
+            tx,
+            "-550000000000000000",
+            cryptoSkullsItemIds[0],
+            wrapper
+        );
+
+        var tokenHolderEtherPirates =
+            "0x43cf525d63987d17052d9891587bcfb9592c3ee2";
+
+        var etherPiratesTokenAddresss =
+            "0x62365089075e3fc959952134c283e0375b49f648";
+
+        var etherPiratesTokenId = ["3456"];
+
+        var etherPirates = new web3.eth.Contract(
+            knowledgeBase.IERC721ABI,
+            etherPiratesTokenAddresss
+        );
+
+        await blockchainConnection.unlockAccounts(tokenHolderEtherPirates);
+
+        etherPiratesTokenId.map(async (id, index) => {
+            await etherPirates.methods
+                .safeTransferFrom(tokenHolderEtherPirates, accounts[1], id)
+                .send(
+                    blockchainConnection.getSendingOptions({
+                        from: tokenHolderEtherPirates,
+                    })
+                );
+        });
+
+        etherPiratesTokenId.map(async (id, index) => {
+            await etherPirates.methods
+                .approve(wrapper.options.address, id)
+                .send(
+                    blockchainConnection.getSendingOptions({
+                        from: accounts[1],
+                    })
+                );
+        });
+
+        var amountToWrap = "1000000000000000000";
+
+        var createItem = await wrapperResource.generateCreateItem(
+            etherPiratesTokenId,
+            [accounts[1]],
+            [etherPiratesTokenAddresss],
+            [amountToWrap]
+        );
+
+        var tx = await wrapper.methods
+            .mintItems(createItem, [false])
+            .send(
+                blockchainConnection.getSendingOptions({ from: accounts[1] })
+            );
+
+        var logs = (await web3.eth.getTransactionReceipt(tx.transactionHash))
+            .logs;
+
+        var etherPiratesItemIds = logs
+            .filter(
+                (it) =>
+                    it.topics[0] ===
+                    web3.utils.sha3("Token(address,uint256,uint256)")
+            )
+            .map((it) => web3.eth.abi.decodeParameter("uint256", it.topics[3]));
+
+        await wrapperResource.checkBalance(
+            tx,
+            accounts[1],
+            wrapper.options.address,
+            "1",
+            etherPirates
+        );
+
+        await wrapperResource.checkBalanceItem(
+            tx,
+            accounts[1],
+            amountToWrap,
+            etherPiratesTokenId[0],
+            wrapper
+        );
+
+        await wrapperResource.checkSupply(
+            tx,
+            amountToWrap,
+            etherPiratesTokenId[0],
+            wrapper
+        );
+
+        var data = web3.eth.abi.encodeParameters(
+            ["address", "uint256", "address", "bytes", "bool", "bool"],
+            [
+                etherPiratesTokenAddresss,
+                etherPiratesTokenId[0],
+                accounts[2],
+                "0x",
+                false,
+                false,
+            ]
+        );
+
+        var amountToUnwrap = "600000000000000000";
+
+        var tx = await wrapper.methods
+            .burn(accounts[1], etherPiratesItemIds[0], amountToUnwrap, data)
+            .send(
+                blockchainConnection.getSendingOptions({
+                    from: accounts[1],
+                })
+            );
+
+        await wrapperResource.checkBalance(
+            tx,
+            wrapper.options.address,
+            accounts[2],
+            "1",
+            etherPirates
+        );
+
+        await wrapperResource.checkBalanceItem(
+            tx,
+            accounts[1],
+            amountToUnwrap.mul(-1),
+            etherPiratesItemIds[0],
+            wrapper
+        );
+
+        await wrapperResource.checkSupply(
+            tx,
+            amountToUnwrap.mul(-1),
+            etherPiratesItemIds[0],
+            wrapper
+        );
+
+        await etherPirates.methods
+            .approve(wrapper.options.address, etherPiratesTokenId[0])
+            .send(
+                blockchainConnection.getSendingOptions({
+                    from: accounts[2],
+                })
+            );
+
+        var amountToWrap = "600000000000000000";
+
+        var createItem = await wrapperResource.generateCreateItem(
+            etherPiratesTokenId,
+            [accounts[1]],
+            [etherPiratesTokenAddresss],
+            [amountToWrap]
+        );
+
+        var tx = await wrapper.methods
+            .mintItems(createItem, [false])
+            .send(
+                blockchainConnection.getSendingOptions({ from: accounts[2] })
+            );
+
+        await wrapperResource.checkBalance(
+            tx,
+            accounts[2],
+            wrapper.options.address,
+            "1",
+            etherPirates
+        );
+
+        await wrapperResource.checkBalanceItem(
+            tx,
+            accounts[1],
+            amountToWrap,
+            etherPiratesTokenId[0],
+            wrapper
+        );
+
+        await wrapperResource.checkSupply(
+            tx,
+            amountToWrap,
+            etherPiratesTokenId[0],
+            wrapper
+        );
+
+        var data = web3.eth.abi.encodeParameters(
+            ["address", "uint256", "address", "bytes", "bool", "bool"],
+            [
+                etherPiratesTokenAddresss,
+                etherPiratesTokenId[0],
+                accounts[2],
+                "0x",
+                false,
+                false,
+            ]
+        );
+
+        var amountToUnwrap = "700000000000000000";
+
+        var tx = await wrapper.methods
+            .burn(accounts[1], etherPiratesItemIds[0], amountToUnwrap, data)
+            .send(
+                blockchainConnection.getSendingOptions({
+                    from: accounts[1],
+                })
+            );
+
+        await wrapperResource.checkBalance(
+            tx,
+            wrapper.options.address,
+            accounts[2],
+            "1",
+            etherPirates
+        );
+
+        await wrapperResource.checkBalanceItem(
+            tx,
+            accounts[1],
+            amountToUnwrap.mul(-1),
+            etherPiratesItemIds[0],
+            wrapper
+        );
+
+        await wrapperResource.checkSupply(
+            tx,
+            amountToUnwrap.mul(-1),
+            etherPiratesItemIds[0],
+            wrapper
+        );
     });
 });

@@ -154,7 +154,7 @@ describe("itemv2 ERC721DeckWrapper", () => {
             boredApeTokenAddresss
         );
 
-        await blockchainConnection.unlockAccounts(tokenHolderBoredApe);
+        await approveHost(tokenHolderBoredApe)
 
         boredApeTokenId.map(async (id, index) => {
             await boredApe.methods
@@ -244,7 +244,7 @@ describe("itemv2 ERC721DeckWrapper", () => {
             godsTokenAddresss
         );
 
-        await blockchainConnection.unlockAccounts(tokenHolder);
+        await approveHost(tokenHolder)
 
         godsTokenId.map(async (id, index) => {
             await gods.methods
@@ -678,7 +678,7 @@ describe("itemv2 ERC721DeckWrapper", () => {
             ENSTokenAddresss
         );
 
-        await blockchainConnection.unlockAccounts(tokenHolderENS);
+        await approveHost(tokenHolderENS)
 
         ENSTokenId.map(async (id, index) => {
             await ens.methods
@@ -768,7 +768,7 @@ describe("itemv2 ERC721DeckWrapper", () => {
             uniTokenAddresss
         );
 
-        await blockchainConnection.unlockAccounts(tokenHolderUni);
+        await approveHost(tokenHolderUni)
 
         uniTokenId.map(async (id, index) => {
             await uni.methods
@@ -1198,7 +1198,7 @@ describe("itemv2 ERC721DeckWrapper", () => {
             godsTokenAddresss
         );
 
-        await blockchainConnection.unlockAccounts(tokenHolderGods);
+        await approveHost(tokenHolderGods)
 
         godsTokenId.map(async (id, index) => {
             await gods.methods
@@ -1281,7 +1281,7 @@ describe("itemv2 ERC721DeckWrapper", () => {
             boredApeTokenAddresss
         );
 
-        await blockchainConnection.unlockAccounts(tokenHolderBoredApe);
+        await approveHost(tokenHolderBoredApe)
 
         boredApeTokenId.map(async (id, index) => {
             await boredApe.methods
@@ -1954,7 +1954,7 @@ describe("itemv2 ERC721DeckWrapper", () => {
             cryptoSkullsTokenAddresss
         );
 
-        await blockchainConnection.unlockAccounts(tokenHolderCryptoSkulls);
+        await approveHost(tokenHolderCryptoSkulls)
 
         cryptoSkullsTokenId.map(async (id, index) => {
             await cryptoSkulls.methods
@@ -2242,7 +2242,7 @@ describe("itemv2 ERC721DeckWrapper", () => {
             etherPiratesTokenAddresss
         );
 
-        await blockchainConnection.unlockAccounts(tokenHolderEtherPirates);
+        await approveHost(tokenHolderEtherPirates)
 
         etherPiratesTokenId.map(async (id, index) => {
             await etherPirates.methods
@@ -2292,26 +2292,26 @@ describe("itemv2 ERC721DeckWrapper", () => {
             )
             .map((it) => web3.eth.abi.decodeParameter("uint256", it.topics[3]));
 
-        await wrapperResource.checkBalance(
-            tx,
-            accounts[1],
-            wrapper.options.address,
-            "1",
-            etherPirates
-        );
+        // await wrapperResource.checkBalance(
+        //     tx,
+        //     accounts[1],
+        //     wrapper.options.address,
+        //     "1",
+        //     etherPirates
+        // );
 
         await wrapperResource.checkBalanceItem(
             tx,
             accounts[1],
             amountToWrap,
-            etherPiratesTokenId[0],
+            etherPiratesItemIds[0],
             wrapper
         );
 
         await wrapperResource.checkSupply(
             tx,
             amountToWrap,
-            etherPiratesTokenId[0],
+            etherPiratesItemIds[0],
             wrapper
         );
 
@@ -2341,13 +2341,13 @@ describe("itemv2 ERC721DeckWrapper", () => {
                 })
             );
 
-        await wrapperResource.checkBalance(
-            tx,
-            wrapper.options.address,
-            accounts[2],
-            "1",
-            etherPirates
-        );
+        // await wrapperResource.checkBalance(
+        //     tx,
+        //     wrapper.options.address,
+        //     accounts[2],
+        //     "1",
+        //     etherPirates
+        // );
 
         await wrapperResource.checkBalanceItem(
             tx,
@@ -2391,26 +2391,26 @@ describe("itemv2 ERC721DeckWrapper", () => {
                 blockchainConnection.getSendingOptions({ from: accounts[2] })
             );
 
-        await wrapperResource.checkBalance(
-            tx,
-            accounts[2],
-            wrapper.options.address,
-            "1",
-            etherPirates
-        );
+        // await wrapperResource.checkBalance(
+        //     tx,
+        //     accounts[2],
+        //     wrapper.options.address,
+        //     "1",
+        //     etherPirates
+        // );
 
         await wrapperResource.checkBalanceItem(
             tx,
             accounts[1],
             amountToWrap,
-            etherPiratesTokenId[0],
+            etherPiratesItemIds[0],
             wrapper
         );
 
         await wrapperResource.checkSupply(
             tx,
             amountToWrap,
-            etherPiratesTokenId[0],
+            etherPiratesItemIds[0],
             wrapper
         );
 
@@ -2440,13 +2440,13 @@ describe("itemv2 ERC721DeckWrapper", () => {
                 })
             );
 
-        await wrapperResource.checkBalance(
-            tx,
-            wrapper.options.address,
-            accounts[2],
-            "1",
-            etherPirates
-        );
+        // await wrapperResource.checkBalance(
+        //     tx,
+        //     wrapper.options.address,
+        //     accounts[2],
+        //     "1",
+        //     etherPirates
+        // );
 
         await wrapperResource.checkBalanceItem(
             tx,
@@ -2460,6 +2460,257 @@ describe("itemv2 ERC721DeckWrapper", () => {
             tx,
             amountToUnwrap.mul(-1),
             etherPiratesItemIds[0],
+            wrapper
+        );
+
+        // #UW_DEP_5_1.4 START
+    });
+
+    it("#5.1", async () => {
+        /**
+         * Label            ||   Operation      || Token         || From || Receiver address || amount    || Token Reference    || Lock
+         * #W_EP_5_1.1           Wrap              Ether Pirates    Acc1        Acc1               1          A                    yes
+         *
+         * #UW_DEP_5_1.2         Unwrap            DEP              Acc1        Acc2               0.6        A                    yes
+         * #W_EP_5_1.3           Wrap              Ether Pirates    Acc2        Acc1               1          A+                   no    
+         * #UW_DEP_5_1.4         Unwrap            DEP              Acc1        Acc2               0.7        A+                   no
+         */
+
+        var tokenHolderDoodle =
+            "0xc41a84d016b1391fa0f4048d37d3131988412360";
+
+        var doodleTokenAddresss =
+            "0x8a90cab2b38dba80c64b7734e58ee1db38b8992e";
+
+        var doodleTokenId = ["5505"];
+
+        var doodle = new web3.eth.Contract(
+            knowledgeBase.IERC721ABI,
+            doodleTokenAddresss
+        );
+
+        await approveHost(tokenHolderDoodle)
+
+        doodleTokenId.map(async (id, index) => {
+            await doodle.methods
+                .safeTransferFrom(tokenHolderDoodle, accounts[1], id)
+                .send(
+                    blockchainConnection.getSendingOptions({
+                        from: tokenHolderDoodle,
+                    })
+                );
+        });
+
+        doodleTokenId.map(async (id, index) => {
+            await doodle.methods
+                .approve(wrapper.options.address, id)
+                .send(
+                    blockchainConnection.getSendingOptions({
+                        from: accounts[1],
+                    })
+                );
+        });
+
+        // console.log("sdfdf")
+        // console.log(await etherPirates.methods.balanceOf(accounts[1]).call());
+        // console.log("sdfdf")
+
+        // #W_EP_5_1.1 START
+
+        var amountToWrap = "1000000000000000000";
+
+        var createItem = await wrapperResource.generateCreateItem(
+            doodleTokenId,
+            [accounts[1]],
+            [doodleTokenAddresss],
+            [amountToWrap]
+        );
+
+        var tx = await wrapper.methods
+            .mintItems(createItem, [false])
+            .send(
+                blockchainConnection.getSendingOptions({ from: accounts[1] })
+            );
+
+        var logs = (await web3.eth.getTransactionReceipt(tx.transactionHash))
+            .logs;
+
+        var doodleItemIds = logs
+            .filter(
+                (it) =>
+                    it.topics[0] ===
+                    web3.utils.sha3("Token(address,uint256,uint256)")
+            )
+            .map((it) => web3.eth.abi.decodeParameter("uint256", it.topics[3]));
+
+        await wrapperResource.checkBalance(
+            tx,
+            accounts[1],
+            wrapper.options.address,
+            "1",
+            doodle
+        );
+
+        await wrapperResource.checkBalanceItem(
+            tx,
+            accounts[1],
+            amountToWrap,
+            doodleItemIds[0],
+            wrapper
+        );
+
+        await wrapperResource.checkSupply(
+            tx,
+            amountToWrap,
+            doodleItemIds[0],
+            wrapper
+        );
+
+        // #W_EP_5_1.1 END
+
+        // #UW_DEP_5_1.2 START
+        
+        var data = web3.eth.abi.encodeParameters(
+            ["address", "uint256", "address", "bytes", "bool", "bool"],
+            [
+                doodleTokenAddresss,
+                doodleTokenId[0],
+                accounts[2],
+                "0x",
+                false,
+                false,
+            ]
+        );
+
+        var amountToUnwrap = "600000000000000000";
+
+        var tx = await wrapper.methods
+            .burn(accounts[1], doodleItemIds[0], amountToUnwrap, data)
+            .send(
+                blockchainConnection.getSendingOptions({
+                    from: accounts[1],
+                })
+            );
+
+        await wrapperResource.checkBalance(
+            tx,
+            wrapper.options.address,
+            accounts[2],
+            "1",
+            doodle
+        );
+
+        await wrapperResource.checkBalanceItem(
+            tx,
+            accounts[1],
+            amountToUnwrap.mul(-1),
+            doodleItemIds[0],
+            wrapper
+        );
+
+        await wrapperResource.checkSupply(
+            tx,
+            amountToUnwrap.mul(-1),
+            doodleItemIds[0],
+            wrapper
+        );
+
+        // #UW_DEP_5_1.2 END
+
+        // #W_EP_5_1.3 START
+
+        await doodle.methods
+            .approve(wrapper.options.address, doodleTokenId[0])
+            .send(
+                blockchainConnection.getSendingOptions({
+                    from: accounts[2],
+                })
+            );
+
+        var amountToWrap = "600000000000000000";
+
+        var createItem = await wrapperResource.generateCreateItem(
+            doodleTokenId,
+            [accounts[1]],
+            [doodleTokenAddresss],
+            [amountToWrap]
+        );
+
+        var tx = await wrapper.methods
+            .mintItems(createItem, [false])
+            .send(
+                blockchainConnection.getSendingOptions({ from: accounts[2] })
+            );
+
+        await wrapperResource.checkBalance(
+            tx,
+            accounts[2],
+            wrapper.options.address,
+            "1",
+            doodle
+        );
+
+        await wrapperResource.checkBalanceItem(
+            tx,
+            accounts[1],
+            amountToWrap,
+            doodleItemIds[0],
+            wrapper
+        );
+
+        await wrapperResource.checkSupply(
+            tx,
+            amountToWrap,
+            doodleItemIds[0],
+            wrapper
+        );
+
+        // #W_EP_5_1.3 END
+
+        // #UW_DEP_5_1.4 START
+
+        var data = web3.eth.abi.encodeParameters(
+            ["address", "uint256", "address", "bytes", "bool", "bool"],
+            [
+                doodleTokenAddresss,
+                doodleTokenId[0],
+                accounts[2],
+                "0x",
+                false,
+                false,
+            ]
+        );
+
+        var amountToUnwrap = "700000000000000000";
+
+        var tx = await wrapper.methods
+            .burn(accounts[1], doodleItemIds[0], amountToUnwrap, data)
+            .send(
+                blockchainConnection.getSendingOptions({
+                    from: accounts[1],
+                })
+            );
+
+        await wrapperResource.checkBalance(
+            tx,
+            wrapper.options.address,
+            accounts[2],
+            "1",
+            doodle
+        );
+
+        await wrapperResource.checkBalanceItem(
+            tx,
+            accounts[1],
+            amountToUnwrap.mul(-1),
+            doodleItemIds[0],
+            wrapper
+        );
+
+        await wrapperResource.checkSupply(
+            tx,
+            amountToUnwrap.mul(-1),
+            doodleItemIds[0],
             wrapper
         );
 
@@ -2493,7 +2744,7 @@ describe("itemv2 ERC721DeckWrapper", () => {
             voxTokenAddresss
         );
 
-        await blockchainConnection.unlockAccounts(tokenHolderVox);
+        await approveHost(tokenHolderVox)
 
         voxTokenId.map(async (id, index) => {
             await vox.methods
@@ -2524,7 +2775,7 @@ describe("itemv2 ERC721DeckWrapper", () => {
             sandboxTokenAddresss
         );
 
-        await blockchainConnection.unlockAccounts(tokenHolderSandbox);
+        await approveHost(tokenHolderSandbox)
 
         sandboxTokenId.map(async (id, index) => {
             await sandbox.methods
@@ -2555,7 +2806,7 @@ describe("itemv2 ERC721DeckWrapper", () => {
             funghiTokenAddresss
         );
 
-        await blockchainConnection.unlockAccounts(tokenHolderFunghi);
+        await approveHost(tokenHolderFunghi)
 
         funghiTokenId.map(async (id, index) => {
             await funghi.methods

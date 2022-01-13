@@ -229,7 +229,8 @@ describe("itemv2 ERC721DeckWrapper", () => {
             accounts[1],
             wrapper.options.address,
             "3",
-            boredApe
+            boredApe,
+            boredApeTokenId
         );
 
         await wrapperResource.checkBalanceItem(
@@ -356,7 +357,8 @@ describe("itemv2 ERC721DeckWrapper", () => {
             accounts[2],
             wrapper.options.address,
             "1",
-            gods
+            gods,
+            [godsTokenId[0]]
         );
 
         await wrapperResource.checkBalanceItem(
@@ -399,7 +401,8 @@ describe("itemv2 ERC721DeckWrapper", () => {
             accounts[2],
             wrapper.options.address,
             "1",
-            gods
+            gods,
+            [godsTokenId[1]]
         );
 
         await wrapperResource.checkBalanceItem(
@@ -592,7 +595,8 @@ describe("itemv2 ERC721DeckWrapper", () => {
             wrapper.options.address,
             accounts[4],
             "3",
-            boredApe
+            boredApe,
+            [boredApeTokenId[0],boredApeTokenId[1],boredApeTokenId[2]]
         );
 
         await wrapperResource.checkBalanceItem(
@@ -652,7 +656,8 @@ describe("itemv2 ERC721DeckWrapper", () => {
             wrapper.options.address,
             accounts[3],
             "1",
-            gods
+            gods,
+            [godsTokenId[0]]
         );
 
         await wrapperResource.checkBalanceItem(
@@ -690,7 +695,8 @@ describe("itemv2 ERC721DeckWrapper", () => {
             wrapper.options.address,
             accounts[2],
             "1",
-            gods
+            gods,
+            [godsTokenId[1]]
         );
 
         await wrapperResource.checkBalanceItem(
@@ -808,7 +814,8 @@ describe("itemv2 ERC721DeckWrapper", () => {
             accounts[1],
             wrapper.options.address,
             "2",
-            ens
+            ens,
+            ENSTokenId
         );
 
         await wrapperResource.checkBalanceItem(
@@ -914,7 +921,8 @@ describe("itemv2 ERC721DeckWrapper", () => {
             accounts[3],
             wrapper.options.address,
             "2",
-            uni
+            uni,
+            [uniTokenId[0], uniTokenId[1]]
         );
 
         await wrapperResource.checkBalanceItem(
@@ -957,7 +965,8 @@ describe("itemv2 ERC721DeckWrapper", () => {
             accounts[3],
             wrapper.options.address,
             "1",
-            uni
+            uni,
+            [uniTokenId[2]]
         );
 
         await wrapperResource.checkBalanceItem(
@@ -1074,7 +1083,8 @@ describe("itemv2 ERC721DeckWrapper", () => {
             wrapper.options.address,
             accounts[2],
             "1",
-            uni
+            uni,
+            [uniTokenId[2]]
         );
 
         await wrapperResource.checkBalance(
@@ -1082,7 +1092,8 @@ describe("itemv2 ERC721DeckWrapper", () => {
             wrapper.options.address,
             accounts[2],
             "1",
-            ens
+            ens,
+            [ENSTokenId[1]]
         );
 
         await wrapperResource.checkBalanceItem(
@@ -1215,7 +1226,8 @@ describe("itemv2 ERC721DeckWrapper", () => {
             accounts[3],
             wrapper.options.address,
             "1",
-            ens
+            ens,
+            [ENSTokenId[0]]
         );
 
         await wrapperResource.checkBalance(
@@ -1223,7 +1235,8 @@ describe("itemv2 ERC721DeckWrapper", () => {
             accounts[3],
             wrapper.options.address,
             "1",
-            uni
+            uni,
+            [uniTokenId[0]]
         );
 
         await wrapperResource.checkBalanceItem(
@@ -1360,7 +1373,8 @@ describe("itemv2 ERC721DeckWrapper", () => {
             accounts[3],
             wrapper.options.address,
             "2",
-            gods
+            gods,
+            godsTokenId
         );
 
         await wrapperResource.checkBalanceItem(
@@ -1443,7 +1457,8 @@ describe("itemv2 ERC721DeckWrapper", () => {
             accounts[4],
             wrapper.options.address,
             "1",
-            boredApe
+            boredApe,
+            [boredApeTokenId[0]]
         );
 
         await wrapperResource.checkBalanceItem(
@@ -1486,7 +1501,8 @@ describe("itemv2 ERC721DeckWrapper", () => {
             accounts[4],
             wrapper.options.address,
             "1",
-            boredApe
+            boredApe,
+            [boredApeTokenId[1]]
         );
 
         await wrapperResource.checkBalanceItem(
@@ -1566,7 +1582,8 @@ describe("itemv2 ERC721DeckWrapper", () => {
             wrapper.options.address,
             accounts[3],
             "1",
-            gods
+            gods,
+            [godsTokenId[0]]
         );
 
         await wrapperResource.checkBalanceItem(
@@ -1614,7 +1631,8 @@ describe("itemv2 ERC721DeckWrapper", () => {
             accounts[3],
             wrapper.options.address,
             "1",
-            gods
+            gods,
+            [godsTokenId[0]]
         );
 
         await wrapperResource.checkBalanceItem(
@@ -1654,7 +1672,8 @@ describe("itemv2 ERC721DeckWrapper", () => {
             wrapper.options.address,
             accounts[2],
             "1",
-            gods
+            gods,
+            [godsTokenId[0]]
         );
 
         await wrapperResource.checkBalanceItem(
@@ -1722,7 +1741,8 @@ describe("itemv2 ERC721DeckWrapper", () => {
             accounts[2],
             wrapper.options.address,
             "1",
-            gods
+            gods,
+            [godsTokenId[0]]
         );
 
         await wrapperResource.checkBalanceItem(
@@ -1762,7 +1782,8 @@ describe("itemv2 ERC721DeckWrapper", () => {
             wrapper.options.address,
             accounts[3],
             "1",
-            gods
+            gods,
+            [godsTokenId[1]]
         );
 
         await wrapperResource.checkBalanceItem(
@@ -1829,7 +1850,8 @@ describe("itemv2 ERC721DeckWrapper", () => {
             wrapper.options.address,
             accounts[4],
             "1",
-            boredApe
+            boredApe,
+            [boredApeTokenId[0]]
         );
 
         await wrapperResource.checkBalanceItem(
@@ -1877,7 +1899,8 @@ describe("itemv2 ERC721DeckWrapper", () => {
             accounts[4],
             wrapper.options.address,
             "1",
-            boredApe
+            boredApe,
+            [boredApeTokenId[0]]
         );
 
         await wrapperResource.checkBalanceItem(
@@ -1924,7 +1947,8 @@ describe("itemv2 ERC721DeckWrapper", () => {
             wrapper.options.address,
             accounts[4],
             "1",
-            boredApe
+            boredApe,
+            [boredApeTokenId[1]]
         );
 
         await wrapperResource.checkBalanceItem(
@@ -1972,7 +1996,8 @@ describe("itemv2 ERC721DeckWrapper", () => {
             accounts[4],
             wrapper.options.address,
             "1",
-            boredApe
+            boredApe,
+            [boredApeTokenId[1]]
         );
 
         await wrapperResource.checkBalanceItem(
@@ -2019,7 +2044,8 @@ describe("itemv2 ERC721DeckWrapper", () => {
             wrapper.options.address,
             accounts[4],
             "1",
-            boredApe
+            boredApe,
+            [boredApeTokenId[1]]
         );
 
         await wrapperResource.checkBalanceItem(
@@ -2118,7 +2144,8 @@ describe("itemv2 ERC721DeckWrapper", () => {
             accounts[1],
             wrapper.options.address,
             "1",
-            cryptoSkulls
+            cryptoSkulls,
+            cryptoSkullsTokenId
         );
 
         await wrapperResource.checkBalanceItem(
@@ -2183,7 +2210,8 @@ describe("itemv2 ERC721DeckWrapper", () => {
             wrapper.options.address,
             accounts[2],
             "1",
-            cryptoSkulls
+            cryptoSkulls,
+            [cryptoSkullsTokenId[0]]
         );
 
         await wrapperResource.checkBalanceItem(
@@ -2231,7 +2259,8 @@ describe("itemv2 ERC721DeckWrapper", () => {
             accounts[2],
             wrapper.options.address,
             "1",
-            cryptoSkulls
+            cryptoSkulls,
+            cryptoSkullsTokenId
         );
 
         await wrapperResource.checkBalanceItem(
@@ -2309,7 +2338,8 @@ describe("itemv2 ERC721DeckWrapper", () => {
             wrapper.options.address,
             accounts[2],
             "1",
-            cryptoSkulls
+            cryptoSkulls,
+            [cryptoSkullsTokenId[0]]
         );
 
         await wrapperResource.checkBalanceItem(
@@ -2655,7 +2685,8 @@ describe("itemv2 ERC721DeckWrapper", () => {
             accounts[1],
             wrapper.options.address,
             "1",
-            doodle
+            doodle,
+            doodleTokenId
         );
 
         await wrapperResource.checkBalanceItem(
@@ -2704,7 +2735,8 @@ describe("itemv2 ERC721DeckWrapper", () => {
             wrapper.options.address,
             accounts[2],
             "1",
-            doodle
+            doodle,
+            doodleTokenId
         );
 
         await wrapperResource.checkBalanceItem(
@@ -2754,7 +2786,8 @@ describe("itemv2 ERC721DeckWrapper", () => {
             accounts[2],
             wrapper.options.address,
             "1",
-            doodle
+            doodle,
+            doodleTokenId
         );
 
         await wrapperResource.checkBalanceItem(
@@ -2803,7 +2836,8 @@ describe("itemv2 ERC721DeckWrapper", () => {
             wrapper.options.address,
             accounts[2],
             "1",
-            doodle
+            doodle,
+            doodleTokenId
         );
 
         await wrapperResource.checkBalanceItem(
@@ -2992,7 +3026,9 @@ describe("itemv2 ERC721DeckWrapper", () => {
             accounts[1],
             wrapper.options.address,
             "2",
-            vox
+            vox,
+            [voxTokenId[0],
+            voxTokenId[1]]
         );
 
         await wrapperResource.checkBalance(
@@ -3000,7 +3036,9 @@ describe("itemv2 ERC721DeckWrapper", () => {
             accounts[1],
             wrapper.options.address,
             "2",
-            sandbox
+            sandbox,
+            [sandboxTokenId[0],
+            sandboxTokenId[1]]
         );
 
         await wrapperResource.checkBalance(
@@ -3008,7 +3046,9 @@ describe("itemv2 ERC721DeckWrapper", () => {
             accounts[1],
             wrapper.options.address,
             "2",
-            funghi
+            funghi,
+            [funghiTokenId[0],
+            funghiTokenId[1]]
         );
 
         await wrapperResource.checkBalanceItem(
@@ -3247,7 +3287,8 @@ describe("itemv2 ERC721DeckWrapper", () => {
             wrapper.options.address,
             accounts[2],
             "1",
-            vox
+            vox,
+            [voxTokenId[0]]
         );
 
         await wrapperResource.checkBalance(
@@ -3255,7 +3296,8 @@ describe("itemv2 ERC721DeckWrapper", () => {
             wrapper.options.address,
             accounts[2],
             "1",
-            sandbox
+            sandbox,
+            [sandboxTokenId[0]]
         );
 
         await wrapperResource.checkBalance(
@@ -3263,15 +3305,8 @@ describe("itemv2 ERC721DeckWrapper", () => {
             wrapper.options.address,
             accounts[2],
             "1",
-            funghi
-        );
-
-        await wrapperResource.checkBalance(
-            tx,
-            wrapper.options.address,
-            accounts[2],
-            "1",
-            vox
+            funghi,
+            [funghiTokenId[0]]
         );
 
         await wrapperResource.checkBalanceItem(
@@ -3437,7 +3472,9 @@ describe("itemv2 ERC721DeckWrapper", () => {
             accounts[2],
             wrapper.options.address,
             "2",
-            vox
+            vox,
+            [voxTokenId[0],
+            voxTokenId[2]]
         );
 
         await wrapperResource.checkBalance(
@@ -3445,7 +3482,9 @@ describe("itemv2 ERC721DeckWrapper", () => {
             accounts[2],
             wrapper.options.address,
             "2",
-            sandbox
+            sandbox,
+            [sandboxTokenId[0],
+            sandboxTokenId[2]]
         );
 
         await wrapperResource.checkBalance(
@@ -3453,7 +3492,9 @@ describe("itemv2 ERC721DeckWrapper", () => {
             accounts[2],
             wrapper.options.address,
             "2",
-            funghi
+            funghi,
+            [funghiTokenId[0],
+            funghiTokenId[2]]
         );
 
         await wrapperResource.checkBalanceItem(
@@ -3710,7 +3751,8 @@ describe("itemv2 ERC721DeckWrapper", () => {
             wrapper.options.address,
             accounts[2],
             "3",
-            vox
+            vox,
+            voxTokenId
         );
 
         await wrapperResource.checkBalance(
@@ -3718,7 +3760,8 @@ describe("itemv2 ERC721DeckWrapper", () => {
             wrapper.options.address,
             accounts[2],
             "3",
-            sandbox
+            sandbox,
+            sandboxTokenId
         );
 
         await wrapperResource.checkBalance(
@@ -3726,7 +3769,8 @@ describe("itemv2 ERC721DeckWrapper", () => {
             wrapper.options.address,
             accounts[2],
             "3",
-            funghi
+            funghi,
+            funghiTokenId
         );
 
         await wrapperResource.checkBalanceItem(

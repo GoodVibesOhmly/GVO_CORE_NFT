@@ -594,7 +594,8 @@ async function checkBalance(
     fromAddress,
     toAddress,
     amount,
-    tokenInstance
+    tokenInstance,
+    tokenIds
 ) {
     var blockNumber =
         transaction.blockNumber ||
@@ -607,6 +608,10 @@ async function checkBalance(
 
     function balanceOf(token, subject, fromBlock) {
         return token.methods.balanceOf(subject).call({}, fromBlock);
+    }
+
+    function ownerOf(token, tokenId, fromBlock) {
+        return token.methods.ownerOf(tokenId).call({}, fromBlock);
     }
 
     var fromBefore = await balanceOf(tokenInstance, fromAddress, blockNumber);
@@ -622,6 +627,20 @@ async function checkBalance(
 
     assert.equal(fromBefore.sub(amount), fromAfter);
     assert.equal(toBefore.add(amount), toAfter);
+
+    await Promise.all(
+        tokenIds.map(async (tokenId, index) => {
+            var ownerBefore = await ownerOf(
+                tokenInstance,
+                tokenId,
+                blockNumber
+            );
+            var ownerAfter = await ownerOf(tokenInstance, tokenId);
+
+            assert.equal(ownerBefore, fromAddress);
+            assert.equal(ownerAfter, toAddress);
+        })
+    );
 }
 
 async function checkBalanceItem(

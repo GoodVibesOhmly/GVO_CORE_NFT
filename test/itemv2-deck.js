@@ -3775,5 +3775,7 @@ describe("itemv2 ERC721DeckWrapper", () => {
         );
 
         // #UW_DVOX_DSB_DNFF_6_1.8 END
+
+        await blockchainConnection.fastForward(blockToSkip);
     });
 });

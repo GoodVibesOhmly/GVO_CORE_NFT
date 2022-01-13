@@ -620,11 +620,6 @@ async function checkBalance(
     var fromAfter = await balanceOf(tokenInstance, fromAddress);
     var toAfter = await balanceOf(tokenInstance, toAddress);
 
-    console.log(fromBefore);
-    console.log(fromAfter);
-    console.log(toBefore);
-    console.log(toAfter);
-
     assert.equal(fromBefore.sub(amount), fromAfter);
     assert.equal(toBefore.add(amount), toAfter);
 
@@ -663,16 +658,10 @@ async function checkBalanceItem(
         return token.methods.balanceOf(subject, item).call({}, fromBlock);
     }
 
-    // var fromBefore = await balanceOf(tokenInstance, fromAddress, item, blockNumber)
     var toBefore = await balanceOf(tokenInstance, toAddress, item, blockNumber);
 
-    // var fromAfter = await balanceOf(tokenInstance, fromAddress, item)
     var toAfter = await balanceOf(tokenInstance, toAddress, item);
 
-    console.log("toAfter " + toAfter);
-    console.log("toBefore " + toBefore);
-
-    // assert.equal(fromBefore.sub(amount), fromAfter)
     assert.equal(toBefore.add(amount), toAfter);
 }
 
@@ -691,9 +680,6 @@ async function checkSupply(transaction, amount, itemId, tokenInstance) {
         .call({}, blockNumber);
 
     var supplyAfter = await tokenInstance.methods.totalSupply(itemId).call();
-
-    console.log("supplyAfter " + supplyAfter);
-    console.log("supplyBefore " + supplyBefore);
 
     assert.equal(supplyBefore.add(amount), supplyAfter);
 }

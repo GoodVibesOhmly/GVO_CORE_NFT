@@ -258,13 +258,11 @@ describe("itemv2 ERC721DeckWrapper", () => {
         };
 
         await catchCall(
-            wrapper.methods
-                .setHeader(headerCollection)
-                .send(
-                    blockchainConnection.getSendingOptions({
-                        from: accounts[2],
-                    })
-                ),
+            wrapper.methods.setHeader(headerCollection).send(
+                blockchainConnection.getSendingOptions({
+                    from: accounts[2],
+                })
+            ),
             "unauthorized"
         );
 
@@ -596,7 +594,7 @@ describe("itemv2 ERC721DeckWrapper", () => {
             accounts[4],
             "3",
             boredApe,
-            [boredApeTokenId[0],boredApeTokenId[1],boredApeTokenId[2]]
+            [boredApeTokenId[0], boredApeTokenId[1], boredApeTokenId[2]]
         );
 
         await wrapperResource.checkBalanceItem(
@@ -770,11 +768,47 @@ describe("itemv2 ERC721DeckWrapper", () => {
         var createItem = await wrapperResource.generateCreateItem(
             ENSTokenId,
             [accounts[1], accounts[3]],
-            [ENSTokenAddresss, ENSTokenAddresss],
+            [utilities.voidEthereumAddress, utilities.voidEthereumAddress],
             ["1000000000000000000", "1000000000000000000"]
         );
 
+        var lock = [true, false];
+
+        await catchCall(
+            wrapper.methods.mintItems(createItem, lock).send(
+                blockchainConnection.getSendingOptions({
+                    from: accounts[1],
+                })
+            ),
+            ""
+        );
+
+        var createItem = await wrapperResource.generateCreateItem(
+            [0],
+            [accounts[1]],
+            [ENSTokenAddresss],
+            ["1000000000000000000"]
+        );
+
+        var lock = [true];
+
+        await catchCall(
+            wrapper.methods.mintItems(createItem, lock).send(
+                blockchainConnection.getSendingOptions({
+                    from: accounts[1],
+                })
+            ),
+            ""
+        );
+
         // #W_ENS_2_1.1 START
+
+        var createItem = await wrapperResource.generateCreateItem(
+            ENSTokenId,
+            [accounts[1], accounts[3]],
+            [ENSTokenAddresss, ENSTokenAddresss],
+            ["1000000000000000000", "1000000000000000000"]
+        );
 
         var lock = [true, false];
 
@@ -1051,6 +1085,62 @@ describe("itemv2 ERC721DeckWrapper", () => {
 
         // #UWB_DENS_DUNI_2_1.5 END
 
+        datas[0] = web3.eth.abi.encodeParameters(
+            ["address", "uint256", "address", "bytes", "bool", "bool"],
+            [ENSTokenAddresss, uniTokenId[2], accounts[2], "0x", false, false]
+        );
+
+        datas[1] = web3.eth.abi.encodeParameters(
+            ["address", "uint256", "address", "bytes", "bool", "bool"],
+            [uniTokenAddresss, ENSTokenId[1], accounts[2], "0x", false, false]
+        );
+
+        var encodeDatas = web3.eth.abi.encodeParameters(["bytes[]"], [datas]);
+
+        await catchCall(
+            wrapper.methods
+                .burnBatch(
+                    accounts[1],
+                    [ENSItemIds[0], uniItemIds[0]],
+                    ["1000000000000000000", "1000000000000000000"],
+                    encodeDatas
+                )
+                .send(
+                    blockchainConnection.getSendingOptions({
+                        from: accounts[1],
+                    })
+                ),
+            ""
+        );
+
+        datas[0] = web3.eth.abi.encodeParameters(
+            ["address", "uint256", "address", "bytes", "bool", "bool"],
+            [uniTokenAddresss, ENSTokenId[1], accounts[2], "0x", false, false]
+        );
+
+        datas[1] = web3.eth.abi.encodeParameters(
+            ["address", "uint256", "address", "bytes", "bool", "bool"],
+            [ENSTokenAddresss, uniTokenId[2], accounts[2], "0x", false, false]
+        );
+
+        var encodeDatas = web3.eth.abi.encodeParameters(["bytes[]"], [datas]);
+
+        await catchCall(
+            wrapper.methods
+                .burnBatch(
+                    accounts[1],
+                    [ENSItemIds[0], uniItemIds[0]],
+                    ["1000000000000000000", "1000000000000000000"],
+                    encodeDatas
+                )
+                .send(
+                    blockchainConnection.getSendingOptions({
+                        from: accounts[1],
+                    })
+                ),
+            "Wrong ERC721"
+        );
+
         // #UWB_DENS_DUNI_2_1.6 START
 
         datas[0] = web3.eth.abi.encodeParameters(
@@ -1206,6 +1296,38 @@ describe("itemv2 ERC721DeckWrapper", () => {
             blockchainConnection.getSendingOptions({
                 from: accounts[3],
             })
+        );
+
+        var createWrongItem = await wrapperResource.generateCreateItem(
+            [ENSTokenId[0], uniTokenId[0]],
+            [accounts[3], accounts[3]],
+            [ENSTokenAddresss, uniTokenAddresss],
+            ["710000000000000000", "710000000000000000"]
+        );
+
+        await catchCall(
+            wrapper.methods.mintItems(createWrongItem, [false, false]).send(
+                blockchainConnection.getSendingOptions({
+                    from: accounts[3],
+                })
+            ),
+            ""
+        );
+
+        var createWrongItem = await wrapperResource.generateCreateItem(
+            [ENSTokenId[0], uniTokenId[0]],
+            [accounts[3], accounts[3]],
+            [ENSTokenAddresss, uniTokenAddresss],
+            ["410000000000000000", "410000000000000000"]
+        );
+
+        await catchCall(
+            wrapper.methods.mintItems(createWrongItem, [false, false]).send(
+                blockchainConnection.getSendingOptions({
+                    from: accounts[3],
+                })
+            ),
+            "amount"
         );
 
         var createItem = await wrapperResource.generateCreateItem(
@@ -1562,6 +1684,19 @@ describe("itemv2 ERC721DeckWrapper", () => {
 
         // #BRN_DGODS_3_1.5 END
 
+        var data = web3.eth.abi.encodeParameters(
+            ["address", "uint256", "address", "bytes", "bool", "bool"],
+            [godsTokenAddresss, godsTokenId[0], accounts[3], "0x", false, false]
+        );
+
+        await catchCall(wrapper.methods
+            .burn(accounts[3], godsItemIds[0], "600000000000000000", data)
+            .send(
+                blockchainConnection.getSendingOptions({
+                    from: accounts[3],
+                })
+            ), "Invalid amount");
+
         // #UW_DGODS_3_1.6 START
 
         var data = web3.eth.abi.encodeParameters(
@@ -1802,6 +1937,26 @@ describe("itemv2 ERC721DeckWrapper", () => {
         );
 
         // #UW_DGODS_3_2.2 END
+
+        var data = web3.eth.abi.encodeParameters(
+            ["address", "uint256", "address", "bytes", "bool", "bool"],
+            [
+                boredApeTokenAddresss,
+                boredApeTokenId[0],
+                accounts[4],
+                "0x",
+                false,
+                false,
+            ]
+        );
+
+        await catchCall(wrapper.methods
+            .burn(accounts[4], boredApeItemIds[0], "600000000000000000", data)
+            .send(
+                blockchainConnection.getSendingOptions({
+                    from: accounts[4],
+                })
+            ), "revert Invalid amount");
 
         // #BRN_DBA_3_2.3 START
 
@@ -2648,10 +2803,6 @@ describe("itemv2 ERC721DeckWrapper", () => {
             );
         });
 
-        // console.log("sdfdf")
-        // console.log(await etherPirates.methods.balanceOf(accounts[1]).call());
-        // console.log("sdfdf")
-
         // #W_EP_5_1.1 START
 
         var amountToWrap = "1000000000000000000";
@@ -3027,8 +3178,7 @@ describe("itemv2 ERC721DeckWrapper", () => {
             wrapper.options.address,
             "2",
             vox,
-            [voxTokenId[0],
-            voxTokenId[1]]
+            [voxTokenId[0], voxTokenId[1]]
         );
 
         await wrapperResource.checkBalance(
@@ -3037,8 +3187,7 @@ describe("itemv2 ERC721DeckWrapper", () => {
             wrapper.options.address,
             "2",
             sandbox,
-            [sandboxTokenId[0],
-            sandboxTokenId[1]]
+            [sandboxTokenId[0], sandboxTokenId[1]]
         );
 
         await wrapperResource.checkBalance(
@@ -3047,8 +3196,7 @@ describe("itemv2 ERC721DeckWrapper", () => {
             wrapper.options.address,
             "2",
             funghi,
-            [funghiTokenId[0],
-            funghiTokenId[1]]
+            [funghiTokenId[0], funghiTokenId[1]]
         );
 
         await wrapperResource.checkBalanceItem(
@@ -3473,8 +3621,7 @@ describe("itemv2 ERC721DeckWrapper", () => {
             wrapper.options.address,
             "2",
             vox,
-            [voxTokenId[0],
-            voxTokenId[2]]
+            [voxTokenId[0], voxTokenId[2]]
         );
 
         await wrapperResource.checkBalance(
@@ -3483,8 +3630,7 @@ describe("itemv2 ERC721DeckWrapper", () => {
             wrapper.options.address,
             "2",
             sandbox,
-            [sandboxTokenId[0],
-            sandboxTokenId[2]]
+            [sandboxTokenId[0], sandboxTokenId[2]]
         );
 
         await wrapperResource.checkBalance(
@@ -3493,8 +3639,7 @@ describe("itemv2 ERC721DeckWrapper", () => {
             wrapper.options.address,
             "2",
             funghi,
-            [funghiTokenId[0],
-            funghiTokenId[2]]
+            [funghiTokenId[0], funghiTokenId[2]]
         );
 
         await wrapperResource.checkBalanceItem(

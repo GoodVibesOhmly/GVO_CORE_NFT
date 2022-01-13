@@ -9,7 +9,11 @@ interface IERC1155DeckWrapper is IItemProjection {
 
     function reserveTimeInBlocks() external view returns(uint256);
 
-    function reserveData(address tokenAddress, uint256 tokenId) external view returns(address unwrapper, uint256 timeout);
+    function reserveData(bytes32 reserveDataKey) external view returns(address unwrapper, uint256 timeout, uint256 amount);
+
+    event ReserveData(address indexed from, address indexed tokenAddress, uint256 indexed tokenId, uint256 amount, uint256 timeout, bytes32 reserveDataKey);
+
+    event ReserveDataUnlocked(address indexed from, bytes32 indexed reserveDataKey, address tokenAddress, uint256 tokenId, address unwrapper, uint256 amount, uint256 timeout);
 
     function mintItems(CreateItem[] calldata createItemsInput, bool[] calldata reserveArray) external returns(uint256[] memory itemIds);
 

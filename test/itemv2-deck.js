@@ -1403,18 +1403,20 @@ describe("itemv2 ERC721DeckWrapper", () => {
          *
          * #UW_DGODS_3_1.4        MF: Unwrap        DGODS           Acc3        Acc3              0.51         A                    yes
          * #BRN_DGODS_3_1.5       Burn(Interop.)    DGODS           Acc3        //                0.8          //                   //
-         * #UW_DGODS_3_1.6        Unwrap            DGODS           Acc3        Acc3              1            A                    yes
-         * #W_GODS_3_1.7          Wrap              GODS            Acc3        Acc3              1            A+                   no
-         * #UW_DGODS_3_1.8        Unwrap            DGODS           Acc3        Acc3              0.6          A+                   no
-         * #UW_DGODS_3_1.9        MF: Unwrap        DGODS           Acc3        Acc3              0.4          B                    yes
-         * #W_GODS_3_2.1          Wrap              GODS            Acc2        Acc2              1            A++                  no
-         * #UW_DGODS_3_2.2        Unwrap            DGODS           Acc3        Acc3              0.51         B                    yes
-         * #BRN_DBA_3_2.3         Burn(Interop.)    DBA             Acc4        //                1.4          //                   //
-         * #UW_DBA_3_2.4          Unwrap            DBA             Acc3        Acc3              0.6          C                    no
-         * #W_BA_3_2.5            Wrap              BORED APE       Acc4        Acc4              1            C+                   no
-         * #UW_DBA_3_2.6          Unwrap            DBA             Acc4        Acc4              0.6          D                    yes
-         * #W_BA_3_2.7            Wrap              BORED APE       Acc4        Acc5              1            D+                   no
-         * #UW_DBA_3_2.6          Unwrap            DBA             Acc5        Acc4              1            D+                   no
+         * #UW_DGODS_3_1.6        MF: Unwrap        DGODS           Acc3        Acc3              0.6          A                    yes
+         * #UW_DGODS_3_1.7        Unwrap            DGODS           Acc3        Acc3              1            A                    yes
+         * #W_GODS_3_1.8          Wrap              GODS            Acc3        Acc3              1            A+                   no
+         * #UW_DGODS_3_1.9        Unwrap            DGODS           Acc3        Acc3              0.6          A+                   no
+         * #UW_DGODS_3_2.1        MF: Unwrap        DGODS           Acc3        Acc3              0.4          B                    yes
+         * #W_GODS_3_2.2          Wrap              GODS            Acc2        Acc2              1            A++                  no
+         * #UW_DBA_3_2.3          MF: Unwrap        DBA             Acc3        Acc3              0.6          C                    no
+         * #UW_DGODS_3_2.4        Unwrap            DGODS           Acc3        Acc3              0.51         B                    yes
+         * #BRN_DBA_3_2.5         Burn(Interop.)    DBA             Acc4        //                1.4          //                   //
+         * #UW_DBA_3_2.6          Unwrap            DBA             Acc3        Acc3              0.6          C                    no
+         * #W_BA_3_2.7            Wrap              BORED APE       Acc4        Acc4              1            C+                   no
+         * #UW_DBA_3_2.8          Unwrap            DBA             Acc4        Acc4              0.6          D                    yes
+         * #W_BA_3_2.9            Wrap              BORED APE       Acc4        Acc5              1            D+                   no
+         * #UW_DBA_3_3.1          Unwrap            DBA             Acc5        Acc4              1            D+                   no
          */
 
         var tokenHolderGods = "0x7891f796a5d43466fC29F102069092aEF497a290";
@@ -1683,7 +1685,8 @@ describe("itemv2 ERC721DeckWrapper", () => {
         );
 
         // #BRN_DGODS_3_1.5 END
-
+        
+        // #UW_DGODS_3_1.6 START
         var data = web3.eth.abi.encodeParameters(
             ["address", "uint256", "address", "bytes", "bool", "bool"],
             [godsTokenAddresss, godsTokenId[0], accounts[3], "0x", false, false]
@@ -1696,8 +1699,9 @@ describe("itemv2 ERC721DeckWrapper", () => {
                     from: accounts[3],
                 })
             ), "Invalid amount");
+        // #BRN_DGODS_3_1.6 END
 
-        // #UW_DGODS_3_1.6 START
+        // #UW_DGODS_3_1.7 START
 
         var data = web3.eth.abi.encodeParameters(
             ["address", "uint256", "address", "bytes", "bool", "bool"],
@@ -1736,9 +1740,9 @@ describe("itemv2 ERC721DeckWrapper", () => {
             wrapper
         );
 
-        // #UW_DGODS_3_1.6 END
+        // #UW_DGODS_3_1.7 END
 
-        // #W_GODS_3_1.7 START
+        // #W_GODS_3_1.8 START
 
         await gods.methods
             .approve(wrapper.options.address, godsTokenId[0])
@@ -1785,9 +1789,9 @@ describe("itemv2 ERC721DeckWrapper", () => {
             wrapper
         );
 
-        // #W_GODS_3_1.7 END
+        // #W_GODS_3_1.8 END
 
-        // #UW_DGODS_3_1.8 START
+        // #UW_DGODS_3_1.9 START
 
         var data = web3.eth.abi.encodeParameters(
             ["address", "uint256", "address", "bytes", "bool", "bool"],
@@ -1826,9 +1830,9 @@ describe("itemv2 ERC721DeckWrapper", () => {
             wrapper
         );
 
-        // #UW_DGODS_3_1.8 END
+        // #UW_DGODS_3_1.9 END
 
-        // #UW_DGODS_3_1.9 START
+        // #UW_DGODS_3_2.1 START
 
         var data = web3.eth.abi.encodeParameters(
             ["address", "uint256", "address", "bytes", "bool", "bool"],
@@ -1846,9 +1850,9 @@ describe("itemv2 ERC721DeckWrapper", () => {
             "Invalid amount"
         );
 
-        // #UW_DGODS_3_1.9 END
+        // #UW_DGODS_3_2.1 END
 
-        // #W_GODS_3_2.1 START
+        // #W_GODS_3_2.2 START
 
         await gods.methods
             .approve(wrapper.options.address, godsTokenId[0])
@@ -1895,9 +1899,9 @@ describe("itemv2 ERC721DeckWrapper", () => {
             wrapper
         );
 
-        // #W_GODS_3_2.1 END
+        // #W_GODS_3_2.2 END
 
-        // #UW_DGODS_3_2.2 START
+        // #UW_DGODS_3_2.3 START
 
         var data = web3.eth.abi.encodeParameters(
             ["address", "uint256", "address", "bytes", "bool", "bool"],
@@ -1936,8 +1940,9 @@ describe("itemv2 ERC721DeckWrapper", () => {
             wrapper
         );
 
-        // #UW_DGODS_3_2.2 END
-
+        // #UW_DGODS_3_2.3 END
+        
+        // #BRN_DBA_3_2.4 START
         var data = web3.eth.abi.encodeParameters(
             ["address", "uint256", "address", "bytes", "bool", "bool"],
             [
@@ -1957,8 +1962,9 @@ describe("itemv2 ERC721DeckWrapper", () => {
                     from: accounts[4],
                 })
             ), "revert Invalid amount");
+         // #UW_DGODS_3_2.4 END
 
-        // #BRN_DBA_3_2.3 START
+        // #BRN_DBA_3_2.5 START
 
         var burnValue = "1400000000000000000";
 
@@ -1976,9 +1982,9 @@ describe("itemv2 ERC721DeckWrapper", () => {
             wrapper
         );
 
-        // #BRN_DBA_3_2.3 END
+        // #BRN_DBA_3_2.5 END
 
-        // #UW_DBA_3_2.4 START
+        // #UW_DBA_3_2.6 START
 
         var data = web3.eth.abi.encodeParameters(
             ["address", "uint256", "address", "bytes", "bool", "bool"],
@@ -2024,9 +2030,9 @@ describe("itemv2 ERC721DeckWrapper", () => {
             wrapper
         );
 
-        // #UW_DBA_3_2.4 END
+        // #UW_DBA_3_2.6 END
 
-        // #W_BA_3_2.5 START
+        // #W_BA_3_2.7 START
 
         await boredApe.methods
             .approve(wrapper.options.address, boredApeTokenId[0])
@@ -2073,9 +2079,9 @@ describe("itemv2 ERC721DeckWrapper", () => {
             wrapper
         );
 
-        // #W_BA_3_2.5 END
+        // #W_BA_3_2.7 END
 
-        // #UW_DBA_3_2.6 START
+        // #UW_DBA_3_2.8 START
 
         var data = web3.eth.abi.encodeParameters(
             ["address", "uint256", "address", "bytes", "bool", "bool"],
@@ -2121,9 +2127,9 @@ describe("itemv2 ERC721DeckWrapper", () => {
             wrapper
         );
 
-        // #UW_DBA_3_2.6 END
+        // #UW_DBA_3_2.8 END
 
-        // #W_BA_3_2.7 START
+        // #W_BA_3_2.9 START
 
         await boredApe.methods
             .approve(wrapper.options.address, boredApeTokenId[1])
@@ -2170,9 +2176,9 @@ describe("itemv2 ERC721DeckWrapper", () => {
             wrapper
         );
 
-        // #W_BA_3_2.7 END
+        // #W_BA_3_2.9 END
 
-        // #UW_DBA_3_2.6 START
+        // #UW_DBA_3_3.1 START
 
         var data = web3.eth.abi.encodeParameters(
             ["address", "uint256", "address", "bytes", "bool", "bool"],
@@ -2218,7 +2224,7 @@ describe("itemv2 ERC721DeckWrapper", () => {
             wrapper
         );
 
-        // #UW_DBA_3_2.6 END
+        // #UW_DBA_3_3.1 END
     });
 
     it("#4", async () => {

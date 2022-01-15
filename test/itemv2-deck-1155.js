@@ -532,7 +532,7 @@ describe("itemv2 ERC1155DeckWrapper", () => {
                         from: accounts[1],
                     })
                 ),
-            ""
+            "amount"
         );
 
         await wrapper.methods
@@ -571,27 +571,27 @@ describe("itemv2 ERC1155DeckWrapper", () => {
                         from: accounts[3],
                     })
                 ),
-            ""
+            "amount"
         );
 
-        // var data = web3.eth.abi.encodeParameters(
-        //     ["address", "uint256", "address", "bytes32[]", "bytes"],
-        //     [
-        //         zerionTokenAddresss,
-        //         zerionTokenId[0],
-        //         accounts[4],
-        //         [utilities.voidBytes32],
-        //         "0x",
-        //     ]
-        // );
+        var data = web3.eth.abi.encodeParameters(
+            ["address", "uint256", "address", "bytes32[]", "bytes"],
+            [
+                zerionTokenAddresss,
+                zerionTokenId[0],
+                accounts[4],
+                zerionKey,
+                "0x",
+            ]
+        );
 
-        // await wrapper.methods
-        //     .burn(accounts[1], zerionItemIds[0], "2000000000000000000", data)
-        //     .send(
-        //         blockchainConnection.getSendingOptions({
-        //             from: accounts[1],
-        //         })
-        //     );
+        await wrapper.methods
+            .burn(accounts[1], zerionItemIds[0], "2000000000000000000", data)
+            .send(
+                blockchainConnection.getSendingOptions({
+                    from: accounts[1],
+                })
+            );
 
         // await wrapperResource.checkBalance1155(
         //     tx,

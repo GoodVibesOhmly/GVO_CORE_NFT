@@ -638,6 +638,55 @@ async function checkBalance(
     );
 }
 
+async function checkBalance1155(
+    transaction,
+    fromAddress,
+    toAddress,
+    amount,
+    tokenInstance,
+    tokenId
+) {
+    var blockNumber =
+        transaction.blockNumber ||
+        (
+            await web3.eth.getTransactionReceipt(
+                transaction.transactionHash || transaction
+            )
+        ).blockNumber;
+    blockNumber = parseInt(blockNumber) - 1;
+
+    function balanceOf(token, subject, tokenId, fromBlock) {
+        return token.methods.balanceOf(subject, tokenId).call({}, fromBlock);
+    }
+
+    // function ownerOf(token, tokenId, fromBlock) {
+    //     return token.methods.ownerOf(tokenId).call({}, fromBlock);
+    // }
+
+    var fromBefore = await balanceOf(tokenInstance, fromAddress, tokenId, blockNumber);
+    var toBefore = await balanceOf(tokenInstance, toAddress, tokenId, blockNumber);
+
+    var fromAfter = await balanceOf(tokenInstance, fromAddress, tokenId);
+    var toAfter = await balanceOf(tokenInstance, toAddress, tokenId);
+
+    assert.equal(fromBefore.sub(amount), fromAfter);
+    assert.equal(toBefore.add(amount), toAfter);
+
+    // await Promise.all(
+    //     tokenIds.map(async (tokenId, index) => {
+    //         var ownerBefore = await ownerOf(
+    //             tokenInstance,
+    //             tokenId,
+    //             blockNumber
+    //         );
+    //         var ownerAfter = await ownerOf(tokenInstance, tokenId);
+
+    //         assert.equal(ownerBefore, fromAddress);
+    //         assert.equal(ownerAfter, toAddress);
+    //     })
+    // );
+}
+
 async function checkBalanceItem(
     transaction,
     toAddress,
@@ -741,4 +790,6 @@ module.exports = {
     checkBalanceItem,
     checkSupply,
     checkReserveData,
+    checkBalance1155
 };
+

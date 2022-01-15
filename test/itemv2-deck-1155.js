@@ -347,8 +347,8 @@ describe("itemv2 ERC1155DeckWrapper", () => {
         );
 
         var data = abi.encode(
-            ["address[]", "uint256[]", "bool"],
-            [[accounts[2]], ["1"], true]
+            ["uint256[]", "address[]", "bool"],
+            [["1"], [accounts[2]], true]
         );
 
         tx = await parallel.methods
@@ -463,20 +463,21 @@ describe("itemv2 ERC1155DeckWrapper", () => {
             osTokenId[0]
         );
 
-        // await wrapperResource.checkBalanceItem(
-        //     tx,
-        //     accounts[4],
-        //     amountToWrap[0].add(amountToWrap[1]),
-        //     osItemIds[0],
-        //     wrapper
-        // );
+        await wrapperResource.checkBalanceItem(
+            tx,
+            accounts[4],
+            amountToWrap[0].add(amountToWrap[1]),
+            osItemIds[0],
+            wrapper
+        );
 
-        // await wrapperResource.checkSupply(
-        //     tx,
-        //     amountToWrap[0].add(amountToWrap[1]),
-        //     osItemIds[0],
-        //     wrapper
-        // );
+        await wrapperResource.checkSupply(
+            tx,
+            amountToWrap[0].add(amountToWrap[1]),
+            osItemIds[0],
+            wrapper
+        );
+        
         await wrapper.methods
             .safeTransferFrom(
                 accounts[1],

@@ -58,21 +58,9 @@ async function cleanAndGetBytecodes(web3, step, transaction) {
 
 function debugTransaction(transactionHash, web3) {
     return Promise.all([
-        new Promise(function(ok, ko) {
-            web3.currentProvider.sendAsync({
-                "id": new Date().getTime(),
-                "jsonrpc": "2.0",
-                "method": "debug_traceTransaction",
-                "params": [transactionHash, {
-                    tracer
-                }]
-            }, function(err, response) {
-                return err ? ko(err) : ok(response.result);
-            })
-        }),
         web3.eth.getTransaction(transactionHash),
         web3.eth.getTransactionReceipt(transactionHash)
-    ]).then(transactionData => cleanAndGetBytecodes(web3, transactionData[0], {...transactionData[1], ...transactionData[2] }));
+    ]).then(result => require('./ganache-transactionDebuggerV2')(web3, transactionHash, tracer, result)).then(transactionData => cleanAndGetBytecodes(web3, transactionData[0], {...transactionData[1], ...transactionData[2] }));
 }
 
 function traceCall(transaction, web3) {

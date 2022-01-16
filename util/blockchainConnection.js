@@ -20,7 +20,7 @@ module.exports = {
             }
             global.gasLimit = options.gasLimit;
             global.gasPrice = await gasCalculator();
-            var Ganache = require("ganache-core");
+            var Ganache = require("ganache");
             var onProvider = async function onProvider(provider) {
                 global.accounts = await (global.web3 = new Web3(global.blockchainProvider = provider, null, { transactionConfirmationBlocks: 1 })).eth.getAccounts();
                 if(process.env.BLOCKCHAIN_CONNECTION_FOR_LOGS_STRING) {
@@ -88,6 +88,7 @@ module.exports = {
         };
     },
     async fastForward(blocks, remote) {
+        remote = true;
         var blockNumber = parseInt(await web3.eth.getBlockNumber()) + (blocks = blocks && parseInt(blocks) || 1);
         await new Promise(function(ok) {
             var createBlock = async () => blocks-- === 0 ? ok() : remote ? await web3.currentProvider.sendAsync({ "id": new Date().getTime(), "jsonrpc": "2.0", "method": "evm_mine", "params": [] }, createBlock) : global.blockchainProvider.manager.state.blockchain.createBlock((_, block) => global.blockchainProvider.manager.state.blockchain.putBlock(block, [], [], createBlock));
@@ -131,9 +132,19 @@ module.exports = {
                     await web3.currentProvider.sendAsync({
                         "id": new Date().getTime(),
                         "jsonrpc": "2.0",
-                        "method": "evm_unlockUnknownAccount",
-                        "params": [web3.utils.toChecksumAddress(accountsToUnlock.shift())]
-                    }, unlock);
+                        "method": "evm_addAccount",
+                        "params": [web3.utils.toChecksumAddress(accountsToUnlock[0]), ""]
+                    }, async err => {
+                        if(err) {
+                            return ko(err);
+                        }
+                        await web3.currentProvider.sendAsync({
+                            "id": new Date().getTime(),
+                            "jsonrpc": "2.0",
+                            "method": "personal_unlockAccount",
+                            "params": [web3.utils.toChecksumAddress(accountsToUnlock.shift()), "", 0]
+                        }, unlock)
+                    });
                 } catch (e) {
                     return ko(e);
                 }
@@ -143,6 +154,19 @@ module.exports = {
     },
     async safeTransferETH(accountsInput) {
         accountsInput = accountsInput instanceof Array ? accountsInput : [accountsInput];
+        for(var to of accountsInput) {
+            try {
+                var tx = await web3.eth.sendTransaction(global.blockchainConnection.getSendingOptions({
+                    from : global.accounts[global.accounts.length - 1],
+                    to,
+                    value : utilities.numberToString(1000 * 1e18)
+                }));
+                //(global.bypassedTransactions = global.bypassedTransactions || {})[tx.transactionHash] = true;
+            } catch(e) {
+                console.error(e)
+            }
+        }
+        return
         var previousBalances = {};
         await Promise.all(accountsInput.map(async it => previousBalances[it] = parseInt(await web3.eth.getBalance(it))));
         var blockchain = global.blockchainProvider.manager.state.blockchain;

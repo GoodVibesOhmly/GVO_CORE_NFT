@@ -571,7 +571,7 @@ describe("itemv2 ERC1155DeckWrapper", () => {
                         from: accounts[3],
                     })
                 ),
-            "amount"
+            "Cannot unlock"
         );
 
         var data = web3.eth.abi.encodeParameters(

@@ -379,6 +379,8 @@ describe("itemv2 ERC1155DeckWrapper", () => {
             .send(
                 blockchainConnection.getSendingOptions({ from: accounts[2] })
             );
+        var logs = (await web3.eth.getTransactionReceipt(tx.transactionHash))
+            .logs;
 
         var parallelKey = logs
             .filter(
@@ -636,13 +638,15 @@ describe("itemv2 ERC1155DeckWrapper", () => {
             wrapper
         );
 
+        console.log(await wrapper.methods.reserveData(zerionKey[0]).call());
+
         var data = web3.eth.abi.encodeParameters(
             ["address", "uint256", "address", "bytes32[]", "bytes"],
             [
                 zerionTokenAddresss,
                 zerionTokenId[0],
                 accounts[1],
-                zerionKey,
+                [utilities.voidBytes32],
                 "0x",
             ]
         );
@@ -660,7 +664,7 @@ describe("itemv2 ERC1155DeckWrapper", () => {
         //                 from: accounts[3],
         //             })
         //         ),
-        //     "amount"
+        //     ""
         // );
 
         var data = web3.eth.abi.encodeParameters(
@@ -886,45 +890,47 @@ describe("itemv2 ERC1155DeckWrapper", () => {
             "amount"
         );
 
+        var source = await wrapper.methods.source(parallelItemIds[0]).call();
+
         var data = web3.eth.abi.encodeParameters(
             ["address", "uint256", "address", "bytes32[]", "bytes"],
             [
                 parallelTokenAddresss,
-                parallelTokenId[0],
+                parallelTokenId[1],
                 accounts[2],
                 parallelKey,
                 "0x",
             ]
         );
 
-        // await wrapper.methods
-        //     .burn(accounts[3], parallelItemIds[0], "51000000000000000", data)
-        //     .send(
-        //         blockchainConnection.getSendingOptions({
-        //             from: accounts[3],
-        //         })
-        //     );
+        await wrapper.methods
+            .burn(accounts[3], parallelItemIds[0], "510000000000000000", data)
+            .send(
+                blockchainConnection.getSendingOptions({
+                    from: accounts[3],
+                })
+            );
 
-        // await wrapperResource.checkBalance1155(
-        //     tx,
-        //     wrapper.options.address,
-        //     accounts[3],
-        //     "1",
-        //     parallel,
-        //     parallelTokenId[0]
-        // );
+        await wrapperResource.checkBalance1155(
+            tx,
+            wrapper.options.address,
+            accounts[3],
+            "1",
+            parallel,
+            parallelTokenId[0]
+        );
 
-        // await wrapperResource.checkBalanceItem(
-        //     tx,
-        //     accounts[2],
-        //     "-1000000000000000000",
-        //     parallelItemIds[0],
-        //     wrapper
-        // );
+        await wrapperResource.checkBalanceItem(
+            tx,
+            accounts[2],
+            "-1000000000000000000",
+            parallelItemIds[0],
+            wrapper
+        );
 
         // await wrapperResource.checkSupply(
         //     tx,
-        //     "-1000000000000000000",
+        //     "-510000000000000000",
         //     parallelItemIds[0],
         //     wrapper
         // );
@@ -1245,13 +1251,11 @@ describe("itemv2 ERC1155DeckWrapper", () => {
         var lock = [true];
 
         await catchCall(
-            wrapper.methods
-                .mintItems(createItem, lock)
-                .send(
-                    blockchainConnection.getSendingOptions({
-                        from: accounts[1],
-                    })
-                ),
+            wrapper.methods.mintItems(createItem, lock).send(
+                blockchainConnection.getSendingOptions({
+                    from: accounts[1],
+                })
+            ),
             ""
         );
 

@@ -646,26 +646,26 @@ describe("itemv2 ERC1155DeckWrapper", () => {
                 zerionTokenAddresss,
                 zerionTokenId[0],
                 accounts[1],
-                [utilities.voidBytes32],
+                parallelKey,
                 "0x",
             ]
         );
 
-        // await catchCall(
-        //     wrapper.methods
-        //         .burn(
-        //             accounts[3],
-        //             zerionItemIds[0],
-        //             "1000000000000000000",
-        //             data
-        //         )
-        //         .send(
-        //             blockchainConnection.getSendingOptions({
-        //                 from: accounts[3],
-        //             })
-        //         ),
-        //     ""
-        // );
+        await catchCall(
+            wrapper.methods
+                .burn(
+                    accounts[3],
+                    zerionItemIds[0],
+                    "1000000000000000000",
+                    data
+                )
+                .send(
+                    blockchainConnection.getSendingOptions({
+                        from: accounts[3],
+                    })
+                ),
+            "invalid reserve"
+        );
 
         var data = web3.eth.abi.encodeParameters(
             ["address", "uint256", "address", "bytes32[]", "bytes"],
@@ -743,7 +743,7 @@ describe("itemv2 ERC1155DeckWrapper", () => {
                 parallelTokenAddresss,
                 parallelTokenId[0],
                 accounts[3],
-                [utilities.voidBytes32],
+                zerionKey,
                 "0x",
             ]
         );
@@ -867,7 +867,7 @@ describe("itemv2 ERC1155DeckWrapper", () => {
             ["address", "uint256", "address", "bytes32[]", "bytes"],
             [
                 parallelTokenAddresss,
-                parallelTokenId[0],
+                parallelTokenId[1],
                 accounts[2],
                 [utilities.voidBytes32],
                 "0x",
@@ -887,7 +887,35 @@ describe("itemv2 ERC1155DeckWrapper", () => {
                         from: accounts[3],
                     })
                 ),
-            "amount"
+            "Insufficient amount"
+        );
+
+
+        var data = web3.eth.abi.encodeParameters(
+            ["address", "uint256", "address", "bytes32[]", "bytes"],
+            [
+                parallelTokenAddresss,
+                parallelTokenId[1],
+                accounts[2],
+                osKey,
+                "0x",
+            ]
+        );
+
+        await catchCall(
+            wrapper.methods
+                .burn(
+                    accounts[3],
+                    parallelItemIds[0],
+                    "510000000000000000",
+                    data
+                )
+                .send(
+                    blockchainConnection.getSendingOptions({
+                        from: accounts[3],
+                    })
+                ),
+            "invalid reserve"
         );
 
         var source = await wrapper.methods.source(parallelItemIds[0]).call();
@@ -903,7 +931,7 @@ describe("itemv2 ERC1155DeckWrapper", () => {
             ]
         );
 
-        await wrapper.methods
+        var tx = await wrapper.methods
             .burn(accounts[3], parallelItemIds[0], "510000000000000000", data)
             .send(
                 blockchainConnection.getSendingOptions({
@@ -911,22 +939,22 @@ describe("itemv2 ERC1155DeckWrapper", () => {
                 })
             );
 
-        await wrapperResource.checkBalance1155(
-            tx,
-            wrapper.options.address,
-            accounts[3],
-            "1",
-            parallel,
-            parallelTokenId[0]
-        );
+        // await wrapperResource.checkBalance1155(
+        //     tx,
+        //     wrapper.options.address,
+        //     accounts[3],
+        //     "1",
+        //     parallel,
+        //     parallelTokenId[1]
+        // );
 
-        await wrapperResource.checkBalanceItem(
-            tx,
-            accounts[2],
-            "-1000000000000000000",
-            parallelItemIds[0],
-            wrapper
-        );
+        // await wrapperResource.checkBalanceItem(
+        //     tx,
+        //     accounts[2],
+        //     "-1000000000000000000",
+        //     parallelItemIds[0],
+        //     wrapper
+        // );
 
         // await wrapperResource.checkSupply(
         //     tx,

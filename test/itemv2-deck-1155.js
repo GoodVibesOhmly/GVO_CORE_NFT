@@ -939,29 +939,29 @@ describe("itemv2 ERC1155DeckWrapper", () => {
                 })
             );
 
-        // await wrapperResource.checkBalance1155(
-        //     tx,
-        //     wrapper.options.address,
-        //     accounts[3],
-        //     "1",
-        //     parallel,
-        //     parallelTokenId[1]
-        // );
+        await wrapperResource.checkBalance1155(
+            tx,
+            wrapper.options.address,
+            accounts[2],
+            "1",
+            parallel,
+            parallelTokenId[1]
+        );
 
-        // await wrapperResource.checkBalanceItem(
-        //     tx,
-        //     accounts[2],
-        //     "-1000000000000000000",
-        //     parallelItemIds[0],
-        //     wrapper
-        // );
+        await wrapperResource.checkBalanceItem(
+            tx,
+            accounts[3],
+            "-510000000000000000",
+            parallelItemIds[0],
+            wrapper
+        );
 
-        // await wrapperResource.checkSupply(
-        //     tx,
-        //     "-510000000000000000",
-        //     parallelItemIds[0],
-        //     wrapper
-        // );
+        await wrapperResource.checkSupply(
+            tx,
+            "-510000000000000000",
+            parallelItemIds[0],
+            wrapper
+        );
 
         var datas = [];
 

@@ -206,7 +206,7 @@ describe("itemv2 ERC1155DeckWrapper", () => {
 
         await approveHost(tokenHolderZerion);
 
-        zerionTokenId.map(async (id, index) => {
+        await Promise.all(zerionTokenId.map(async (id, index) => {
             await zerion.methods
                 .safeTransferFrom(tokenHolderZerion, accounts[1], id, 3, "0x")
                 .send(
@@ -214,7 +214,8 @@ describe("itemv2 ERC1155DeckWrapper", () => {
                         from: tokenHolderZerion,
                     })
                 );
-        });
+        }));
+
         await zerion.methods
             .setApprovalForAll(wrapper.options.address, accounts[1])
             .send(
@@ -313,7 +314,7 @@ describe("itemv2 ERC1155DeckWrapper", () => {
 
         await approveHost(tokenHolderParallel);
 
-        parallelTokenId.map(async (id, index) => {
+        await Promise.all(parallelTokenId.map(async (id, index) => {
             await parallel.methods
                 .safeTransferFrom(tokenHolderParallel, accounts[2], id, 1, "0x")
                 .send(
@@ -321,7 +322,7 @@ describe("itemv2 ERC1155DeckWrapper", () => {
                         from: tokenHolderParallel,
                     })
                 );
-        });
+        }));
 
         await parallel.methods
             .setApprovalForAll(wrapper.options.address, accounts[2])
@@ -461,7 +462,7 @@ describe("itemv2 ERC1155DeckWrapper", () => {
 
         await approveHost(tokenHolderOs);
 
-        osTokenId.map(async (id, index) => {
+        await Promise.all(osTokenId.map(async (id, index) => {
             await os.methods
                 .safeTransferFrom(
                     tokenHolderOs,
@@ -475,7 +476,7 @@ describe("itemv2 ERC1155DeckWrapper", () => {
                         from: tokenHolderOs,
                     })
                 );
-        });
+        }));
 
         await os.methods
             .setApprovalForAll(wrapper.options.address, accounts[3])
@@ -486,7 +487,7 @@ describe("itemv2 ERC1155DeckWrapper", () => {
             );
 
         var balance = await os.methods
-            .balanceOf(tokenHolderOs, osTokenId[0])
+            .balanceOf(accounts[3], osTokenId[0])
             .call();
 
         // #W_OS_1_1.4 START
@@ -498,6 +499,9 @@ describe("itemv2 ERC1155DeckWrapper", () => {
             [osTokenAddresss, osTokenAddresss],
             amountToWrap
         );
+
+        console.log(balance)
+        console.log(amountToWrap)
 
         var lock = [true, false];
 
@@ -1145,7 +1149,7 @@ describe("itemv2 ERC1155DeckWrapper", () => {
 
         await approveHost(tokenHolderElite);
 
-        eliteTokenId.map(async (id, index) => {
+        await Promise.all(eliteTokenId.map(async (id, index) => {
             await elite.methods
                 .safeTransferFrom(tokenHolderElite, accounts[1], id, 7, "0x")
                 .send(
@@ -1153,7 +1157,7 @@ describe("itemv2 ERC1155DeckWrapper", () => {
                         from: tokenHolderElite,
                     })
                 );
-        });
+        }));
 
         await elite.methods
             .setApprovalForAll(wrapper.options.address, accounts[1])
@@ -1794,7 +1798,7 @@ describe("itemv2 ERC1155DeckWrapper", () => {
 
         await approveHost(tokenHolderOpensea);
 
-        openseaTokenId
+        await Promise.all(openseaTokenId
             .slice(0, openseaTokenId.length - 1)
             .map(async (id, index) => {
                 await opensea.methods
@@ -1810,7 +1814,7 @@ describe("itemv2 ERC1155DeckWrapper", () => {
                             from: tokenHolderOpensea,
                         })
                     );
-            });
+            }));
 
         await opensea.methods
             .safeTransferFrom(
@@ -1984,7 +1988,7 @@ describe("itemv2 ERC1155DeckWrapper", () => {
 
         await approveHost(tokenHolderOs);
 
-        osTokenId.map(async (id, index) => {
+        await Promise.all(osTokenId.map(async (id, index) => {
             await os.methods
                 .safeTransferFrom(
                     tokenHolderOs,
@@ -1998,7 +2002,7 @@ describe("itemv2 ERC1155DeckWrapper", () => {
                         from: tokenHolderOs,
                     })
                 );
-        });
+        }));
 
         var tokenHolderHo = "0xf1fced5b0475a935b49b95786adbda2d40794d2d";
 
@@ -2625,7 +2629,7 @@ describe("itemv2 ERC1155DeckWrapper", () => {
 
         await approveHost(tokenHolderZapper);
 
-        zapperTokenId.map(async (id, index) => {
+        await Promise.all(zapperTokenId.map(async (id, index) => {
             await zapper.methods
                 .safeTransferFrom(tokenHolderZapper, accounts[1], id, 12, "0x")
                 .send(
@@ -2633,7 +2637,7 @@ describe("itemv2 ERC1155DeckWrapper", () => {
                         from: tokenHolderZapper,
                     })
                 );
-        });
+        }));
 
         await zapper.methods
             .setApprovalForAll(wrapper.options.address, accounts[1])

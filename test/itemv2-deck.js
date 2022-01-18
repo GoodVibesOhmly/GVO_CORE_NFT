@@ -1311,7 +1311,7 @@ describe("itemv2 ERC721DeckWrapper", () => {
                     from: accounts[3],
                 })
             ),
-            ""
+            "SafeMath over-/under-flows"
         );
 
         var createWrongItem = await wrapperResource.generateCreateItem(
@@ -1685,7 +1685,7 @@ describe("itemv2 ERC721DeckWrapper", () => {
         );
 
         // #BRN_DGODS_3_1.5 END
-        
+
         // #UW_DGODS_3_1.6 START
         var data = web3.eth.abi.encodeParameters(
             ["address", "uint256", "address", "bytes", "bool", "bool"],
@@ -1941,7 +1941,7 @@ describe("itemv2 ERC721DeckWrapper", () => {
         );
 
         // #UW_DGODS_3_2.3 END
-        
+
         // #BRN_DBA_3_2.4 START
         var data = web3.eth.abi.encodeParameters(
             ["address", "uint256", "address", "bytes", "bool", "bool"],
@@ -3044,23 +3044,21 @@ describe("itemv2 ERC721DeckWrapper", () => {
 
         await approveHost(tokenHolderVox);
 
-        voxTokenId.map(async (id, index) => {
-            await vox.methods
+        await Promise.all(voxTokenId.map(id => vox.methods
                 .safeTransferFrom(tokenHolderVox, accounts[1], id)
                 .send(
                     blockchainConnection.getSendingOptions({
                         from: tokenHolderVox,
                     })
-                );
-        });
+                )
+        ));
 
-        voxTokenId.map(async (id, index) => {
-            await vox.methods.approve(wrapper.options.address, id).send(
+        await Promise.all(voxTokenId.map(id => vox.methods.approve(wrapper.options.address, id).send(
                 blockchainConnection.getSendingOptions({
                     from: accounts[1],
                 })
-            );
-        });
+            )
+        ));
 
         var tokenHolderSandbox = "0x9cfA73B8d300Ec5Bf204e4de4A58e5ee6B7dC93C";
 
@@ -3075,23 +3073,21 @@ describe("itemv2 ERC721DeckWrapper", () => {
 
         await approveHost(tokenHolderSandbox);
 
-        sandboxTokenId.map(async (id, index) => {
-            await sandbox.methods
+        await Promise.all(sandboxTokenId.map(id => sandbox.methods
                 .safeTransferFrom(tokenHolderSandbox, accounts[1], id)
                 .send(
                     blockchainConnection.getSendingOptions({
                         from: tokenHolderSandbox,
                     })
-                );
-        });
+                )
+        ));
 
-        sandboxTokenId.map(async (id, index) => {
-            await sandbox.methods.approve(wrapper.options.address, id).send(
+        await Promise.all(sandboxTokenId.map(id => sandbox.methods.approve(wrapper.options.address, id).send(
                 blockchainConnection.getSendingOptions({
                     from: accounts[1],
                 })
-            );
-        });
+            )
+        ));
 
         var tokenHolderFunghi = "0x1d2c4cd9bee9dfe088430b95d274e765151c32db";
 
@@ -3106,23 +3102,21 @@ describe("itemv2 ERC721DeckWrapper", () => {
 
         await approveHost(tokenHolderFunghi);
 
-        funghiTokenId.map(async (id, index) => {
-            await funghi.methods
+        await Promise.all(funghiTokenId.map(id => funghi.methods
                 .safeTransferFrom(tokenHolderFunghi, accounts[1], id)
                 .send(
                     blockchainConnection.getSendingOptions({
                         from: tokenHolderFunghi,
                     })
-                );
-        });
+                )
+        ));
 
-        funghiTokenId.map(async (id, index) => {
-            await funghi.methods.approve(wrapper.options.address, id).send(
+        await Promise.all(funghiTokenId.map(id => funghi.methods.approve(wrapper.options.address, id).send(
                 blockchainConnection.getSendingOptions({
                     from: accounts[1],
                 })
-            );
-        });
+            )
+        ));
 
         // #W_VOX_SB_NFF_6_1.1 START
 
@@ -3970,7 +3964,5 @@ describe("itemv2 ERC721DeckWrapper", () => {
         );
 
         // #UW_DVOX_DSB_DNFF_6_1.8 END
-
-        await blockchainConnection.fastForward(blockToSkip);
     });
 });

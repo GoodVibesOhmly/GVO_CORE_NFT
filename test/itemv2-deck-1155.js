@@ -3061,7 +3061,7 @@ describe("itemv2 ERC1155DeckWrapper", () => {
             .send(
                 blockchainConnection.getSendingOptions({ from: accounts[1] })
             );
-return
+
         var logs = (await web3.eth.getTransactionReceipt(tx.transactionHash))
             .logs;
 

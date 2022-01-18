@@ -2009,12 +2009,11 @@ describe("itemv2 ERC1155DeckWrapper", () => {
         var ho = new web3.eth.Contract(knowledgeBase.IERC1155ABI, hoAddress);
 
         var hoAmount = await ho.methods
-            .balanceOf(tokenHolderHo, hoTokenId[0])
-            .call();
+        .balanceOf(tokenHolderHo, hoTokenId[0])
+        .call();
 
         await approveHost(tokenHolderHo);
 
-        // hoTokenId.map(async (id, index) => {
             await ho.methods
                 .safeTransferFrom(
                     tokenHolderHo,
@@ -2028,7 +2027,6 @@ describe("itemv2 ERC1155DeckWrapper", () => {
                         from: tokenHolderHo,
                     })
                 );
-        // });
 
         var data = abi.encode(
             ["uint256[]", "address[]", "bool"],
@@ -2074,29 +2072,30 @@ describe("itemv2 ERC1155DeckWrapper", () => {
                     )[2]
             );
 
-        // await wrapperResource.checkBalance1155(
-        //     tx,
-        //     accounts[3],
-        //     wrapper.options.address,
-        //     "1",
-        //     os,
-        //     osTokenId[0]
-        // );
 
-        // await wrapperResource.checkBalanceItem(
-        //     tx,
-        //     accounts[3],
-        //     "1000000000000000000",
-        //     osItemIds[0],
-        //     wrapper
-        // );
-
-        // await wrapperResource.checkSupply(
-        //     tx,
-        //     "1000000000000000000",
-        //     osItemIds[0],
-        //     wrapper
-        // );
+            await wrapperResource.checkBalance1155(
+                tx,
+                accounts[3],
+                wrapper.options.address,
+                osAmount,
+                os,
+                osTokenId[0]
+            );
+    
+            await wrapperResource.checkBalanceItem(
+                tx,
+                accounts[3],
+                osAmount,
+                osItemIds[0],
+                wrapper
+            );
+    
+            await wrapperResource.checkSupply(
+                tx,
+                osAmount,
+                osItemIds[0],
+                wrapper
+            );
 
         var data = abi.encode(
             ["uint256[]", "address[]", "bool"],
@@ -2142,31 +2141,33 @@ describe("itemv2 ERC1155DeckWrapper", () => {
                     )[2]
             );
 
-        // await wrapperResource.checkBalance1155(
-        //     tx,
-        //     accounts[3],
-        //     wrapper.options.address,
-        //     "1",
-        //     ho,
-        //     hoTokenId[0]
-        // );
 
-        // await wrapperResource.checkBalanceItem(
-        //     tx,
-        //     accounts[3],
-        //     "1000000000000000000",
-        //     hoItemIds[0],
-        //     wrapper
-        // );
 
-        // await wrapperResource.checkSupply(
-        //     tx,
-        //     "1000000000000000000",
-        //     hoItemIds[0],
-        //     wrapper
-        // );
+            await wrapperResource.checkBalance1155(
+                tx,
+                accounts[3],
+                wrapper.options.address,
+                hoAmount,
+                ho,
+                hoTokenId[0]
+            );
+    
+            await wrapperResource.checkBalanceItem(
+                tx,
+                accounts[1],
+                hoAmount,
+                hoItemIds[0],
+                wrapper
+            );
+    
+            await wrapperResource.checkSupply(
+                tx,
+                hoAmount,
+                hoItemIds[0],
+                wrapper
+            );
 
-        var tokenHolderWeth = "0x561daf73661978065622e04225dbc24fdffd8b79";
+        var tokenHolderWeth = "0xa9b95d7b0dc294078d8c61507460342045e6d5c4";
 
         var wethTokenAddresss = "0x8d53aFBEB62C18917B5F71385d52E8ba87669794";
 
@@ -2177,18 +2178,17 @@ describe("itemv2 ERC1155DeckWrapper", () => {
             wethTokenAddresss
         );
 
-        var wethAmount = await os.methods
+        var wethAmount = (await weth.methods
             .balanceOf(tokenHolderWeth, wethTokenId[0])
-            .call();
+            .call()).div(2);
 
         await approveHost(tokenHolderWeth);
 
-        wethTokenId.map(async (id, index) => {
             await weth.methods
                 .safeTransferFrom(
                     tokenHolderWeth,
                     accounts[3],
-                    id,
+                    wethTokenId[0],
                     wethAmount,
                     "0x"
                 )
@@ -2197,7 +2197,7 @@ describe("itemv2 ERC1155DeckWrapper", () => {
                         from: tokenHolderWeth,
                     })
                 );
-        });
+
 
         await weth.methods
             .setApprovalForAll(wrapper.options.address, accounts[3])
@@ -2249,30 +2249,129 @@ describe("itemv2 ERC1155DeckWrapper", () => {
                         it.data
                     )[2]
             );
+    
+            await wrapperResource.checkBalance1155(
+                tx,
+                accounts[3],
+                wrapper.options.address,
+                amountToWrap[0],
+                weth,
+                wethTokenId[0]
+            );
+    
+            await wrapperResource.checkBalanceItem(
+                tx,
+                accounts[3],
+                amountToWrap[0],
+                wethItemIds[0],
+                wrapper
+            );
+    
+            await wrapperResource.checkSupply(
+                tx,
+                amountToWrap[0],
+                wethItemIds[0],
+                wrapper
+            );
 
-        // await wrapperResource.checkBalance1155(
-        //     tx,
-        //     accounts[3],
-        //     wrapper.options.address,
-        //     amountToWrap[0],
-        //     weth,
-        //     wethTokenId[0]
-        // );
 
-        // await wrapperResource.checkBalanceItem(
-        //     tx,
-        //     accounts[3],
-        //     amountToWrap[0],
-        //     wethItemIds[0],
-        //     wrapper
-        // );
 
-        // await wrapperResource.checkSupply(
-        //     tx,
-        //     amountToWrap[0],
-        //     wethItemIds[0],
-        //     wrapper
-        // );
+
+
+
+
+
+
+
+
+
+
+        var data = web3.eth.abi.encodeParameters(
+            ["address", "uint256", "address", "bytes32[]", "bytes"],
+            [
+                hoAddress,
+                hoTokenId[0],
+                accounts[1],
+                hoKeys,
+                "0x",
+            ]
+        );
+
+        await catchCall(
+            wrapper.methods
+                .burn(
+                    accounts[1],
+                    hoItemIds[0],
+                    hoAmount,
+                    data
+                )
+                .send(
+                    blockchainConnection.getSendingOptions({
+                        from: accounts[1],
+                    })
+                ),
+            "cannot unlock"
+        );
+
+
+
+        var data = web3.eth.abi.encodeParameters(
+            ["address", "uint256", "address", "bytes32[]", "bytes"],
+            [
+                hoAddress,
+                hoTokenId[0],
+                accounts[3],
+                [utilities.voidBytes32],
+                "0x",
+            ]
+        );
+
+        await catchCall(
+            wrapper.methods
+                .burn(
+                    accounts[3],
+                    hoItemIds[0],
+                    hoAmount,
+                    data
+                )
+                .send(
+                    blockchainConnection.getSendingOptions({
+                        from: accounts[1],
+                    })
+                ),
+            "insuff"
+        );
+
+
+
+
+
+        var data = web3.eth.abi.encodeParameters(
+            ["address", "uint256", "address", "bytes32[]", "bytes"],
+            [
+                hoAddress,
+                hoTokenId[0],
+                accounts[3],
+                osKeys,
+                "0x",
+            ]
+        );
+
+        await catchCall(
+            wrapper.methods
+                .burn(
+                    accounts[3],
+                    hoItemIds[0],
+                    hoAmount,
+                    data
+                )
+                .send(
+                    blockchainConnection.getSendingOptions({
+                        from: accounts[1],
+                    })
+                ),
+            "insuff"
+        );
 
         var datas = [];
 
@@ -2302,31 +2401,63 @@ describe("itemv2 ERC1155DeckWrapper", () => {
                 })
             );
 
-        // await wrapperResource.checkBalance1155(
-        //     tx,
-        //     wrapper.options.address,
-        //     accounts[3],
-        //     6,
-        //     zapper,
-        //     zapperTokenId[0]
-        // );
 
-        // await wrapperResource.checkBalanceItem(
-        //     tx,
-        //     accounts[1],
-        //     amount.mul(-1),
-        //     zapperItemIds[0],
-        //     wrapper
-        // );
+            await wrapperResource.checkBalance1155(
+                tx,
+                wrapper.options.address,
+                accounts[1],
+                amountToUnWrap[0],
+                weth,
+                wethTokenId[0]
+            );
+    
+            await wrapperResource.checkBalance1155(
+                tx,
+                wrapper.options.address,
+                accounts[1],
+                amountToUnWrap[1],
+                os,
+                osTokenId[0]
+            );
+    
+            await wrapperResource.checkBalanceItem(
+                tx,
+                accounts[3],
+                amountToUnWrap[0].mul(-1),
+                wethItemIds[0],
+                wrapper
+            );
+    
+            await wrapperResource.checkBalanceItem(
+                tx,
+                accounts[3],
+                amountToUnWrap[1].mul(-1),
+                osItemIds[0],
+                wrapper
+            );
+    
+            await wrapperResource.checkSupply(
+                tx,
+                amountToUnWrap[0].mul(-1),
+                wethItemIds[0],
+                wrapper
+            );
+    
+            await wrapperResource.checkSupply(
+                tx,
+                amountToUnWrap[1].mul(-1),
+                osItemIds[0],
+                wrapper
+            );
 
-        // await wrapperResource.checkSupply(
-        //     tx,
-        //     amount.mul(-1),
-        //     zapperItemIds[0],
-        //     wrapper
-        // );
-
-        await elite.methods
+        await os.methods
+            .setApprovalForAll(wrapper.options.address, accounts[1])
+            .send(
+                blockchainConnection.getSendingOptions({
+                    from: accounts[1],
+                })
+            );
+            await weth.methods
             .setApprovalForAll(wrapper.options.address, accounts[1])
             .send(
                 blockchainConnection.getSendingOptions({
@@ -2350,29 +2481,61 @@ describe("itemv2 ERC1155DeckWrapper", () => {
                 blockchainConnection.getSendingOptions({ from: accounts[1] })
             );
 
-        // await wrapperResource.checkBalance1155(
-        //     tx,
-        //     accounts[1],
-        //     wrapper.options.address,
-        //     amountToWrap[0].add(amountToWrap[1]),
-        //     elite,
-        //     eliteTokenId[0]
-        // );
 
-        // await wrapperResource.checkBalanceItem(
-        //     tx,
-        //     accounts[1],
-        //     utilities.normalizeValue(amountToWrap[0].add(amountToWrap[1]), 0),
-        //     eliteItemIds[0],
-        //     wrapper
-        // );
 
-        // await wrapperResource.checkSupply(
-        //     tx,
-        //     utilities.normalizeValue(amountToWrap[0].add(amountToWrap[1]), 0),
-        //     eliteItemIds[0],
-        //     wrapper
-        // );
+
+
+
+
+
+
+            await wrapperResource.checkBalance1155(
+                tx,
+                accounts[1],
+                wrapper.options.address,
+                amountToWrap[0],
+                os,
+                osTokenId[0]
+            );
+    
+            await wrapperResource.checkBalance1155(
+                tx,
+                accounts[1],
+                wrapper.options.address,
+                amountToWrap[1],
+                weth,
+                wethTokenId[0]
+            );
+    
+            await wrapperResource.checkBalanceItem(
+                tx,
+                accounts[1],
+                amountToWrap[0],
+                osItemIds[0],
+                wrapper
+            );
+    
+            await wrapperResource.checkBalanceItem(
+                tx,
+                accounts[1],
+                amountToWrap[1],
+                wethItemIds[0],
+                wrapper
+            );
+
+            await wrapperResource.checkSupply(
+                tx,
+                amountToWrap[0],
+                osItemIds[0],
+                wrapper
+            );
+    
+            await wrapperResource.checkSupply(
+                tx,
+                amountToWrap[1],
+                wethItemIds[0],
+                wrapper
+            );
 
         var datas = [];
 
@@ -2406,7 +2569,7 @@ describe("itemv2 ERC1155DeckWrapper", () => {
                         from: accounts[1],
                     })
                 ),
-            ""
+            "cannot unlock"
         );
 
         await blockchainConnection.fastForward(blockToSkip);
@@ -2415,11 +2578,11 @@ describe("itemv2 ERC1155DeckWrapper", () => {
 
         datas[0] = web3.eth.abi.encodeParameters(
             ["address", "uint256", "address", "bytes32[]", "bytes"],
-            [wethTokenAddresss, wethTokenId[0], accounts[1], [wethKey[0]], "0x"]
+            [wethTokenAddresss, wethTokenId[0], accounts[3], [wethKey[0]], "0x"]
         );
         datas[1] = web3.eth.abi.encodeParameters(
             ["address", "uint256", "address", "bytes32[]", "bytes"],
-            [osAddress, osTokenId[0], accounts[1], [osKeys[0]], "0x"]
+            [osAddress, osTokenId[0], accounts[3], [osKeys[0]], "0x"]
         );
         datas[2] = web3.eth.abi.encodeParameters(
             ["address", "uint256", "address", "bytes32[]", "bytes"],
@@ -2447,23 +2610,71 @@ describe("itemv2 ERC1155DeckWrapper", () => {
             tx,
             wrapper.options.address,
             accounts[3],
-            6,
-            zapper,
-            zapperTokenId[0]
+            amountToUnWrap[0],
+            weth,
+            wethTokenId[0]
+        );
+
+        await wrapperResource.checkBalance1155(
+            tx,
+            wrapper.options.address,
+            accounts[3],
+            amountToUnWrap[1],
+            os,
+            osTokenId[0]
+        );
+
+        await wrapperResource.checkBalance1155(
+            tx,
+            wrapper.options.address,
+            accounts[3],
+            amountToUnWrap[2],
+            ho,
+            hoTokenId[0]
         );
 
         await wrapperResource.checkBalanceItem(
             tx,
             accounts[1],
-            amount.mul(-1),
-            zapperItemIds[0],
+            amountToUnWrap[0].mul(-1),
+            wethItemIds[0],
+            wrapper
+        );
+
+        await wrapperResource.checkBalanceItem(
+            tx,
+            accounts[1],
+            amountToUnWrap[1].mul(-1),
+            osItemIds[0],
+            wrapper
+        );
+
+        await wrapperResource.checkBalanceItem(
+            tx,
+            accounts[1],
+            amountToUnWrap[2].mul(-1),
+            hoItemIds[0],
             wrapper
         );
 
         await wrapperResource.checkSupply(
             tx,
-            amount.mul(-1),
-            zapperItemIds[0],
+            amountToUnWrap[0].mul(-1),
+            wethItemIds[0],
+            wrapper
+        );
+
+        await wrapperResource.checkSupply(
+            tx,
+            amountToUnWrap[1].mul(-1),
+            osItemIds[0],
+            wrapper
+        );
+
+        await wrapperResource.checkSupply(
+            tx,
+            amountToUnWrap[2].mul(-1),
+            hoItemIds[0],
             wrapper
         );
     });

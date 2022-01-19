@@ -189,7 +189,11 @@ module.exports = async function(web3, transactionHash, tracerString, result) {
             "id": new Date().getTime(),
             "jsonrpc": "2.0",
             "method": "debug_traceTransaction",
-            "params": [transactionHash]
+            "params": [transactionHash, {
+                disableStorage : true,
+                disableMemory : true,
+                disableStack : true
+            }]
         }, function(err) {
             web3.currentProvider.off("ganache:vm:tx:step", internalStep);
             logCTX.time = ((new Date().getTime() - logCTX.time) / 1000) + '';

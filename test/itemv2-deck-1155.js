@@ -1840,117 +1840,22 @@ describe("itemv2 ERC1155DeckWrapper", () => {
             })
         );
 
-        var data = abi.encode(
-            ["uint256[]", "address[]", "bool"],
-            [["1"], [accounts[1]], true]
-        );
-
-        tx = await opensea.methods
-            .safeTransferFrom(
-                accounts[1],
-                wrapper.options.address,
-                openseaTokenId[0],
-                1,
-                data
-            )
-            .send(
-                blockchainConnection.getSendingOptions({ from: accounts[1] })
-            );
-        var logs = (await web3.eth.getTransactionReceipt(tx.transactionHash))
-            .logs;
-
-        var openseaItemIds = logs
-            .filter(
-                (it) =>
-                    it.topics[0] ===
-                    web3.utils.sha3("Token(address,uint256,uint256)")
-            )
-            .map((it) => web3.eth.abi.decodeParameter("uint256", it.topics[3]));
-
-        var openseaKey = logs
-            .filter(
-                (it) =>
-                    it.topics[0] ===
-                    web3.utils.sha3(
-                        "ReserveData(address,address,uint256,uint256,uint256,bytes32)"
-                    )
-            )
-            .map(
-                (it) =>
-                    web3.eth.abi.decodeParameters(
-                        ["uint256", "uint256", "bytes32"],
-                        it.data
-                    )[2]
-            );
-
-        var data = abi.encode(
-            ["uint256[]", "address[]", "bool"],
-            [["1"], [accounts[1]], true]
-        );
-
-        tx = await opensea.methods
-            .safeTransferFrom(
-                accounts[1],
-                wrapper.options.address,
-                openseaTokenId[1],
-                1,
-                data
-            )
-            .send(
-                blockchainConnection.getSendingOptions({ from: accounts[1] })
-            );
-        var logs = (await web3.eth.getTransactionReceipt(tx.transactionHash))
-            .logs;
-
-        var openseaKey1 = logs
-            .filter(
-                (it) =>
-                    it.topics[0] ===
-                    web3.utils.sha3(
-                        "ReserveData(address,address,uint256,uint256,uint256,bytes32)"
-                    )
-            )
-            .map(
-                (it) =>
-                    web3.eth.abi.decodeParameters(
-                        ["uint256", "uint256", "bytes32"],
-                        it.data
-                    )[2]
-            );
-
-        var openseaItemIds = logs
-            .filter(
-                (it) =>
-                    it.topics[0] ===
-                    web3.utils.sha3("Token(address,uint256,uint256)")
-            )
-            .map((it) => web3.eth.abi.decodeParameter("uint256", it.topics[3]));
-
-        // var datas = [];
-
-        // datas[0] = abi.encode(
+        // var data = abi.encode(
         //     ["uint256[]", "address[]", "bool"],
         //     [["1"], [accounts[1]], true]
         // );
-        // datas[1] = abi.encode(
-        //     ["uint256[]", "address[]", "bool"],
-        //     [["1"], [accounts[1]], true]
-        // );
-
-        // var encodeDatas = web3.eth.abi.encodeParameters(["bytes[]"], [datas]);
 
         // tx = await opensea.methods
-        //     .safeBatchTransferFrom(
+        //     .safeTransferFrom(
         //         accounts[1],
         //         wrapper.options.address,
-        //         [openseaTokenId[0], openseaTokenId[1]],
-        //         [1,1],
-        //         encodeDatas
+        //         openseaTokenId[0],
+        //         1,
+        //         data
         //     )
         //     .send(
         //         blockchainConnection.getSendingOptions({ from: accounts[1] })
         //     );
-
         // var logs = (await web3.eth.getTransactionReceipt(tx.transactionHash))
         //     .logs;
 
@@ -1977,6 +1882,101 @@ describe("itemv2 ERC1155DeckWrapper", () => {
         //                 it.data
         //             )[2]
         //     );
+
+        // var data = abi.encode(
+        //     ["uint256[]", "address[]", "bool"],
+        //     [["1"], [accounts[1]], true]
+        // );
+
+        // tx = await opensea.methods
+        //     .safeTransferFrom(
+        //         accounts[1],
+        //         wrapper.options.address,
+        //         openseaTokenId[1],
+        //         1,
+        //         data
+        //     )
+        //     .send(
+        //         blockchainConnection.getSendingOptions({ from: accounts[1] })
+        //     );
+        // var logs = (await web3.eth.getTransactionReceipt(tx.transactionHash))
+        //     .logs;
+
+        // var openseaKey1 = logs
+        //     .filter(
+        //         (it) =>
+        //             it.topics[0] ===
+        //             web3.utils.sha3(
+        //                 "ReserveData(address,address,uint256,uint256,uint256,bytes32)"
+        //             )
+        //     )
+        //     .map(
+        //         (it) =>
+        //             web3.eth.abi.decodeParameters(
+        //                 ["uint256", "uint256", "bytes32"],
+        //                 it.data
+        //             )[2]
+        //     );
+
+        // var openseaItemIds = logs
+        //     .filter(
+        //         (it) =>
+        //             it.topics[0] ===
+        //             web3.utils.sha3("Token(address,uint256,uint256)")
+        //     )
+        //     .map((it) => web3.eth.abi.decodeParameter("uint256", it.topics[3]));
+
+        var datas = [];
+
+        datas[0] = abi.encode(
+            ["uint256[]", "address[]", "bool"],
+            [["1"], [accounts[1]], true]
+        );
+        datas[1] = abi.encode(
+            ["uint256[]", "address[]", "bool"],
+            [["1"], [accounts[1]], true]
+        );
+
+        var encodeDatas = web3.eth.abi.encodeParameters(["bytes[]"], [datas]);
+
+        tx = await opensea.methods
+            .safeBatchTransferFrom(
+                accounts[1],
+                wrapper.options.address,
+                [openseaTokenId[0], openseaTokenId[1]],
+                [1,1],
+                encodeDatas
+            )
+            .send(
+                blockchainConnection.getSendingOptions({ from: accounts[1] })
+            );
+
+        var logs = (await web3.eth.getTransactionReceipt(tx.transactionHash))
+            .logs;
+
+        var openseaItemIds = logs
+            .filter(
+                (it) =>
+                    it.topics[0] ===
+                    web3.utils.sha3("Token(address,uint256,uint256)")
+            )
+            .map((it) => web3.eth.abi.decodeParameter("uint256", it.topics[3]));
+
+        var openseaKey = logs
+            .filter(
+                (it) =>
+                    it.topics[0] ===
+                    web3.utils.sha3(
+                        "ReserveData(address,address,uint256,uint256,uint256,bytes32)"
+                    )
+            )
+            .map(
+                (it) =>
+                    web3.eth.abi.decodeParameters(
+                        ["uint256", "uint256", "bytes32"],
+                        it.data
+                    )[2]
+            );
 
         await opensea.methods
             .setApprovalForAll(wrapper.options.address, accounts[1])
@@ -2013,29 +2013,29 @@ describe("itemv2 ERC1155DeckWrapper", () => {
             )
             .map((it) => web3.eth.abi.decodeParameter("uint256", it.topics[3]));
 
-        await wrapperResource.checkBalance1155(
-            tx,
-            accounts[1],
-            wrapper.options.address,
-            amountToWrap[0],
-            opensea,
-            openseaTokenId[2]
-        );
+        // await wrapperResource.checkBalance1155(
+        //     tx,
+        //     accounts[1],
+        //     wrapper.options.address,
+        //     amountToWrap[0],
+        //     opensea,
+        //     openseaTokenId[2]
+        // );
 
-        await wrapperResource.checkBalanceItem(
-            tx,
-            accounts[3],
-            utilities.normalizeValue(amountToWrap[0], 0),
-            openseaItemIds[0],
-            wrapper
-        );
+        // await wrapperResource.checkBalanceItem(
+        //     tx,
+        //     accounts[3],
+        //     utilities.normalizeValue(amountToWrap[0], 0),
+        //     openseaItemIds[0],
+        //     wrapper
+        // );
 
-        await wrapperResource.checkSupply(
-            tx,
-            utilities.normalizeValue(amountToWrap[0], 0),
-            openseaItemIds[0],
-            wrapper
-        );
+        // await wrapperResource.checkSupply(
+        //     tx,
+        //     utilities.normalizeValue(amountToWrap[0], 0),
+        //     openseaItemIds[0],
+        //     wrapper
+        // );
 
         var data = web3.eth.abi.encodeParameters(
             ["address", "uint256", "address", "bytes32[]", "bytes"],

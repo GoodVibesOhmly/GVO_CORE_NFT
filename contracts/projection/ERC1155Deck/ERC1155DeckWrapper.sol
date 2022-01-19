@@ -280,30 +280,24 @@ contract ERC1155DeckWrapper is IERC1155DeckWrapper, ItemProjection, IERC1155Rece
         for(uint256 i = 0 ; i < tokenIds.length; i++) {
             _prepareTempVars(from, tokenIds[i], amounts[i], dataArray[i]);
         }
-        (CreateItem[] memory createItems, uint256[] memory loadedItemIds, uint256[] memory tokenDecimals) = _buildCreateItems(from, msg.sender);
-        uint256[] memory itemIds = IItemMainInterface(mainInterface).mintItems(createItems);
-        for(uint256 i = 0; i < createItems.length; i++) {
-            _trySaveCreatedItemAndEmitTokenEvent(loadedItemIds[i], itemIds[i], _tokenIds[i], createItems[i], tokenDecimals[i]);
-            delete _tokenIds[i];
-        }
-        delete _tokenIds;
-        return this.onERC1155BatchReceived.selector;
-    }
-
-    function _buildCreateItems(address from, address tokenAddress) private returns(CreateItem[] memory createItems, uint256[] memory loadedItemIds, uint256[] memory tokenDecimals) {
-        createItems = new CreateItem[](_tokenIds.length);
-        loadedItemIds = new uint256[](_tokenIds.length);
-        tokenDecimals = new uint256[](_tokenIds.length);
         string memory uri = plainUri();
         for(uint256 i = 0; i < _tokenIds.length; i++) {
             uint256 tokenId = _tokenIds[i];
-            uint256 itemId = loadedItemIds[i] = itemIdOf(msg.sender, tokenId);
-            (createItems[i], tokenDecimals[i]) = _buildCreateItem(from, tokenAddress, tokenId, _originalAmount[tokenId], abi.encode(_originalAmounts[tokenId], _accounts[tokenId], _reserve[tokenId]), itemId, uri);
+            uint256 itemId = itemIdOf(msg.sender, tokenId);
+            uint256 loadedItemId = itemId;
+            CreateItem[] memory singleCreateItems = new CreateItem[](1);
+            uint256 tokenDecimals;
+            (singleCreateItems[0], tokenDecimals) = _buildCreateItem(from, msg.sender, tokenId, _originalAmount[tokenId], abi.encode(_originalAmounts[tokenId], _accounts[tokenId], _reserve[tokenId]), itemId, uri);
+            itemId = IItemMainInterface(mainInterface).mintItems(singleCreateItems)[0];
+            _trySaveCreatedItemAndEmitTokenEvent(loadedItemId, itemId, _tokenIds[i], singleCreateItems[0], tokenDecimals);
             delete _originalAmount[tokenId];
             delete _accounts[tokenId];
             delete _originalAmounts[tokenId];
             delete _reserve[tokenId];
+            delete _tokenIds[i];
         }
+        delete _tokenIds;
+        return this.onERC1155BatchReceived.selector;
     }
 
     function _trySaveCreatedItemAndEmitTokenEvent(uint256 itemId, uint256 createdItemId, uint256 tokenId, CreateItem memory createItem, uint256 tokenDecimals) internal {

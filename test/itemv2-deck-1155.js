@@ -1840,565 +1840,6 @@ describe("itemv2 ERC1155DeckWrapper", () => {
             })
         );
 
-        var data = abi.encode(
-            ["uint256[]", "address[]", "bool"],
-            [["1"], [accounts[1]], true]
-        );
-
-        tx = await opensea.methods
-            .safeTransferFrom(
-                accounts[1],
-                wrapper.options.address,
-                openseaTokenId[0],
-                1,
-                data
-            )
-            .send(
-                blockchainConnection.getSendingOptions({ from: accounts[1] })
-            );
-        var logs = (await web3.eth.getTransactionReceipt(tx.transactionHash))
-            .logs;
-
-        var openseaItemIds = logs
-            .filter(
-                (it) =>
-                    it.topics[0] ===
-                    web3.utils.sha3("Token(address,uint256,uint256)")
-            )
-            .map((it) => web3.eth.abi.decodeParameter("uint256", it.topics[3]));
-
-        var openseaKey = logs
-            .filter(
-                (it) =>
-                    it.topics[0] ===
-                    web3.utils.sha3(
-                        "ReserveData(address,address,uint256,uint256,uint256,bytes32)"
-                    )
-            )
-            .map(
-                (it) =>
-                    web3.eth.abi.decodeParameters(
-                        ["uint256", "uint256", "bytes32"],
-                        it.data
-                    )[2]
-            );
-
-        var data = abi.encode(
-            ["uint256[]", "address[]", "bool"],
-            [["1"], [accounts[1]], true]
-        );
-
-        tx = await opensea.methods
-            .safeTransferFrom(
-                accounts[1],
-                wrapper.options.address,
-                openseaTokenId[1],
-                1,
-                data
-            )
-            .send(
-                blockchainConnection.getSendingOptions({ from: accounts[1] })
-            );
-        var logs = (await web3.eth.getTransactionReceipt(tx.transactionHash))
-            .logs;
-
-        var openseaKey1 = logs
-            .filter(
-                (it) =>
-                    it.topics[0] ===
-                    web3.utils.sha3(
-                        "ReserveData(address,address,uint256,uint256,uint256,bytes32)"
-                    )
-            )
-            .map(
-                (it) =>
-                    web3.eth.abi.decodeParameters(
-                        ["uint256", "uint256", "bytes32"],
-                        it.data
-                    )[2]
-            );
-
-        var openseaItemIds = logs
-            .filter(
-                (it) =>
-                    it.topics[0] ===
-                    web3.utils.sha3("Token(address,uint256,uint256)")
-            )
-            .map((it) => web3.eth.abi.decodeParameter("uint256", it.topics[3]));
-
-        // var datas = [];
-
-        // datas[0] = abi.encode(
-        //     ["uint256[]", "address[]", "bool"],
-        //     [["1"], [accounts[1]], true]
-        // );
-        // datas[1] = abi.encode(
-        //     ["uint256[]", "address[]", "bool"],
-        //     [["1"], [accounts[1]], true]
-        // );
-
-        // var encodeDatas = web3.eth.abi.encodeParameters(["bytes[]"], [datas]);
-
-        // tx = await opensea.methods
-        //     .safeBatchTransferFrom(
-        //         accounts[1],
-        //         wrapper.options.address,
-        //         [openseaTokenId[0], openseaTokenId[1]],
-        //         [1,1],
-        //         encodeDatas
-        //     )
-        //     .send(
-        //         blockchainConnection.getSendingOptions({ from: accounts[1] })
-        //     );
-
-        // var logs = (await web3.eth.getTransactionReceipt(tx.transactionHash))
-        //     .logs;
-
-        // var openseaItemIds = logs
-        //     .filter(
-        //         (it) =>
-        //             it.topics[0] ===
-        //             web3.utils.sha3("Token(address,uint256,uint256)")
-        //     )
-        //     .map((it) => web3.eth.abi.decodeParameter("uint256", it.topics[3]));
-
-        // var openseaKey = logs
-        //     .filter(
-        //         (it) =>
-        //             it.topics[0] ===
-        //             web3.utils.sha3(
-        //                 "ReserveData(address,address,uint256,uint256,uint256,bytes32)"
-        //             )
-        //     )
-        //     .map(
-        //         (it) =>
-        //             web3.eth.abi.decodeParameters(
-        //                 ["uint256", "uint256", "bytes32"],
-        //                 it.data
-        //             )[2]
-        //     );
-
-        await opensea.methods
-            .setApprovalForAll(wrapper.options.address, accounts[1])
-            .send(
-                blockchainConnection.getSendingOptions({
-                    from: accounts[1],
-                })
-            );
-
-        var amountToWrap = [1];
-        var createItem = await wrapperResource.generateCreateItem(
-            [openseaTokenId[2]],
-            [accounts[3]],
-            [openseaAddresss],
-            amountToWrap
-        );
-
-        var lock = [false];
-
-        var tx = await wrapper.methods
-            .mintItems(createItem, lock)
-            .send(
-                blockchainConnection.getSendingOptions({ from: accounts[1] })
-            );
-
-        var logs = (await web3.eth.getTransactionReceipt(tx.transactionHash))
-            .logs;
-
-        var openseaItemIds2 = logs
-            .filter(
-                (it) =>
-                    it.topics[0] ===
-                    web3.utils.sha3("Token(address,uint256,uint256)")
-            )
-            .map((it) => web3.eth.abi.decodeParameter("uint256", it.topics[3]));
-
-        await wrapperResource.checkBalance1155(
-            tx,
-            accounts[1],
-            wrapper.options.address,
-            amountToWrap[0],
-            opensea,
-            openseaTokenId[2]
-        );
-
-        await wrapperResource.checkBalanceItem(
-            tx,
-            accounts[3],
-            utilities.normalizeValue(amountToWrap[0], 0),
-            openseaItemIds[0],
-            wrapper
-        );
-
-        await wrapperResource.checkSupply(
-            tx,
-            utilities.normalizeValue(amountToWrap[0], 0),
-            openseaItemIds[0],
-            wrapper
-        );
-
-        var data = web3.eth.abi.encodeParameters(
-            ["address", "uint256", "address", "bytes32[]", "bytes"],
-            [
-                openseaAddresss,
-                openseaTokenId[2],
-                accounts[1],
-                [utilities.voidBytes32],
-                "0x",
-            ]
-        );
-
-        await catchCall(
-            wrapper.methods
-                .burn(
-                    accounts[3],
-                    openseaItemIds[0],
-                    "600000000000000000",
-                    data
-                )
-                .send(
-                    blockchainConnection.getSendingOptions({
-                        from: accounts[3],
-                    })
-                ),
-            "amount"
-        );
-
-        var data = web3.eth.abi.encodeParameters(
-            ["address", "uint256", "address", "bytes32[]", "bytes"],
-            [
-                openseaAddresss,
-                openseaTokenId[2],
-                accounts[1],
-                [utilities.voidBytes32],
-                "0x",
-            ]
-        );
-
-        var amountToUnWrap = "1000000000000000000";
-
-        var tx = await wrapper.methods
-            .burn(accounts[3], openseaItemIds[0], amountToUnWrap, data)
-            .send(
-                blockchainConnection.getSendingOptions({
-                    from: accounts[3],
-                })
-            );
-
-        await wrapperResource.checkBalance1155(
-            tx,
-            wrapper.options.address,
-            accounts[1],
-            "1",
-            opensea,
-            openseaTokenId[2]
-        );
-
-        await wrapperResource.checkBalanceItem(
-            tx,
-            accounts[3],
-            amountToUnWrap.mul(-1),
-            openseaItemIds[0],
-            wrapper
-        );
-
-        await wrapperResource.checkSupply(
-            tx,
-            amountToUnWrap.mul(-1),
-            openseaItemIds[0],
-            wrapper
-        );
-
-        var data = web3.eth.abi.encodeParameters(
-            ["address", "uint256", "address", "bytes32[]", "bytes"],
-            [openseaAddresss, openseaTokenId[0], accounts[3], openseaKey, "0x"]
-        );
-
-        await catchCall(
-            wrapper.methods
-                .burn(
-                    accounts[3],
-                    openseaItemIds[0],
-                    "1000000000000000000",
-                    data
-                )
-                .send(
-                    blockchainConnection.getSendingOptions({
-                        from: accounts[3],
-                    })
-                ),
-            "insuff"
-        );
-
-        var data = web3.eth.abi.encodeParameters(
-            ["address", "uint256", "address", "bytes32[]", "bytes"],
-            [openseaAddresss, openseaTokenId[1], accounts[1], openseaKey1, "0x"]
-        );
-
-        var amountToUnWrap = "1000000000000000000";
-
-        var tx = await wrapper.methods
-            .burn(accounts[1], openseaItemIds[0], amountToUnWrap, data)
-            .send(
-                blockchainConnection.getSendingOptions({
-                    from: accounts[1],
-                })
-            );
-
-        await wrapperResource.checkBalance1155(
-            tx,
-            wrapper.options.address,
-            accounts[1],
-            "1",
-            opensea,
-            openseaTokenId[1]
-        );
-
-        await wrapperResource.checkBalanceItem(
-            tx,
-            accounts[1],
-            amountToUnWrap.mul(-1),
-            openseaItemIds[0],
-            wrapper
-        );
-
-        await wrapperResource.checkSupply(
-            tx,
-            amountToUnWrap.mul(-1),
-            openseaItemIds[0],
-            wrapper
-        );
-
-        await opensea.methods
-            .setApprovalForAll(wrapper.options.address, accounts[1])
-            .send(
-                blockchainConnection.getSendingOptions({
-                    from: accounts[1],
-                })
-            );
-
-        var amountToWrap = [1];
-        var createItem = await wrapperResource.generateCreateItem(
-            [openseaTokenId[1]],
-            [accounts[1]],
-            [openseaAddresss],
-            amountToWrap
-        );
-
-        var lock = [true];
-
-        var tx = await wrapper.methods
-            .mintItems(createItem, lock)
-            .send(
-                blockchainConnection.getSendingOptions({ from: accounts[1] })
-            );
-
-        var logs = (await web3.eth.getTransactionReceipt(tx.transactionHash))
-            .logs;
-
-        var openseaKeyBPlus = logs
-            .filter(
-                (it) =>
-                    it.topics[0] ===
-                    web3.utils.sha3(
-                        "ReserveData(address,address,uint256,uint256,uint256,bytes32)"
-                    )
-            )
-            .map(
-                (it) =>
-                    web3.eth.abi.decodeParameters(
-                        ["uint256", "uint256", "bytes32"],
-                        it.data
-                    )[2]
-            );
-
-        await wrapperResource.checkBalance1155(
-            tx,
-            accounts[1],
-            wrapper.options.address,
-            amountToWrap[0],
-            opensea,
-            openseaTokenId[1]
-        );
-
-        await wrapperResource.checkBalanceItem(
-            tx,
-            accounts[1],
-            utilities.normalizeValue(amountToWrap[0], 0),
-            openseaItemIds[0],
-            wrapper
-        );
-
-        await wrapperResource.checkSupply(
-            tx,
-            utilities.normalizeValue(amountToWrap[0], 0),
-            openseaItemIds[0],
-            wrapper
-        );
-
-        await blockchainConnection.fastForward(blockToSkip);
-
-        var data = web3.eth.abi.encodeParameters(
-            ["address", "uint256", "address", "bytes32[]", "bytes"],
-            [openseaAddresss, openseaTokenId[0], accounts[3], openseaKey, "0x"]
-        );
-
-        var amountToUnWrap = "1000000000000000000";
-
-        var tx = await wrapper.methods
-            .burn(accounts[1], openseaItemIds[0], amountToUnWrap, data)
-            .send(
-                blockchainConnection.getSendingOptions({
-                    from: accounts[1],
-                })
-            );
-
-        await wrapperResource.checkBalance1155(
-            tx,
-            wrapper.options.address,
-            accounts[3],
-            "1",
-            opensea,
-            openseaTokenId[0]
-        );
-
-        await wrapperResource.checkBalanceItem(
-            tx,
-            accounts[1],
-            amountToUnWrap.mul(-1),
-            openseaItemIds[0],
-            wrapper
-        );
-
-        await wrapperResource.checkSupply(
-            tx,
-            amountToUnWrap.mul(-1),
-            openseaItemIds[0],
-            wrapper
-        );
-
-        var data = web3.eth.abi.encodeParameters(
-            ["address", "uint256", "address", "bytes32[]", "bytes"],
-            [openseaAddresss, openseaTokenId[1], accounts[1], openseaKey1, "0x"]
-        );
-
-        // await catchCall(wrapper.methods
-        //     .burn(accounts[1], openseaItemIds[0], "700000000000000000", data)
-        //     .send(
-        //         blockchainConnection.getSendingOptions({
-        //             from: accounts[1],
-        //         })
-        //     ), "");
-
-        var data = web3.eth.abi.encodeParameters(
-            ["address", "uint256", "address", "bytes32[]", "bytes"],
-            [
-                openseaAddresss,
-                openseaTokenId[1],
-                accounts[1],
-                openseaKeyBPlus,
-                "0x",
-            ]
-        );
-
-        await catchCall(
-            wrapper.methods
-                .burn(
-                    accounts[1],
-                    openseaItemIds[0],
-                    "400000000000000000",
-                    data
-                )
-                .send(
-                    blockchainConnection.getSendingOptions({
-                        from: accounts[1],
-                    })
-                ),
-            "amount"
-        );
-
-        var data = web3.eth.abi.encodeParameters(
-            ["address", "uint256", "address", "bytes32[]", "bytes"],
-            [
-                openseaAddresss,
-                openseaTokenId[1],
-                accounts[1],
-                openseaKeyBPlus,
-                "0x",
-            ]
-        );
-
-        var amountToUnWrap = "700000000000000000";
-
-        var tx = await wrapper.methods
-            .burn(accounts[1], openseaItemIds[0], amountToUnWrap, data)
-            .send(
-                blockchainConnection.getSendingOptions({
-                    from: accounts[1],
-                })
-            );
-
-        await wrapperResource.checkBalance1155(
-            tx,
-            wrapper.options.address,
-            accounts[1],
-            "1",
-            opensea,
-            openseaTokenId[1]
-        );
-
-        await wrapperResource.checkBalanceItem(
-            tx,
-            accounts[1],
-            amountToUnWrap.mul(-1),
-            openseaItemIds[0],
-            wrapper
-        );
-
-        await wrapperResource.checkSupply(
-            tx,
-            amountToUnWrap.mul(-1),
-            openseaItemIds[0],
-            wrapper
-        );
-    });
-
-    it("#3.1", async () => {
-        var tokenHolderOpensea = "0xeea89c8843e8beb56e411bb4cac6dbc2d937ee1d";
-
-        var openseaAddresss = "0x495f947276749ce646f68ac8c248420045cb7b5e";
-
-        var openseaTokenId = [
-            "57410037754672571264739567782498400843114500082247629786531933482096386899969",
-            "18024890227566502247768699122836641523078737603476603287028741122087903559780",
-            "65423712643887032042488748359236551000215163492589935922997446439823617294532",
-        ];
-
-        var opensea = new web3.eth.Contract(
-            knowledgeBase.IERC1155ABI,
-            openseaAddresss
-        );
-
-        await approveHost(tokenHolderOpensea);
-
-        await Promise.all(
-            openseaTokenId.map(async (id, index) => {
-                await opensea.methods
-                    .safeTransferFrom(
-                        tokenHolderOpensea,
-                        accounts[1],
-                        id,
-                        1,
-                        "0x"
-                    )
-                    .send(
-                        blockchainConnection.getSendingOptions({
-                            from: tokenHolderOpensea,
-                        })
-                    );
-            })
-        );
-
         // var data = abi.encode(
         //     ["uint256[]", "address[]", "bool"],
         //     [["1"], [accounts[1]], true]
@@ -2503,7 +1944,7 @@ describe("itemv2 ERC1155DeckWrapper", () => {
                 accounts[1],
                 wrapper.options.address,
                 [openseaTokenId[0], openseaTokenId[1]],
-                [1,1],
+                [1, 1],
                 encodeDatas
             )
             .send(
@@ -2691,7 +2132,13 @@ describe("itemv2 ERC1155DeckWrapper", () => {
 
         var data = web3.eth.abi.encodeParameters(
             ["address", "uint256", "address", "bytes32[]", "bytes"],
-            [openseaAddresss, openseaTokenId[1], accounts[1], openseaKey1, "0x"]
+            [
+                openseaAddresss,
+                openseaTokenId[1],
+                accounts[1],
+                [openseaKey[1]],
+                "0x",
+            ]
         );
 
         var amountToUnWrap = "1000000000000000000";
@@ -2799,7 +2246,13 @@ describe("itemv2 ERC1155DeckWrapper", () => {
 
         var data = web3.eth.abi.encodeParameters(
             ["address", "uint256", "address", "bytes32[]", "bytes"],
-            [openseaAddresss, openseaTokenId[0], accounts[3], openseaKey, "0x"]
+            [
+                openseaAddresss,
+                openseaTokenId[0],
+                accounts[3],
+                [openseaKey[0]],
+                "0x",
+            ]
         );
 
         var amountToUnWrap = "1000000000000000000";
@@ -2838,7 +2291,13 @@ describe("itemv2 ERC1155DeckWrapper", () => {
 
         var data = web3.eth.abi.encodeParameters(
             ["address", "uint256", "address", "bytes32[]", "bytes"],
-            [openseaAddresss, openseaTokenId[1], accounts[1], openseaKey1, "0x"]
+            [
+                openseaAddresss,
+                openseaTokenId[1],
+                accounts[1],
+                [openseaKey[1]],
+                "0x",
+            ]
         );
 
         // await catchCall(wrapper.methods
@@ -3614,7 +3073,6 @@ describe("itemv2 ERC1155DeckWrapper", () => {
         );
 
         var lock = [true, true, true];
-
         var tx = await wrapper.methods
             .mintItems(createItem, lock)
             .send(
@@ -3677,7 +3135,7 @@ describe("itemv2 ERC1155DeckWrapper", () => {
                 accounts[1],
                 accounts[2],
                 zapperItemIds[0],
-                6,
+                "6000000000000000000",
                 "0x"
             )
             .send(
@@ -3685,6 +3143,44 @@ describe("itemv2 ERC1155DeckWrapper", () => {
                     from: accounts[1],
                 })
             );
+
+        var datas = [];
+
+        datas[0] = web3.eth.abi.encodeParameters(
+            ["address", "uint256", "address", "bytes32[]", "bytes"],
+            [zapperAddress, zapperTokenId[0], accounts[2], [zapperKey[0]], "0x"]
+        );
+        datas[1] = web3.eth.abi.encodeParameters(
+            ["address", "uint256", "address", "bytes32[]", "bytes"],
+            [zapperAddress, zapperTokenId[0], accounts[2], [zapperKey[1]], "0x"]
+        );
+        datas[2] = web3.eth.abi.encodeParameters(
+            ["address", "uint256", "address", "bytes32[]", "bytes"],
+            [zapperAddress, zapperTokenId[0], accounts[2], [zapperKey[2]], "0x"]
+        );
+        var encodeDatas = web3.eth.abi.encodeParameters(["bytes[]"], [datas]);
+
+        var amountToUnWrap = [
+            "1000000000000000000",
+            "2000000000000000000",
+            "3000000000000000000",
+        ];
+
+        await catchCall(
+            wrapper.methods
+                .burnBatch(
+                    accounts[2],
+                    [zapperItemIds[0], zapperItemIds[0], zapperItemIds[0]],
+                    amountToUnWrap,
+                    encodeDatas
+                )
+                .send(
+                    blockchainConnection.getSendingOptions({
+                        from: accounts[2],
+                    })
+                ),
+            "Cannot unlock"
+        );
 
         var datas = [];
 
@@ -3702,13 +3198,12 @@ describe("itemv2 ERC1155DeckWrapper", () => {
         );
         var encodeDatas = web3.eth.abi.encodeParameters(["bytes[]"], [datas]);
 
-        var amountToUnWrap = [1, 2, 3];
+        var amountToUnWrap = [
+            "1000000000000000000",
+            "2000000000000000000",
+            "3000000000000000000",
+        ];
 
-        console.log(await wrapper.methods.reserveData(zapperKey[0]).call());
-        console.log(await wrapper.methods.reserveData(zapperKey[1]).call());
-        console.log(await wrapper.methods.reserveData(zapperKey[2]).call());
-
-        console.log(accounts[1])
         var tx = await wrapper.methods
             .burnBatch(
                 accounts[1],
@@ -3722,30 +3217,875 @@ describe("itemv2 ERC1155DeckWrapper", () => {
                 })
             );
 
-        // var amount = "6000000000000000000";
+        var amount = "6000000000000000000";
 
-        // await wrapperResource.checkBalance1155(
-        //     tx,
-        //     wrapper.options.address,
-        //     accounts[3],
-        //     6,
-        //     zapper,
-        //     zapperTokenId[0]
-        // );
+        await wrapperResource.checkBalance1155(
+            tx,
+            wrapper.options.address,
+            accounts[3],
+            6,
+            zapper,
+            zapperTokenId[0]
+        );
 
-        // await wrapperResource.checkBalanceItem(
-        //     tx,
-        //     accounts[1],
-        //     amount.mul(-1),
-        //     zapperItemIds[0],
-        //     wrapper
-        // );
+        await wrapperResource.checkBalanceItem(
+            tx,
+            accounts[1],
+            amount.mul(-1),
+            zapperItemIds[0],
+            wrapper
+        );
 
-        // await wrapperResource.checkSupply(
-        //     tx,
-        //     amount.mul(-1),
-        //     zapperItemIds[0],
-        //     wrapper
-        // );
+        await wrapperResource.checkSupply(
+            tx,
+            amount.mul(-1),
+            zapperItemIds[0],
+            wrapper
+        );
+
+        await zapper.methods
+            .setApprovalForAll(wrapper.options.address, accounts[3])
+            .send(
+                blockchainConnection.getSendingOptions({
+                    from: accounts[3],
+                })
+            );
+
+        var createItem = await wrapperResource.generateCreateItem(
+            [zapperTokenId[0], zapperTokenId[0], zapperTokenId[0]],
+            [accounts[2], accounts[2], accounts[2]],
+            [zapperAddress, zapperAddress, zapperAddress],
+            ["1", "2", "3"]
+        );
+
+        var lock = [false, true, false];
+        var tx = await wrapper.methods
+            .mintItems(createItem, lock)
+            .send(
+                blockchainConnection.getSendingOptions({ from: accounts[3] })
+            );
+
+        var logs = (await web3.eth.getTransactionReceipt(tx.transactionHash))
+            .logs;
+
+        var zapperKeyPlus = logs
+            .filter(
+                (it) =>
+                    it.topics[0] ===
+                    web3.utils.sha3(
+                        "ReserveData(address,address,uint256,uint256,uint256,bytes32)"
+                    )
+            )
+            .map(
+                (it) =>
+                    web3.eth.abi.decodeParameters(
+                        ["uint256", "uint256", "bytes32"],
+                        it.data
+                    )[2]
+            );
+
+        await wrapperResource.checkBalance1155(
+            tx,
+            accounts[3],
+            wrapper.options.address,
+            "6",
+            zapper,
+            zapperTokenId[0]
+        );
+
+        await wrapperResource.checkBalanceItem(
+            tx,
+            accounts[2],
+            "6000000000000000000",
+            zapperItemIds[0],
+            wrapper
+        );
+
+        await wrapperResource.checkSupply(
+            tx,
+            "6000000000000000000",
+            zapperItemIds[0],
+            wrapper
+        );
+
+        await blockchainConnection.fastForward(blockToSkip);
+
+        var datas = [];
+
+        datas[0] = web3.eth.abi.encodeParameters(
+            ["address", "uint256", "address", "bytes32[]", "bytes"],
+            [zapperAddress, zapperTokenId[0], accounts[1], [zapperKey[0]], "0x"]
+        );
+        datas[1] = web3.eth.abi.encodeParameters(
+            ["address", "uint256", "address", "bytes32[]", "bytes"],
+            [zapperAddress, zapperTokenId[0], accounts[1], [zapperKey[2]], "0x"]
+        );
+        datas[2] = web3.eth.abi.encodeParameters(
+            ["address", "uint256", "address", "bytes32[]", "bytes"],
+            [
+                zapperAddress,
+                zapperTokenId[0],
+                accounts[1],
+                [zapperKeyPlus[0]],
+                "0x",
+            ]
+        );
+        var encodeDatas = web3.eth.abi.encodeParameters(["bytes[]"], [datas]);
+
+        var amountToUnWrap = [
+            "510000000000000000",
+            "2000000000000000000",
+            "3000000000000000000",
+        ];
+
+        await catchCall(
+            wrapper.methods
+                .burnBatch(
+                    accounts[2],
+                    [zapperItemIds[0], zapperItemIds[0], zapperItemIds[0]],
+                    amountToUnWrap,
+                    encodeDatas
+                )
+                .send(
+                    blockchainConnection.getSendingOptions({
+                        from: accounts[2],
+                    })
+                ),
+            "amount"
+        );
+
+        var amountToUnWrap = [
+            "1000000000000000000",
+            "2000000000000000000",
+            "3000000000000000000",
+        ];
+
+        var tx = await wrapper.methods
+            .burnBatch(
+                accounts[2],
+                [zapperItemIds[0], zapperItemIds[0], zapperItemIds[0]],
+                amountToUnWrap,
+                encodeDatas
+            )
+            .send(
+                blockchainConnection.getSendingOptions({
+                    from: accounts[2],
+                })
+            );
+
+        var amount = "6000000000000000000";
+
+        await wrapperResource.checkBalance1155(
+            tx,
+            wrapper.options.address,
+            accounts[1],
+            6,
+            zapper,
+            zapperTokenId[0]
+        );
+
+        await wrapperResource.checkBalanceItem(
+            tx,
+            accounts[2],
+            amount.mul(-1),
+            zapperItemIds[0],
+            wrapper
+        );
+
+        await wrapperResource.checkSupply(
+            tx,
+            amount.mul(-1),
+            zapperItemIds[0],
+            wrapper
+        );
+
+        var datas = [];
+
+        datas[0] = web3.eth.abi.encodeParameters(
+            ["address", "uint256", "address", "bytes32[]", "bytes"],
+            [
+                zapperAddress,
+                zapperTokenId[0],
+                accounts[1],
+                [utilities.voidBytes32],
+                "0x",
+            ]
+        );
+        datas[1] = web3.eth.abi.encodeParameters(
+            ["address", "uint256", "address", "bytes32[]", "bytes"],
+            [
+                zapperAddress,
+                zapperTokenId[0],
+                accounts[1],
+                [utilities.voidBytes32],
+                "0x",
+            ]
+        );
+        datas[2] = web3.eth.abi.encodeParameters(
+            ["address", "uint256", "address", "bytes32[]", "bytes"],
+            [
+                zapperAddress,
+                zapperTokenId[0],
+                accounts[1],
+                [utilities.voidBytes32],
+                "0x",
+            ]
+        );
+        datas[3] = web3.eth.abi.encodeParameters(
+            ["address", "uint256", "address", "bytes32[]", "bytes"],
+            [
+                zapperAddress,
+                zapperTokenId[0],
+                accounts[1],
+                [utilities.voidBytes32],
+                "0x",
+            ]
+        );
+        var encodeDatas = web3.eth.abi.encodeParameters(["bytes[]"], [datas]);
+
+        var amountToUnWrap = [
+            "1000000000000000000",
+            "2000000000000000000",
+            "2000000000000000000",
+            "510000000000000000",
+        ];
+
+        var tx = await wrapper.methods
+            .burnBatch(
+                accounts[2],
+                [
+                    zapperItemIds[0],
+                    zapperItemIds[0],
+                    zapperItemIds[0],
+                    zapperItemIds[0],
+                ],
+                amountToUnWrap,
+                encodeDatas
+            )
+            .send(
+                blockchainConnection.getSendingOptions({
+                    from: accounts[2],
+                })
+            );
+
+        var amount = "5510000000000000000";
+
+        await wrapperResource.checkBalance1155(
+            tx,
+            wrapper.options.address,
+            accounts[1],
+            6,
+            zapper,
+            zapperTokenId[0]
+        );
+
+        await wrapperResource.checkBalanceItem(
+            tx,
+            accounts[2],
+            amount.mul(-1),
+            zapperItemIds[0],
+            wrapper
+        );
+
+        await wrapperResource.checkSupply(
+            tx,
+            amount.mul(-1),
+            zapperItemIds[0],
+            wrapper
+        );
+    });
+
+    it("#6", async () => {
+        var tokenHolderZerion = "0xecde04e088828c93a1003b9388727a25c064e5e3";
+
+        var zerionAddress = "0x74EE68a33f6c9f113e22B3B77418B75f85d07D22";
+
+        var zerionTokenId = ["10", "2", "4"];
+
+        var zerion = new web3.eth.Contract(
+            knowledgeBase.IERC1155ABI,
+            zerionAddress
+        );
+
+        await approveHost(tokenHolderZerion);
+
+        await Promise.all(
+            zerionTokenId.map(async (id, index) => {
+                await zerion.methods
+                    .safeTransferFrom(
+                        tokenHolderZerion,
+                        accounts[3],
+                        id,
+                        4,
+                        "0x"
+                    )
+                    .send(
+                        blockchainConnection.getSendingOptions({
+                            from: tokenHolderOpensea,
+                        })
+                    );
+            })
+        );
+
+        var datas = [];
+
+        datas[0] = abi.encode(
+            ["uint256[]", "address[]", "bool"],
+            [["4"], [accounts[3]], true]
+        );
+        datas[1] = abi.encode(
+            ["uint256[]", "address[]", "bool"],
+            [["4"], [accounts[3]], false]
+        );
+        datas[2] = abi.encode(
+            ["uint256[]", "address[]", "bool"],
+            [["4"], [accounts[3]], true]
+        );
+
+        var encodeDatas = web3.eth.abi.encodeParameters(["bytes[]"], [datas]);
+
+        tx = await opensea.methods
+            .safeBatchTransferFrom(
+                accounts[3],
+                wrapper.options.address,
+                [zerionTokenId[0], zerionTokenId[0], zerionTokenId[0]],
+                [4, 4, 4],
+                encodeDatas
+            )
+            .send(
+                blockchainConnection.getSendingOptions({ from: accounts[3] })
+            );
+
+        var logs = (await web3.eth.getTransactionReceipt(tx.transactionHash))
+            .logs;
+
+        var zerionItemIds = logs
+            .filter(
+                (it) =>
+                    it.topics[0] ===
+                    web3.utils.sha3("Token(address,uint256,uint256)")
+            )
+            .map((it) => web3.eth.abi.decodeParameter("uint256", it.topics[3]));
+
+        var zerionKey = logs
+            .filter(
+                (it) =>
+                    it.topics[0] ===
+                    web3.utils.sha3(
+                        "ReserveData(address,address,uint256,uint256,uint256,bytes32)"
+                    )
+            )
+            .map(
+                (it) =>
+                    web3.eth.abi.decodeParameters(
+                        ["uint256", "uint256", "bytes32"],
+                        it.data
+                    )[2]
+            );
+
+        var tokenHolderWitems = "0xecde04e088828c93a1003b9388727a25c064e5e3";
+
+        var witemsAddress = "0x74EE68a33f6c9f113e22B3B77418B75f85d07D22";
+
+        var witemsTokenId = ["10", "2", "4"];
+
+        var witems = new web3.eth.Contract(
+            knowledgeBase.IERC1155ABI,
+            witemsAddress
+        );
+
+        await approveHost(tokenHolderWitems);
+
+        await Promise.all(
+            witemsTokenId.map(async (id, index) => {
+                await witems.methods
+                    .safeTransferFrom(
+                        tokenHolderWitems,
+                        accounts[3],
+                        id,
+                        6,
+                        "0x"
+                    )
+                    .send(
+                        blockchainConnection.getSendingOptions({
+                            from: tokenHolderWitems,
+                        })
+                    );
+            })
+        );
+
+        await witems.methods
+            .setApprovalForAll(wrapper.options.address, accounts[3])
+            .send(
+                blockchainConnection.getSendingOptions({
+                    from: accounts[3],
+                })
+            );
+
+        var amountToWrap = [3, 3];
+        var createItem = await wrapperResource.generateCreateItem(
+            [witemsTokenId[0]],
+            [accounts[3], accounts[3]],
+            [witemsAddress, witemsAddress],
+            amountToWrap
+        );
+
+        var lock = [false, true];
+
+        var tx = await wrapper.methods
+            .mintItems(createItem, lock)
+            .send(
+                blockchainConnection.getSendingOptions({ from: accounts[3] })
+            );
+
+        var logs = (await web3.eth.getTransactionReceipt(tx.transactionHash))
+            .logs;
+
+        var witemsItemIds = logs
+            .filter(
+                (it) =>
+                    it.topics[0] ===
+                    web3.utils.sha3("Token(address,uint256,uint256)")
+            )
+            .map((it) => web3.eth.abi.decodeParameter("uint256", it.topics[3]));
+
+        await wrapperResource.checkBalance1155(
+            tx,
+            accounts[1],
+            wrapper.options.address,
+            amountToWrap[0],
+            witems,
+            witemsTokenId[0]
+        );
+
+        await wrapperResource.checkBalanceItem(
+            tx,
+            accounts[3],
+            amountToWrap[0],
+            witemsItemIds[0],
+            wrapper
+        );
+
+        await wrapperResource.checkSupply(
+            tx,
+            amountToWrap[0],
+            witemsItemIds[0],
+            wrapper
+        );
+
+        var tokenHolderWitems = "0xecde04e088828c93a1003b9388727a25c064e5e3";
+
+        var witemsAddress = "0x74EE68a33f6c9f113e22B3B77418B75f85d07D22";
+
+        var witemsTokenId = ["10", "2", "4"];
+
+        var witems = new web3.eth.Contract(
+            knowledgeBase.IERC1155ABI,
+            witemsAddress
+        );
+
+        await approveHost(tokenHolderWitems);
+
+        await Promise.all(
+            witemsTokenId.map(async (id, index) => {
+                await witems.methods
+                    .safeTransferFrom(
+                        tokenHolderWitems,
+                        accounts[3],
+                        id,
+                        6,
+                        "0x"
+                    )
+                    .send(
+                        blockchainConnection.getSendingOptions({
+                            from: tokenHolderWitems,
+                        })
+                    );
+            })
+        );
+
+        await witems.methods
+            .setApprovalForAll(wrapper.options.address, accounts[3])
+            .send(
+                blockchainConnection.getSendingOptions({
+                    from: accounts[3],
+                })
+            );
+
+        var amountToWrap = [3, 3];
+        var createItem = await wrapperResource.generateCreateItem(
+            [witemsTokenId[0]],
+            [accounts[3], accounts[3]],
+            [witemsAddress, witemsAddress],
+            amountToWrap
+        );
+
+        var lock = [false, true];
+
+        var tx = await wrapper.methods
+            .mintItems(createItem, lock)
+            .send(
+                blockchainConnection.getSendingOptions({ from: accounts[3] })
+            );
+
+        var logs = (await web3.eth.getTransactionReceipt(tx.transactionHash))
+            .logs;
+
+        var witemsItemIds = logs
+            .filter(
+                (it) =>
+                    it.topics[0] ===
+                    web3.utils.sha3("Token(address,uint256,uint256)")
+            )
+            .map((it) => web3.eth.abi.decodeParameter("uint256", it.topics[3]));
+
+        await wrapperResource.checkBalance1155(
+            tx,
+            accounts[1],
+            wrapper.options.address,
+            amountToWrap[0],
+            witems,
+            witemsTokenId[0]
+        );
+
+        await wrapperResource.checkBalanceItem(
+            tx,
+            accounts[3],
+            amountToWrap[0],
+            witemsItemIds[0],
+            wrapper
+        );
+
+        await wrapperResource.checkSupply(
+            tx,
+            amountToWrap[0],
+            witemsItemIds[0],
+            wrapper
+        );
+
+        var data = web3.eth.abi.encodeParameters(
+            ["address", "uint256", "address", "bytes32[]", "bytes"],
+            [
+                openseaAddresss,
+                openseaTokenId[2],
+                accounts[1],
+                [utilities.voidBytes32],
+                "0x",
+            ]
+        );
+
+        await catchCall(
+            wrapper.methods
+                .burn(
+                    accounts[3],
+                    openseaItemIds[0],
+                    "600000000000000000",
+                    data
+                )
+                .send(
+                    blockchainConnection.getSendingOptions({
+                        from: accounts[3],
+                    })
+                ),
+            "amount"
+        );
+
+        var data = web3.eth.abi.encodeParameters(
+            ["address", "uint256", "address", "bytes32[]", "bytes"],
+            [
+                openseaAddresss,
+                openseaTokenId[2],
+                accounts[1],
+                [utilities.voidBytes32],
+                "0x",
+            ]
+        );
+
+        var amountToUnWrap = "1000000000000000000";
+
+        var tx = await wrapper.methods
+            .burn(accounts[3], openseaItemIds[0], amountToUnWrap, data)
+            .send(
+                blockchainConnection.getSendingOptions({
+                    from: accounts[3],
+                })
+            );
+
+        await wrapperResource.checkBalance1155(
+            tx,
+            wrapper.options.address,
+            accounts[1],
+            "1",
+            opensea,
+            openseaTokenId[2]
+        );
+
+        await wrapperResource.checkBalanceItem(
+            tx,
+            accounts[3],
+            amountToUnWrap.mul(-1),
+            openseaItemIds[0],
+            wrapper
+        );
+
+        await wrapperResource.checkSupply(
+            tx,
+            amountToUnWrap.mul(-1),
+            openseaItemIds[0],
+            wrapper
+        );
+
+        var data = web3.eth.abi.encodeParameters(
+            ["address", "uint256", "address", "bytes32[]", "bytes"],
+            [openseaAddresss, openseaTokenId[0], accounts[3], openseaKey, "0x"]
+        );
+
+        await catchCall(
+            wrapper.methods
+                .burn(
+                    accounts[3],
+                    openseaItemIds[0],
+                    "1000000000000000000",
+                    data
+                )
+                .send(
+                    blockchainConnection.getSendingOptions({
+                        from: accounts[3],
+                    })
+                ),
+            "insuff"
+        );
+
+        var data = web3.eth.abi.encodeParameters(
+            ["address", "uint256", "address", "bytes32[]", "bytes"],
+            [openseaAddresss, openseaTokenId[1], accounts[1], openseaKey1, "0x"]
+        );
+
+        var amountToUnWrap = "1000000000000000000";
+
+        var tx = await wrapper.methods
+            .burn(accounts[1], openseaItemIds[0], amountToUnWrap, data)
+            .send(
+                blockchainConnection.getSendingOptions({
+                    from: accounts[1],
+                })
+            );
+
+        await wrapperResource.checkBalance1155(
+            tx,
+            wrapper.options.address,
+            accounts[1],
+            "1",
+            opensea,
+            openseaTokenId[1]
+        );
+
+        await wrapperResource.checkBalanceItem(
+            tx,
+            accounts[1],
+            amountToUnWrap.mul(-1),
+            openseaItemIds[0],
+            wrapper
+        );
+
+        await wrapperResource.checkSupply(
+            tx,
+            amountToUnWrap.mul(-1),
+            openseaItemIds[0],
+            wrapper
+        );
+
+        await opensea.methods
+            .setApprovalForAll(wrapper.options.address, accounts[1])
+            .send(
+                blockchainConnection.getSendingOptions({
+                    from: accounts[1],
+                })
+            );
+
+        var amountToWrap = [1];
+        var createItem = await wrapperResource.generateCreateItem(
+            [openseaTokenId[1]],
+            [accounts[1]],
+            [openseaAddresss],
+            amountToWrap
+        );
+
+        var lock = [true];
+
+        var tx = await wrapper.methods
+            .mintItems(createItem, lock)
+            .send(
+                blockchainConnection.getSendingOptions({ from: accounts[1] })
+            );
+
+        var logs = (await web3.eth.getTransactionReceipt(tx.transactionHash))
+            .logs;
+
+        var openseaKeyBPlus = logs
+            .filter(
+                (it) =>
+                    it.topics[0] ===
+                    web3.utils.sha3(
+                        "ReserveData(address,address,uint256,uint256,uint256,bytes32)"
+                    )
+            )
+            .map(
+                (it) =>
+                    web3.eth.abi.decodeParameters(
+                        ["uint256", "uint256", "bytes32"],
+                        it.data
+                    )[2]
+            );
+
+        await wrapperResource.checkBalance1155(
+            tx,
+            accounts[1],
+            wrapper.options.address,
+            amountToWrap[0],
+            opensea,
+            openseaTokenId[1]
+        );
+
+        await wrapperResource.checkBalanceItem(
+            tx,
+            accounts[1],
+            utilities.normalizeValue(amountToWrap[0], 0),
+            openseaItemIds[0],
+            wrapper
+        );
+
+        await wrapperResource.checkSupply(
+            tx,
+            utilities.normalizeValue(amountToWrap[0], 0),
+            openseaItemIds[0],
+            wrapper
+        );
+
+        await blockchainConnection.fastForward(blockToSkip);
+
+        var data = web3.eth.abi.encodeParameters(
+            ["address", "uint256", "address", "bytes32[]", "bytes"],
+            [openseaAddresss, openseaTokenId[0], accounts[3], openseaKey, "0x"]
+        );
+
+        var amountToUnWrap = "1000000000000000000";
+
+        var tx = await wrapper.methods
+            .burn(accounts[1], openseaItemIds[0], amountToUnWrap, data)
+            .send(
+                blockchainConnection.getSendingOptions({
+                    from: accounts[1],
+                })
+            );
+
+        await wrapperResource.checkBalance1155(
+            tx,
+            wrapper.options.address,
+            accounts[3],
+            "1",
+            opensea,
+            openseaTokenId[0]
+        );
+
+        await wrapperResource.checkBalanceItem(
+            tx,
+            accounts[1],
+            amountToUnWrap.mul(-1),
+            openseaItemIds[0],
+            wrapper
+        );
+
+        await wrapperResource.checkSupply(
+            tx,
+            amountToUnWrap.mul(-1),
+            openseaItemIds[0],
+            wrapper
+        );
+
+        var data = web3.eth.abi.encodeParameters(
+            ["address", "uint256", "address", "bytes32[]", "bytes"],
+            [openseaAddresss, openseaTokenId[1], accounts[1], openseaKey1, "0x"]
+        );
+
+        // await catchCall(wrapper.methods
+        //     .burn(accounts[1], openseaItemIds[0], "700000000000000000", data)
+        //     .send(
+        //         blockchainConnection.getSendingOptions({
+        //             from: accounts[1],
+        //         })
+        //     ), "");
+
+        var data = web3.eth.abi.encodeParameters(
+            ["address", "uint256", "address", "bytes32[]", "bytes"],
+            [
+                openseaAddresss,
+                openseaTokenId[1],
+                accounts[1],
+                openseaKeyBPlus,
+                "0x",
+            ]
+        );
+
+        await catchCall(
+            wrapper.methods
+                .burn(
+                    accounts[1],
+                    openseaItemIds[0],
+                    "400000000000000000",
+                    data
+                )
+                .send(
+                    blockchainConnection.getSendingOptions({
+                        from: accounts[1],
+                    })
+                ),
+            "amount"
+        );
+
+        var data = web3.eth.abi.encodeParameters(
+            ["address", "uint256", "address", "bytes32[]", "bytes"],
+            [
+                openseaAddresss,
+                openseaTokenId[1],
+                accounts[1],
+                openseaKeyBPlus,
+                "0x",
+            ]
+        );
+
+        var amountToUnWrap = "700000000000000000";
+
+        var tx = await wrapper.methods
+            .burn(accounts[1], openseaItemIds[0], amountToUnWrap, data)
+            .send(
+                blockchainConnection.getSendingOptions({
+                    from: accounts[1],
+                })
+            );
+
+        await wrapperResource.checkBalance1155(
+            tx,
+            wrapper.options.address,
+            accounts[1],
+            "1",
+            opensea,
+            openseaTokenId[1]
+        );
+
+        await wrapperResource.checkBalanceItem(
+            tx,
+            accounts[1],
+            amountToUnWrap.mul(-1),
+            openseaItemIds[0],
+            wrapper
+        );
+
+        await wrapperResource.checkSupply(
+            tx,
+            amountToUnWrap.mul(-1),
+            openseaItemIds[0],
+            wrapper
+        );
     });
 });

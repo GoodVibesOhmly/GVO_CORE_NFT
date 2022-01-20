@@ -3863,13 +3863,13 @@ describe("itemv2 ERC1155DeckWrapper", () => {
                 witemsTokenId[1],
             ],
             [
-                accounts[1],
-                accounts[1],
-                accounts[1],
-                accounts[1],
-                accounts[1],
-                accounts[1],
-                accounts[1],
+                accounts[3],
+                accounts[3],
+                accounts[3],
+                accounts[3],
+                accounts[3],
+                accounts[3],
+                accounts[3],
             ],
             [
                 zerionAddress,
@@ -3922,43 +3922,43 @@ describe("itemv2 ERC1155DeckWrapper", () => {
 
         datas[0] = web3.eth.abi.encodeParameters(
             ["address", "uint256", "address", "bytes32[]", "bytes"],
-            [zerionAddress, zerionTokenId[0], accounts[2], [zerionKey[0]], "0x"]
+            [zerionAddress, zerionTokenId[0], accounts[1], [zerionKey[0]], "0x"]
         );
         datas[1] = web3.eth.abi.encodeParameters(
             ["address", "uint256", "address", "bytes32[]", "bytes"],
             [
                 zerionAddress,
                 zerionTokenId[1],
-                accounts[2],
+                accounts[1],
                 [utilities.voidBytes32],
                 "0x",
             ]
         );
         datas[2] = web3.eth.abi.encodeParameters(
             ["address", "uint256", "address", "bytes32[]", "bytes"],
-            [zerionAddress, zerionTokenId[2], accounts[2], [zerionKey[1]], "0x"]
+            [zerionAddress, zerionTokenId[2], accounts[1], [zerionKey[1]], "0x"]
         );
         datas[3] = web3.eth.abi.encodeParameters(
             ["address", "uint256", "address", "bytes32[]", "bytes"],
             [
                 zapperAddress,
                 zapperTokenId[0],
-                accounts[2],
+                accounts[1],
                 [utilities.voidBytes32],
                 "0x",
             ]
         );
         datas[4] = web3.eth.abi.encodeParameters(
             ["address", "uint256", "address", "bytes32[]", "bytes"],
-            [zapperAddress, zapperTokenId[1], accounts[2], [keys[0]], "0x"]
+            [zapperAddress, zapperTokenId[1], accounts[1], [keys[0]], "0x"]
         );
         datas[5] = web3.eth.abi.encodeParameters(
             ["address", "uint256", "address", "bytes32[]", "bytes"],
-            [witemsAddress, witemsTokenId[0], accounts[2], [keys[1]], "0x"]
+            [witemsAddress, witemsTokenId[0], accounts[1], [keys[1]], "0x"]
         );
         datas[6] = web3.eth.abi.encodeParameters(
             ["address", "uint256", "address", "bytes32[]", "bytes"],
-            [witemsAddress, witemsTokenId[1], accounts[2], [keys[2]], "0x"]
+            [witemsAddress, witemsTokenId[1], accounts[1], [keys[2]], "0x"]
         );
 
         console.log(keys1);
@@ -3977,7 +3977,7 @@ describe("itemv2 ERC1155DeckWrapper", () => {
             [
                 zerionAddress,
                 zerionTokenId[0],
-                accounts[2],
+                accounts[1],
                 [utilities.voidBytes32],
                 "0x",
             ]
@@ -3987,7 +3987,7 @@ describe("itemv2 ERC1155DeckWrapper", () => {
             [
                 zerionAddress,
                 zerionTokenId[1],
-                accounts[2],
+                accounts[1],
                 [utilities.voidBytes32],
                 "0x",
             ]
@@ -3997,7 +3997,7 @@ describe("itemv2 ERC1155DeckWrapper", () => {
             [
                 zerionAddress,
                 zerionTokenId[2],
-                accounts[2],
+                accounts[1],
                 [utilities.voidBytes32],
                 "0x",
             ]
@@ -4007,7 +4007,7 @@ describe("itemv2 ERC1155DeckWrapper", () => {
             [
                 zapperAddress,
                 zapperTokenId[0],
-                accounts[2],
+                accounts[1],
                 [utilities.voidBytes32],
                 "0x",
             ]
@@ -4017,7 +4017,7 @@ describe("itemv2 ERC1155DeckWrapper", () => {
             [
                 zapperAddress,
                 zapperTokenId[1],
-                accounts[2],
+                accounts[1],
                 [utilities.voidBytes32],
                 "0x",
             ]
@@ -4027,7 +4027,7 @@ describe("itemv2 ERC1155DeckWrapper", () => {
             [
                 witemsAddress,
                 witemsTokenId[0],
-                accounts[2],
+                accounts[1],
                 [utilities.voidBytes32],
                 "0x",
             ]
@@ -4037,7 +4037,7 @@ describe("itemv2 ERC1155DeckWrapper", () => {
             [
                 witemsAddress,
                 witemsTokenId[1],
-                accounts[2],
+                accounts[1],
                 [utilities.voidBytes32],
                 "0x",
             ]
@@ -4085,7 +4085,7 @@ describe("itemv2 ERC1155DeckWrapper", () => {
             )
             .send(
                 blockchainConnection.getSendingOptions({
-                    from: accounts[1],
+                    from: accounts[3],
                 })
             );
 
@@ -4115,4 +4115,277 @@ describe("itemv2 ERC1155DeckWrapper", () => {
         //     wrapper
         // );
     });
+
+    it("#8", async () => {
+        var tokenHolderOpensea = "0xeea89c8843e8beb56e411bb4cac6dbc2d937ee1d";
+
+        var openseaAddresss = "0x495f947276749ce646f68ac8c248420045cb7b5e";
+
+        var openseaTokenId = [
+            "57410037754672571264739567782498400843114500082247629786531933482096386899969",
+            "18024890227566502247768699122836641523078737603476603287028741122087903559780",
+        ];
+
+        var opensea = new web3.eth.Contract(
+            knowledgeBase.IERC1155ABI,
+            openseaAddresss
+        );
+
+        await approveHost(tokenHolderOpensea);
+
+        await Promise.all(
+            openseaTokenId.map(async (id, index) => {
+                await opensea.methods
+                    .safeTransferFrom(
+                        tokenHolderOpensea,
+                        accounts[3],
+                        id,
+                        1,
+                        "0x"
+                    )
+                    .send(
+                        blockchainConnection.getSendingOptions({
+                            from: tokenHolderOpensea,
+                        })
+                    );
+            })
+        );
+
+        await opensea.methods
+            .setApprovalForAll(wrapper.options.address, accounts[3])
+            .send(
+                blockchainConnection.getSendingOptions({
+                    from: accounts[3],
+                })
+            );
+
+        var amountToWrap = [1, 1];
+        var createItem = await wrapperResource.generateCreateItem(
+            [openseaTokenId[0], openseaTokenId[1]],
+            [accounts[3], accounts[3]],
+            [openseaAddresss, openseaAddresss],
+            amountToWrap
+        );
+
+        var lock = [true, true];
+
+        var tx = await wrapper.methods
+            .mintItems(createItem, lock)
+            .send(
+                blockchainConnection.getSendingOptions({ from: accounts[3] })
+            );
+
+        var logs = (await web3.eth.getTransactionReceipt(tx.transactionHash))
+            .logs;
+
+        var openseaItemIds = logs
+            .filter(
+                (it) =>
+                    it.topics[0] ===
+                    web3.utils.sha3("Token(address,uint256,uint256)")
+            )
+            .map((it) => web3.eth.abi.decodeParameter("uint256", it.topics[3]));
+
+            var openseaKey = logs
+            .filter(
+                (it) =>
+                    it.topics[0] ===
+                    web3.utils.sha3(
+                        "ReserveData(address,address,uint256,uint256,uint256,bytes32)"
+                    )
+            )
+            .map(
+                (it) =>
+                    web3.eth.abi.decodeParameters(
+                        ["uint256", "uint256", "bytes32"],
+                        it.data
+                    )[2]
+            );
+
+        await wrapperResource.checkBalance1155(
+            tx,
+            accounts[3],
+            wrapper.options.address,
+            amountToWrap[0],
+            opensea,
+            openseaTokenId[0]
+        );
+
+        await wrapperResource.checkBalance1155(
+            tx,
+            accounts[3],
+            wrapper.options.address,
+            amountToWrap[0],
+            opensea,
+            openseaTokenId[1]
+        );
+
+        await wrapperResource.checkBalanceItem(
+            tx,
+            accounts[3],
+            utilities.normalizeValue(amountToWrap[0].add(amountToWrap[1]), 0),
+            openseaItemIds[0],
+            wrapper
+        );
+
+        await wrapperResource.checkSupply(
+            tx,
+            utilities.normalizeValue(amountToWrap[0].add(amountToWrap[1]), 0),
+            openseaItemIds[0],
+            wrapper
+        );
+
+       
+        var tokenHolderParallel = "0xd0829f8dda953e85da70b0a62a2f4e9a774ebf16";
+
+        var parallelTokenAddresss =
+            "0x76be3b62873462d2142405439777e971754e8e77";
+
+        var parallelTokenId = ["10144", "10150"];
+
+        var parallel = new web3.eth.Contract(
+            knowledgeBase.IERC1155ABI,
+            parallelTokenAddresss
+        );
+
+        await approveHost(tokenHolderParallel);
+
+        await Promise.all(
+            parallelTokenId.map(async (id, index) => {
+                await parallel.methods
+                    .safeTransferFrom(
+                        tokenHolderParallel,
+                        accounts[2],
+                        id,
+                        1,
+                        "0x"
+                    )
+                    .send(
+                        blockchainConnection.getSendingOptions({
+                            from: tokenHolderParallel,
+                        })
+                    );
+            })
+        );
+
+        await parallel.methods
+            .setApprovalForAll(wrapper.options.address, accounts[2])
+            .send(
+                blockchainConnection.getSendingOptions({
+                    from: accounts[2],
+                })
+            );
+
+
+        var createItem = await wrapperResource.generateCreateItem(
+            [parallelTokenId[0]],
+            [accounts[4]],
+            [parallelTokenAddresss],
+            ["1"]
+        );
+
+        var lock = [false];
+
+        var tx = await wrapper.methods
+            .mintItems(createItem, lock)
+            .send(
+                blockchainConnection.getSendingOptions({ from: accounts[4] })
+            );
+
+        // var logs = (await web3.eth.getTransactionReceipt(tx.transactionHash))
+        //     .logs;
+
+        // var parallelItemIds = logs
+        //     .filter(
+        //         (it) =>
+        //             it.topics[0] ===
+        //             web3.utils.sha3("Token(address,uint256,uint256)")
+        //     )
+        //     .map((it) => web3.eth.abi.decodeParameter("uint256", it.topics[3]));
+
+        // await wrapperResource.checkBalance1155(
+        //     tx,
+        //     accounts[3],
+        //     wrapper.options.address,
+        //     "1",
+        //     parallel,
+        //     parallelTokenId[0]
+        // );
+
+        // await wrapperResource.checkBalanceItem(
+        //     tx,
+        //     accounts[3],
+        //     "1000000000000000000",
+        //     parallelItemIds[0],
+        //     wrapper
+        // );
+
+        // await wrapperResource.checkSupply(
+        //     tx,
+        //     "1000000000000000000",
+        //     parallelItemIds[0],
+        //     wrapper
+        // );
+
+        // var data = abi.encode(
+        //     ["uint256[]", "address[]", "bool"],
+        //     [["1"], [accounts[4]], true]
+        // );
+
+        // tx = await parallel.methods
+        //     .safeTransferFrom(
+        //         accounts[4],
+        //         wrapper.options.address,
+        //         parallelTokenId[1],
+        //         1,
+        //         data
+        //     )
+        //     .send(
+        //         blockchainConnection.getSendingOptions({ from: accounts[4] })
+        //     );
+        // var logs = (await web3.eth.getTransactionReceipt(tx.transactionHash))
+        //     .logs;
+
+        // var parallelKey = logs
+        //     .filter(
+        //         (it) =>
+        //             it.topics[0] ===
+        //             web3.utils.sha3(
+        //                 "ReserveData(address,address,uint256,uint256,uint256,bytes32)"
+        //             )
+        //     )
+        //     .map(
+        //         (it) =>
+        //             web3.eth.abi.decodeParameters(
+        //                 ["uint256", "uint256", "bytes32"],
+        //                 it.data
+        //             )[2]
+        //     );
+
+        // await wrapperResource.checkBalance1155(
+        //     tx,
+        //     accounts[4],
+        //     wrapper.options.address,
+        //     "1",
+        //     parallel,
+        //     parallelTokenId[1]
+        // );
+
+        // await wrapperResource.checkBalanceItem(
+        //     tx,
+        //     accounts[4],
+        //     "1000000000000000000",
+        //     parallelItemIds[0],
+        //     wrapper
+        // );
+
+        // await wrapperResource.checkSupply(
+        //     tx,
+        //     "1000000000000000000",
+        //     parallelItemIds[0],
+        //     wrapper
+        // );
+    });
+
+    
 });

@@ -3234,7 +3234,7 @@ describe("itemv2 ERC1155DeckWrapper", () => {
                 })
             );
 
-        // // #TRA_DZAP_5_1.2 END
+        // #TRA_DZAP_5_1.2 END
 
         // #UWB_DZAP_5_1.3 START
 
@@ -3616,7 +3616,6 @@ describe("itemv2 ERC1155DeckWrapper", () => {
     });
 
     it("#6", async () => {
-        //TODO: controlli
         /**
          * Label                       ||   Operation        || Token                    || From  || Receiver address ||amount                                      || Token Reference                  || Lock
          * #W_ZRN_6_1.1                     Wrap                Zerion                      Acc3     Acc3                4,4,4                                         A,B,C                               yes,no,yes
@@ -3722,7 +3721,7 @@ describe("itemv2 ERC1155DeckWrapper", () => {
             zerionTokenId.map(async (id, index) => {
                 await wrapperResource.checkBalance1155(
                     tx,
-                    accounts[1],
+                    accounts[3],
                     wrapper.options.address,
                     amountToWrap[index],
                     zerion,
@@ -3733,7 +3732,7 @@ describe("itemv2 ERC1155DeckWrapper", () => {
 
         await wrapperResource.checkBalanceItem(
             tx,
-            accounts[1],
+            accounts[3],
             "12000000000000000000",
             zerionItemIds[0],
             wrapper
@@ -3894,18 +3893,11 @@ describe("itemv2 ERC1155DeckWrapper", () => {
                     )[2]
             );
 
-        var normalizedAmountToWrap = [
-            "3000000000000000000",
-            "3000000000000000000",
-            witemAmount[0],
-            witemAmount[1],
-        ];
-
         await Promise.all(
             tokenids.map(async (id, index) => {
                 await wrapperResource.checkBalance1155(
                     tx,
-                    accounts[1],
+                    accounts[3],
                     wrapper.options.address,
                     amountToWrap[index],
                     tokenInstance[index],
@@ -3916,7 +3908,7 @@ describe("itemv2 ERC1155DeckWrapper", () => {
 
         await wrapperResource.checkBalanceItem(
             tx,
-            accounts[1],
+            accounts[3],
             "6000000000000000000",
             itemIds[0],
             wrapper
@@ -3924,7 +3916,7 @@ describe("itemv2 ERC1155DeckWrapper", () => {
 
         await wrapperResource.checkBalanceItem(
             tx,
-            accounts[1],
+            accounts[3],
             amountToWrap[2].add(amountToWrap[3]),
             itemIds[2],
             wrapper
@@ -3932,7 +3924,6 @@ describe("itemv2 ERC1155DeckWrapper", () => {
 
         await wrapperResource.checkSupply(
             tx,
-            accounts[1],
             "6000000000000000000",
             itemIds[0],
             wrapper
@@ -4003,6 +3994,26 @@ describe("itemv2 ERC1155DeckWrapper", () => {
             witemAmount[1].div(2),
         ];
 
+        var tokenIdToCheck = [
+            zerionTokenId[0],
+            zerionTokenId[1],
+            zerionTokenId[2],
+            zapperTokenId[0],
+            zapperTokenId[1],
+            witemsTokenId[0],
+            witemsTokenId[1],
+        ];
+
+        var tokenInstanceToCheck = [
+            zerion,
+            zerion,
+            zerion,
+            zapper,
+            zapper,
+            witems,
+            witems,
+        ];
+
         var tx = await wrapper.methods
             .burnBatch(
                 accounts[3],
@@ -4024,31 +4035,73 @@ describe("itemv2 ERC1155DeckWrapper", () => {
                 })
             );
 
-        var amount = "6000000000000000000";
+        var amount = [
+            "2",
+            "2",
+            "2",
+            "1",
+            "1",
+            witemAmount[0].div(2),
+            witemAmount[1].div(2),
+        ];
 
-        // await wrapperResource.checkBalance1155(
-        //     tx,
-        //     wrapper.options.address,
-        //     accounts[3],
-        //     6,
-        //     zapper,
-        //     zapperTokenId[0]
-        // );
+        await Promise.all(
+            tokenIdToCheck.map(async (id, index) => {
+                await wrapperResource.checkBalance1155(
+                    tx,
+                    wrapper.options.address,
+                    accounts[2],
+                    amount[index],
+                    tokenInstanceToCheck[index],
+                    id
+                );
+            })
+        );
 
-        // await wrapperResource.checkBalanceItem(
-        //     tx,
-        //     accounts[1],
-        //     amount.mul(-1),
-        //     zapperItemIds[0],
-        //     wrapper
-        // );
+        await wrapperResource.checkBalanceItem(
+            tx,
+            accounts[3],
+            "-6000000000000000000",
+            zerionItemIds[0],
+            wrapper
+        );
 
-        // await wrapperResource.checkSupply(
-        //     tx,
-        //     amount.mul(-1),
-        //     zapperItemIds[0],
-        //     wrapper
-        // );
+        await wrapperResource.checkBalanceItem(
+            tx,
+            accounts[3],
+            "-2000000000000000000",
+            itemIds[0],
+            wrapper
+        );
+
+        await wrapperResource.checkBalanceItem(
+            tx,
+            accounts[3],
+            amountToUnWrap[5].add(amountToUnWrap[6]).mul(-1),
+            itemIds[2],
+            wrapper
+        );
+
+        await wrapperResource.checkSupply(
+            tx,
+            "-6000000000000000000",
+            zerionItemIds[0],
+            wrapper
+        );
+
+        await wrapperResource.checkSupply(
+            tx,
+            "-2000000000000000000",
+            itemIds[0],
+            wrapper
+        );
+
+        await wrapperResource.checkSupply(
+            tx,
+            amountToUnWrap[5].add(amountToUnWrap[6]).mul(-1),
+            itemIds[2],
+            wrapper
+        );
 
         // #UWB_DZRN_DZAP_DiERC20_6_1.3 END
 
@@ -4087,16 +4140,28 @@ describe("itemv2 ERC1155DeckWrapper", () => {
             witemAmount[0].div(2),
             witemAmount[1].div(2),
         ];
+        var tokenIdToCheck = [
+            zerionTokenId[0],
+            zerionTokenId[1],
+            zerionTokenId[2],
+            zapperTokenId[0],
+            zapperTokenId[1],
+            witemsTokenId[0],
+            witemsTokenId[1],
+        ];
+
+        var tokeninstanceToCheck = [
+            zerion,
+            zerion,
+            zerion,
+            zapper,
+            zapper,
+            witems,
+            witems,
+        ];
+
         var createItem = await wrapperResource.generateCreateItem(
-            [
-                zerionTokenId[0],
-                zerionTokenId[1],
-                zerionTokenId[2],
-                zapperTokenId[0],
-                zapperTokenId[1],
-                witemsTokenId[0],
-                witemsTokenId[1],
-            ],
+            tokenIdToCheck,
             [
                 accounts[3],
                 accounts[3],
@@ -4153,7 +4218,64 @@ describe("itemv2 ERC1155DeckWrapper", () => {
                     )[2]
             );
 
-        //TODO: controlli
+        await Promise.all(
+            tokenIdToCheck.map(async (id, index) => {
+                await wrapperResource.checkBalance1155(
+                    tx,
+                    accounts[2],
+                    wrapper.options.address,
+                    amountToWrap[index],
+                    tokeninstanceToCheck[index],
+                    id
+                );
+            })
+        );
+
+        await wrapperResource.checkBalanceItem(
+            tx,
+            accounts[3],
+            "6000000000000000000",
+            itemIds1[0],
+            wrapper
+        );
+
+        await wrapperResource.checkBalanceItem(
+            tx,
+            accounts[3],
+            "2000000000000000000",
+            itemIds1[3],
+            wrapper
+        );
+
+        await wrapperResource.checkBalanceItem(
+            tx,
+            accounts[3],
+            amountToWrap[5].add(amountToWrap[6]),
+            itemIds1[5],
+            wrapper
+        );
+
+        await wrapperResource.checkSupply(
+            tx,
+            "6000000000000000000",
+            itemIds1[0],
+            wrapper
+        );
+
+        await wrapperResource.checkSupply(
+            tx,
+            "2000000000000000000",
+            itemIds1[3],
+            wrapper
+        );
+
+        await wrapperResource.checkSupply(
+            tx,
+            amountToWrap[5].add(amountToWrap[6]),
+            itemIds1[5],
+            wrapper
+        );
+
         // #W_ZRN_ZAP_iERC20_6_1.4 END
 
         // #UWB_DZRN_DZAP_DiERC20_6_1.5 START
@@ -4318,29 +4440,84 @@ describe("itemv2 ERC1155DeckWrapper", () => {
                 })
             );
 
-        var amount = "6000000000000000000";
+        var amount = ["4", "4", "4", "3", "3", witemAmount[0], witemAmount[1]];
 
-        // await wrapperResource.checkBalance1155(
-        //     tx,
-        //     wrapper.options.address,
-        //     accounts[3],
-        //     6,
-        //     zapper,
-        //     zapperTokenId[0]
-        // );
+        var tokenInstanceToCheck = [
+            zerion,
+            zerion,
+            zerion,
+            zapper,
+            zapper,
+            witems,
+            witems,
+        ];
+
+        var tokenIdToCheck = [
+            zerionTokenId[0],
+            zerionTokenId[1],
+            zerionTokenId[2],
+            zapperTokenId[0],
+            zapperTokenId[1],
+            witemsTokenId[0],
+            witemsTokenId[1],
+        ];
+
+        await Promise.all(
+            tokenIdToCheck.map(async (id, index) => {
+                console.log(id);
+                await wrapperResource.checkBalance1155(
+                    tx,
+                    wrapper.options.address,
+                    accounts[1],
+                    amount[index],
+                    tokenInstanceToCheck[index],
+                    id
+                );
+            })
+        );
+
+        await wrapperResource.checkBalanceItem(
+            tx,
+            accounts[3],
+            "-12000000000000000000",
+            zerionItemIds[0],
+            wrapper
+        );
+
+        await wrapperResource.checkBalanceItem(
+            tx,
+            accounts[3],
+            "-6000000000000000000",
+            itemIds[0],
+            wrapper
+        );
 
         // await wrapperResource.checkBalanceItem(
         //     tx,
-        //     accounts[1],
-        //     amount.mul(-1),
-        //     zapperItemIds[0],
+        //     accounts[3],
+        //     amountToUnWrap[5].add(amountToUnWrap[6]).mul(2).mul(-1),
+        //     itemIds[2],
         //     wrapper
         // );
 
+        await wrapperResource.checkSupply(
+            tx,
+            "-12000000000000000000",
+            zerionItemIds[0],
+            wrapper
+        );
+
+        await wrapperResource.checkSupply(
+            tx,
+            "-6000000000000000000",
+            itemIds[0],
+            wrapper
+        );
+
         // await wrapperResource.checkSupply(
         //     tx,
-        //     amount.mul(-1),
-        //     zapperItemIds[0],
+        //     amountToUnWrap[5].add(amountToUnWrap[6]).mul(2).mul(-1),
+        //     itemIds[2],
         //     wrapper
         // );
 
@@ -4372,6 +4549,26 @@ describe("itemv2 ERC1155DeckWrapper", () => {
                 })
             );
 
+        var tokenids = [
+            zerionTokenId[0],
+            zerionTokenId[1],
+            zerionTokenId[2],
+            zapperTokenId[0],
+            zapperTokenId[1],
+            witemsTokenId[0],
+            witemsTokenId[1],
+        ];
+
+        var tokenInstance = [
+            zerion,
+            zerion,
+            zerion,
+            zapper,
+            zapper,
+            witems,
+            witems,
+        ];
+
         var amountToWrap = [
             4,
             4,
@@ -4387,15 +4584,7 @@ describe("itemv2 ERC1155DeckWrapper", () => {
         ];
 
         var createItem = await wrapperResource.generateCreateItem(
-            [
-                zerionTokenId[0],
-                zerionTokenId[1],
-                zerionTokenId[2],
-                zapperTokenId[0],
-                zapperTokenId[1],
-                witemsTokenId[0],
-                witemsTokenId[1],
-            ],
+            tokenids,
             [
                 accounts[1],
                 accounts[1],
@@ -4425,7 +4614,64 @@ describe("itemv2 ERC1155DeckWrapper", () => {
                 blockchainConnection.getSendingOptions({ from: accounts[1] })
             );
 
-        //TODO: controlli
+        await Promise.all(
+            tokenids.map(async (id, index) => {
+                await wrapperResource.checkBalance1155(
+                    tx,
+                    accounts[1],
+                    wrapper.options.address,
+                    amountToWrap[index],
+                    tokenInstance[index],
+                    id
+                );
+            })
+        );
+
+        await wrapperResource.checkBalanceItem(
+            tx,
+            accounts[1],
+            "6000000000000000000",
+            itemIds[0],
+            wrapper
+        );
+
+        await wrapperResource.checkBalanceItem(
+            tx,
+            accounts[1],
+            amountToWrap[5].add(amountToWrap[6]),
+            itemIds[2],
+            wrapper
+        );
+
+        await wrapperResource.checkBalanceItem(
+            tx,
+            accounts[1],
+            "12000000000000000000",
+            zerionItemIds[0],
+            wrapper
+        );
+
+        await wrapperResource.checkSupply(
+            tx,
+            "6000000000000000000",
+            itemIds[0],
+            wrapper
+        );
+
+        await wrapperResource.checkSupply(
+            tx,
+            amountToWrap[5].add(amountToWrap[6]),
+            itemIds[2],
+            wrapper
+        );
+
+        await wrapperResource.checkSupply(
+            tx,
+            "12000000000000000000",
+            zerionItemIds[0],
+            wrapper
+        );
+
         // #W_ZRN_ZAP_iERC20_6_1.6 END
     });
 
@@ -6895,7 +7141,6 @@ describe("itemv2 ERC1155DeckWrapper", () => {
 
         var datas = [];
 
-        console.log(zerionTokenId);
         datas[0] = web3.eth.abi.encodeParameters(
             ["address", "uint256", "address", "bytes32[]", "bytes"],
             [
@@ -6927,14 +7172,6 @@ describe("itemv2 ERC1155DeckWrapper", () => {
             ]
         );
 
-        console.log(
-            await wrapper.methods
-                .balanceOf(accounts[3], zerionItemIds[0])
-                .call()
-        );
-        console.log(
-            await wrapper.methods.reserveData(utilities.voidBytes32).call()
-        );
         var encodeDatas = web3.eth.abi.encodeParameters(["bytes[]"], [datas]);
 
         var amountToUnWrap = [

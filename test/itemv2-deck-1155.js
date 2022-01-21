@@ -1808,7 +1808,7 @@ describe("itemv2 ERC1155DeckWrapper", () => {
          * #W_OSS_3_1.1              Wrap                OpenSea Storefront     Acc1     Acc1, Acc1             1,1                     A,B                     yes,yes
          * #W_OSS_3_1.2              Wrap                OpenSea Storefront     Acc1     Acc1, Acc1             1                       C                       no
          * #W_OSS_3_1.3              Wrap                OpenSea Storefront     Acc3     Acc3                   1                       D                       yes
-         * 
+         *
          * #UW_DOSS_3_1.4            MF: Unwrap          DOSS                   Acc1    Acc1                    0.6                     C                        no
          * #UW_DOSS_3_1.5            Unwrap              DOSS                   Acc1    Acc1                    1                       C                        no
          * #UW_DOSS_3_1.6            MF: Unwrap          DOSS                   Acc3    Acc3                    1                       A                        yes
@@ -2412,7 +2412,7 @@ describe("itemv2 ERC1155DeckWrapper", () => {
          * Label                ||   Operation        || Token              || From  || Receiver address     || amount               || Token Reference       || Lock
          * #W_OS_OH_4_1.1            Wrap                OS, Oh-oh-oh          Acc3     Acc3, Acc1              x, y                    A, B                     yes,yes
          * #W_iETH_4_1.2             Wrap                Ethereum item         Acc3     Acc3                    z                       C                        yes
-         * 
+         *
          * #UW_DOH_4_1.3             MF: Unwrap          DOH                    Acc1    Acc1                    y                       B                        yes
          * #UW_DOH_4_1.4             MF: Unwrap          DOH                    Acc3    Acc3                    x                       B(passing key bytes32(0) yes
          * #UW_DOH_4_1.5             MF: Unwrap          DOH                    Acc3    Acc3                    x                       B(passing OS key         yes
@@ -3100,7 +3100,7 @@ describe("itemv2 ERC1155DeckWrapper", () => {
         /**
          * Label                ||   Operation        || Token              || From  || Receiver address     || amount               || Token Reference       || Lock
          * #W_ZAP_5_1.1              Wrap                Zapper                Acc1     Acc1                    3,4,5                   A, B, C                  yes,yes,yes
-         * 
+         *
          * #TRA_DZAP_5_1.2           Transfer            DZAP                   Acc1    Acc2                    6                       //                       //
          * #UWB_DZAP_5_1.3           MF: Unwrap Batch    DZAP                   Acc2    Acc2                    1,2,3                   A,B,C                    yes,yes,yes
          * #UWB_DZAP_5_1.4           Unwrap Batch        DZAP                   Acc1    Acc3                    1,2,3                   A,B,C                    yes,yes,yes
@@ -3233,7 +3233,7 @@ describe("itemv2 ERC1155DeckWrapper", () => {
                     from: accounts[1],
                 })
             );
-        
+
         // // #TRA_DZAP_5_1.2 END
 
         // #UWB_DZAP_5_1.3 START
@@ -3275,7 +3275,7 @@ describe("itemv2 ERC1155DeckWrapper", () => {
                 ),
             "Cannot unlock"
         );
-        
+
         // #UWB_DZAP_5_1.3 END
 
         // #UWB_DZAP_5_1.4 START
@@ -3615,12 +3615,13 @@ describe("itemv2 ERC1155DeckWrapper", () => {
         // #UWB_DZAP_5_1.8 END
     });
 
-    it("#6", async () => {//TODO: controlli
+    it("#6", async () => {
+        //TODO: controlli
         /**
          * Label                       ||   Operation        || Token                    || From  || Receiver address ||amount                                      || Token Reference                  || Lock
          * #W_ZRN_6_1.1                     Wrap                Zerion                      Acc3     Acc3                4,4,4                                         A,B,C                               yes,no,yes
          * #W_ZAP_iERC20_6_1.2              Wrap                Zapper,iERC20 item          Acc3     Acc3                3,3,x,y                                       D,E,F,G                             no,yes,yes,yes
-         * 
+         *
          * #UWB_DZRN_DZAP_DiERC20_6_1.3     Unwrap Batch        DZRN,DZAP,DiERC20           Acc1     Acc2                2,2,2,1,1,x/2,y/2                             A,B,C,D,E,F,G                       yes,no, yes,no,yes,yes,yes
          * #W_ZRN_ZAP_iERC20_6_1.4          Wrap                Zerion,Zapper,iERC20 item   Acc2     Acc1                2,2,2,1,1,x/2,y/2                             A+,B+,C+,D+,E+,F+,G+                no,no,no,no,no,no,no
          * #UWB_DZRN_DZAP_DiERC20_6_1.5     Unwrap Batch        DZRN,DZAP,DiERC20           Acc1     Acc3                2,2,2,2,2,x/2,y/2,2,2,2,1,1,x/2,y/2           A,B,C,D,E,F,G,A+,B+,C+,D+,E+,F+,G+  yes,no, yes,no,yes,yes,yes,no,no,no,no,no,no,no
@@ -3676,12 +3677,14 @@ describe("itemv2 ERC1155DeckWrapper", () => {
 
         var encodeDatas = web3.eth.abi.encodeParameters(["bytes[]"], [datas]);
 
+        var amountToWrap = [4, 4, 4];
+
         tx = await zerion.methods
             .safeBatchTransferFrom(
                 accounts[3],
                 wrapper.options.address,
                 [zerionTokenId[0], zerionTokenId[1], zerionTokenId[2]],
-                [4, 4, 4],
+                amountToWrap,
                 encodeDatas
             )
             .send(
@@ -3715,7 +3718,34 @@ describe("itemv2 ERC1155DeckWrapper", () => {
                     )[2]
             );
 
-        //TODO: controlli
+        await Promise.all(
+            zerionTokenId.map(async (id, index) => {
+                await wrapperResource.checkBalance1155(
+                    tx,
+                    accounts[1],
+                    wrapper.options.address,
+                    amountToWrap[index],
+                    zerion,
+                    id
+                );
+            })
+        );
+
+        await wrapperResource.checkBalanceItem(
+            tx,
+            accounts[1],
+            "12000000000000000000",
+            zerionItemIds[0],
+            wrapper
+        );
+
+        await wrapperResource.checkSupply(
+            tx,
+            "12000000000000000000",
+            zerionItemIds[0],
+            wrapper
+        );
+
         // #W_ZRN_6_1.1 END
 
         var tokenHolderWitems = "0xdc0090f8add5db06de0897a54e753af143668668";
@@ -3795,7 +3825,7 @@ describe("itemv2 ERC1155DeckWrapper", () => {
                     );
             })
         );
-        
+
         // #W_ZAP_iERC20_6_1.2 START
 
         await zapper.methods
@@ -3814,14 +3844,16 @@ describe("itemv2 ERC1155DeckWrapper", () => {
                 })
             );
 
+        var tokenids = [
+            zapperTokenId[0],
+            zapperTokenId[1],
+            witemsTokenId[0],
+            witemsTokenId[1],
+        ];
+        var tokenInstance = [zapper, zapper, witems, witems];
         var amountToWrap = [3, 3, witemAmount[0], witemAmount[1]];
         var createItem = await wrapperResource.generateCreateItem(
-            [
-                zapperTokenId[0],
-                zapperTokenId[1],
-                witemsTokenId[0],
-                witemsTokenId[1],
-            ],
+            tokenids,
             [accounts[3], accounts[3], accounts[3], accounts[3]],
             [zapperAddress, zapperAddress, witemsAddress, witemsAddress],
             amountToWrap
@@ -3862,29 +3894,56 @@ describe("itemv2 ERC1155DeckWrapper", () => {
                     )[2]
             );
 
-        // await wrapperResource.checkBalance1155(
-        //     tx,
-        //     accounts[1],
-        //     wrapper.options.address,
-        //     amountToWrap[0],
-        //     witems,
-        //     witemsTokenId[0]
-        // );
+        var normalizedAmountToWrap = [
+            "3000000000000000000",
+            "3000000000000000000",
+            witemAmount[0],
+            witemAmount[1],
+        ];
 
-        // await wrapperResource.checkBalanceItem(
-        //     tx,
-        //     accounts[3],
-        //     amountToWrap[0],
-        //     witemsItemIds[0],
-        //     wrapper
-        // );
+        await Promise.all(
+            tokenids.map(async (id, index) => {
+                await wrapperResource.checkBalance1155(
+                    tx,
+                    accounts[1],
+                    wrapper.options.address,
+                    amountToWrap[index],
+                    tokenInstance[index],
+                    id
+                );
+            })
+        );
 
-        // await wrapperResource.checkSupply(
-        //     tx,
-        //     amountToWrap[0],
-        //     witemsItemIds[0],
-        //     wrapper
-        // );
+        await wrapperResource.checkBalanceItem(
+            tx,
+            accounts[1],
+            "6000000000000000000",
+            itemIds[0],
+            wrapper
+        );
+
+        await wrapperResource.checkBalanceItem(
+            tx,
+            accounts[1],
+            amountToWrap[2].add(amountToWrap[3]),
+            itemIds[2],
+            wrapper
+        );
+
+        await wrapperResource.checkSupply(
+            tx,
+            accounts[1],
+            "6000000000000000000",
+            itemIds[0],
+            wrapper
+        );
+
+        await wrapperResource.checkSupply(
+            tx,
+            amountToWrap[2].add(amountToWrap[3]),
+            itemIds[2],
+            wrapper
+        );
 
         // #W_ZAP_iERC20_6_1.2 END
 
@@ -4094,7 +4153,7 @@ describe("itemv2 ERC1155DeckWrapper", () => {
                     )[2]
             );
 
-    //TODO: controlli
+        //TODO: controlli
         // #W_ZRN_ZAP_iERC20_6_1.4 END
 
         // #UWB_DZRN_DZAP_DiERC20_6_1.5 START
@@ -4366,7 +4425,7 @@ describe("itemv2 ERC1155DeckWrapper", () => {
                 blockchainConnection.getSendingOptions({ from: accounts[1] })
             );
 
-            //TODO: controlli
+        //TODO: controlli
         // #W_ZRN_ZAP_iERC20_6_1.6 END
     });
 
@@ -4374,7 +4433,7 @@ describe("itemv2 ERC1155DeckWrapper", () => {
         /**
          * Label                       ||   Operation        || Token                    || From  || Receiver address ||amount    || Token Reference     || Lock
          * #W_FLU_ADI_7_1.1                 Wrap                FLUF,Adidas                 Acc1     Acc1                4,5         A,B                    yes,yes
-         * 
+         *
          * #W_FLU_ADI_7_1.2                 MF:Wrap             FLUF,Adidas                 Acc1     Acc1                4,5         A,B                    yes,yes
          * #UWB_DFLU_DADI_7_1.3             Unwrap Batch        DFLU,DADI                   Acc1     Acc1                4,5         A,B                    yes,yes
          * #W_FLU_ADI_7_1.4                 Wrap                FLUF,Adidas                 Acc1     Acc1                4,5         A+,B+                  yes,yes
@@ -5751,7 +5810,7 @@ describe("itemv2 ERC1155DeckWrapper", () => {
                 ),
             "amount"
         );
-        
+
         // #UW_DOSS_8_2.1 END
 
         // #W_OSS_8_2.2 START
@@ -5803,7 +5862,7 @@ describe("itemv2 ERC1155DeckWrapper", () => {
             openseaItemIds[0],
             wrapper
         );
-        
+
         // #W_OSS_8_2.2 END
 
         // #UW_DOSS_8_2.4 START
@@ -6857,7 +6916,7 @@ describe("itemv2 ERC1155DeckWrapper", () => {
                 "0x",
             ]
         );
-        datas[1] = web3.eth.abi.encodeParameters(
+        datas[2] = web3.eth.abi.encodeParameters(
             ["address", "uint256", "address", "bytes32[]", "bytes"],
             [
                 zerionAddress,
@@ -6878,7 +6937,11 @@ describe("itemv2 ERC1155DeckWrapper", () => {
         );
         var encodeDatas = web3.eth.abi.encodeParameters(["bytes[]"], [datas]);
 
-        var amountToUnWrap = [1, 1, 1];
+        var amountToUnWrap = [
+            "1000000000000000000",
+            "1000000000000000000",
+            "1000000000000000000",
+        ];
 
         var tx = await wrapper.methods
             .burnBatch(
@@ -6893,13 +6956,18 @@ describe("itemv2 ERC1155DeckWrapper", () => {
                 })
             );
 
+        var tokenIdToCheck = [
+            zerionTokenId[1],
+            zerionTokenId[3],
+            zerionTokenId[5],
+        ];
         await Promise.all(
-            zerionTokenId.slice(2).map(async (id, index) => {
+            tokenIdToCheck.map(async (id, index) => {
                 await wrapperResource.checkBalance1155(
                     tx,
                     wrapper.options.address,
                     accounts[3],
-                    amountToUnWrap[index],
+                    1,
                     zerion,
                     id
                 );
@@ -6952,26 +7020,42 @@ describe("itemv2 ERC1155DeckWrapper", () => {
                 blockchainConnection.getSendingOptions({ from: accounts[3] })
             );
 
-        await wrapperResource.checkBalance1155(
-            tx,
-            accounts[1],
-            wrapper.options.address,
-            amountToWrap[0],
-            zerion,
-            zerionTokenId[1]
+        var tokenIdToCheck = [
+            zerionTokenId[1],
+            zerionTokenId[3],
+            zerionTokenId[5],
+        ];
+
+        await Promise.all(
+            tokenIdToCheck.map(async (id, index) => {
+                await wrapperResource.checkBalance1155(
+                    tx,
+                    accounts[3],
+                    wrapper.options.address,
+                    amountToWrap[index],
+                    zerion,
+                    id
+                );
+            })
         );
 
         await wrapperResource.checkBalanceItem(
             tx,
-            accounts[1],
-            utilities.normalizeValue(amountToWrap[0], 0),
+            accounts[3],
+            utilities
+                .normalizeValue(amountToWrap[0], 0)
+                .add(utilities.normalizeValue(amountToWrap[1], 0))
+                .add(utilities.normalizeValue(amountToWrap[2], 0)),
             zerionItemIds[0],
             wrapper
         );
 
         await wrapperResource.checkSupply(
             tx,
-            utilities.normalizeValue(amountToWrap[0], 0),
+            utilities
+                .normalizeValue(amountToWrap[0], 0)
+                .add(utilities.normalizeValue(amountToWrap[1], 0))
+                .add(utilities.normalizeValue(amountToWrap[2], 0)),
             zerionItemIds[0],
             wrapper
         );

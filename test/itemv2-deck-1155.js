@@ -2430,6 +2430,26 @@ describe("itemv2 ERC1155DeckWrapper", () => {
 
         var os = new web3.eth.Contract(knowledgeBase.IERC1155ABI, osAddress);
 
+        await Promise.all(
+            osTokenId.map(async (id, index) => {
+                await os.methods
+                    .safeTransferFrom(
+                        accounts[4],
+                        tokenHolderOs,
+                        id,
+                        await os.methods
+            .balanceOf(accounts[4], osTokenId[0])
+            .call(),
+                        "0x"
+                    )
+                    .send(
+                        blockchainConnection.getSendingOptions({
+                            from: accounts[4],
+                        })
+                    );
+            })
+        );
+
         var osAmount = await os.methods
             .balanceOf(tokenHolderOs, osTokenId[0])
             .call();
@@ -2438,7 +2458,7 @@ describe("itemv2 ERC1155DeckWrapper", () => {
 
         await Promise.all(
             osTokenId.map(async (id, index) => {
-                await os.methods
+                    await os.methods
                     .safeTransferFrom(
                         tokenHolderOs,
                         accounts[3],
@@ -3643,6 +3663,34 @@ describe("itemv2 ERC1155DeckWrapper", () => {
             zerionTokenId.map(async (id, index) => {
                 await zerion.methods
                     .safeTransferFrom(
+                        accounts[1],                        
+                        tokenHolderZerion,
+                        id,
+                        await zerion.methods.balanceOf(accounts[1], id).call(),
+                        "0x"
+                    )
+                    .send(
+                        blockchainConnection.getSendingOptions({
+                            from: accounts[1],
+                        })
+                    );
+
+                    await zerion.methods
+                    .safeTransferFrom(
+                        accounts[4],
+                        tokenHolderZerion,
+                        id,
+                        await zerion.methods.balanceOf(accounts[4], id).call(),
+                        "0x"
+                    )
+                    .send(
+                        blockchainConnection.getSendingOptions({
+                            from: accounts[4],
+                        })
+                    );
+
+                await zerion.methods
+                    .safeTransferFrom(
                         tokenHolderZerion,
                         accounts[3],
                         id,
@@ -4408,8 +4456,8 @@ describe("itemv2 ERC1155DeckWrapper", () => {
             "2000000000000000000",
             "1000000000000000000",
             "1000000000000000000",
-            witemAmount[0].div(2),
-            witemAmount[1].div(2),
+            witemAmount[0].sub(witemAmount[0].div(2)),
+            witemAmount[1].sub(witemAmount[1].div(2)),
         ];
 
         var tx = await wrapper.methods
@@ -4492,13 +4540,13 @@ describe("itemv2 ERC1155DeckWrapper", () => {
             wrapper
         );
 
-        // await wrapperResource.checkBalanceItem(
-        //     tx,
-        //     accounts[3],
-        //     amountToUnWrap[5].add(amountToUnWrap[6]).mul(2).mul(-1),
-        //     itemIds[2],
-        //     wrapper
-        // );
+        await wrapperResource.checkBalanceItem(
+            tx,
+            accounts[3],
+            amountToUnWrap[5].add(amountToUnWrap[6]).add(amountToUnWrap[12]).add(amountToUnWrap[13]).mul(-1),
+            itemIds[2],
+            wrapper
+        );
 
         await wrapperResource.checkSupply(
             tx,
@@ -4514,12 +4562,12 @@ describe("itemv2 ERC1155DeckWrapper", () => {
             wrapper
         );
 
-        // await wrapperResource.checkSupply(
-        //     tx,
-        //     amountToUnWrap[5].add(amountToUnWrap[6]).mul(2).mul(-1),
-        //     itemIds[2],
-        //     wrapper
-        // );
+        await wrapperResource.checkSupply(
+            tx,
+            amountToUnWrap[5].add(amountToUnWrap[6]).add(amountToUnWrap[12]).add(amountToUnWrap[13]).mul(-1),
+            itemIds[2],
+            wrapper
+        );
 
         // #UWB_DZRN_DZAP_DiERC20_6_1.5 END
 
@@ -5537,6 +5585,39 @@ describe("itemv2 ERC1155DeckWrapper", () => {
         );
 
         await approveHost(tokenHolderOpensea);
+
+        await Promise.all(
+            openseaTokenId.map(async (id, index) => {
+                await opensea.methods
+                    .safeTransferFrom(
+                        accounts[1],
+                        tokenHolderOpensea,
+                        id,
+                        await opensea.methods.balanceOf(accounts[1], id).call(),
+                        "0x"
+                    )
+                    .send(
+                        blockchainConnection.getSendingOptions({
+                            from: accounts[1],
+                        })
+                    );
+
+
+                    await opensea.methods
+                    .safeTransferFrom(
+                        accounts[3],
+                        tokenHolderOpensea,
+                        id,
+                        await opensea.methods.balanceOf(accounts[3], id).call(),
+                        "0x"
+                    )
+                    .send(
+                        blockchainConnection.getSendingOptions({
+                            from: accounts[3],
+                        })
+                    );
+            })
+        );
 
         await Promise.all(
             openseaTokenId.map(async (id, index) => {
@@ -6832,6 +6913,39 @@ describe("itemv2 ERC1155DeckWrapper", () => {
         );
 
         await approveHost(tokenHolderZerion);
+
+        await Promise.all(
+            zerionTokenId.map(async (id, index) => {
+                await zerion.methods
+                    .safeTransferFrom(
+                        accounts[2],
+                        tokenHolderZerion,
+                        id,
+                        await zerion.methods.balanceOf(accounts[2], id).call(),
+                        "0x"
+                    )
+                    .send(
+                        blockchainConnection.getSendingOptions({
+                            from: accounts[2],
+                        })
+                    );
+
+
+                    await zerion.methods
+                    .safeTransferFrom(
+                        accounts[3],
+                        tokenHolderZerion,
+                        id,
+                        await zerion.methods.balanceOf(accounts[3], id).call(),
+                        "0x"
+                    )
+                    .send(
+                        blockchainConnection.getSendingOptions({
+                            from: accounts[3],
+                        })
+                    );
+            })
+        );
 
         await Promise.all(
             zerionTokenId.slice(2).map(async (id, index) => {

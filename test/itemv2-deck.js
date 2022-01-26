@@ -776,7 +776,7 @@ describe("itemv2 ERC721DeckWrapper", () => {
                 );
             })
         );
-        
+
         // #W_ENS_2_1.1 START
         var createItem = await wrapperResource.generateCreateItem(
             ENSTokenId,
@@ -796,7 +796,7 @@ describe("itemv2 ERC721DeckWrapper", () => {
             " "
         );
         // #W_ENS_2_1.1 END
-        
+
         // #W_ENS_2_1.2 START
         var createItem = await wrapperResource.generateCreateItem(
             [0],
@@ -1103,7 +1103,7 @@ describe("itemv2 ERC721DeckWrapper", () => {
         );
 
         // #UWB_DENS_DUNI_2_1.7 END
-        
+
         // #UWB_DENS_DUNI_2_1.8 START
         datas[0] = web3.eth.abi.encodeParameters(
             ["address", "uint256", "address", "bytes", "bool", "bool"],
@@ -1133,7 +1133,7 @@ describe("itemv2 ERC721DeckWrapper", () => {
             " "
         );
         // #UWB_DENS_DUNI_2_1.8 END
-        
+
         // #UWB_DENS_DUNI_2_1.9 END
         datas[0] = web3.eth.abi.encodeParameters(
             ["address", "uint256", "address", "bytes", "bool", "bool"],
@@ -3992,7 +3992,7 @@ describe("itemv2 ERC721DeckWrapper", () => {
         /**
          * Label            ||   Operation        || Token         || From  || Receiver address ||amount    || Token Reference             || Lock
          * #W_BA_7_1.1           Wrap                Bored Ape        Acc1     Acc1               1            A                               yes
-         * 
+         *
          * #UW_DBA_7_1.2         Unwrap              DBA              Acc1     Acc1               1            A                               yes
          * #W_BA_7_1.3           Wrap                Bored Ape        Acc1     Acc1,Acc2          1,1          A+,B                            yes,yes
          * #W_BA_GODS_7_1.4      Wrap                Bored Ape,GODS   Acc2     Acc2               1,1          C,D                             yes,yes
@@ -4008,7 +4008,7 @@ describe("itemv2 ERC721DeckWrapper", () => {
          * #UW_DBA_7_2.4         Unwrap              DBA              Acc1     Acc1               1            A+                              yes
          * #UWB_DBA_DGODS_7_2.5  Unwrap batch        DBA,DGODS        Acc2     Acc1               1,1,0.51     B,C,D                           yes,yes,yes
          */
-       
+
         var tokenHolderBoredApe = "0x1b523DC90A79cF5ee5d095825e586e33780f7188";
 
         var boredApeTokenAddresss =
@@ -4066,6 +4066,8 @@ describe("itemv2 ERC721DeckWrapper", () => {
                     from: accounts[2],
                 })
             );
+
+        // #W_BA_7_1.1 START
 
         var createItem = await wrapperResource.generateCreateItem(
             [boredApeTokenId[0]],
@@ -4126,6 +4128,10 @@ describe("itemv2 ERC721DeckWrapper", () => {
             wrapper
         );
 
+        // #W_BA_7_1.1 END
+
+        // #UW_DBA_7_1.2 START
+
         var data = web3.eth.abi.encodeParameters(
             ["address", "uint256", "address", "bytes", "bool", "bool"],
             [
@@ -4169,6 +4175,8 @@ describe("itemv2 ERC721DeckWrapper", () => {
             boredApeItemIds[0],
             wrapper
         );
+
+        // #UW_DBA_7_1.2 END
 
         var tokenHolder = "0x7891f796a5d43466fC29F102069092aEF497a290";
 
@@ -4221,6 +4229,8 @@ describe("itemv2 ERC721DeckWrapper", () => {
                 })
             );
 
+        // #W_BA_7_1.3 START
+
         var createItem = await wrapperResource.generateCreateItem(
             [boredApeTokenId[0], boredApeTokenId[1]],
             [accounts[1], accounts[2]],
@@ -4235,6 +4245,42 @@ describe("itemv2 ERC721DeckWrapper", () => {
             .send(
                 blockchainConnection.getSendingOptions({ from: accounts[1] })
             );
+
+        await wrapperResource.checkBalance(
+            tx,
+            accounts[1],
+            wrapper.options.address,
+            "2",
+            boredApe,
+            [boredApeTokenId[0], boredApeTokenId[1]]
+        );
+
+        await wrapperResource.checkBalanceItem(
+            tx,
+            accounts[1],
+            "1000000000000000000",
+            boredApeItemIds[0],
+            wrapper
+        );
+
+        await wrapperResource.checkBalanceItem(
+            tx,
+            accounts[2],
+            "1000000000000000000",
+            boredApeItemIds[0],
+            wrapper
+        );
+
+        await wrapperResource.checkSupply(
+            tx,
+            "2000000000000000000",
+            boredApeItemIds[0],
+            wrapper
+        );
+
+        // #W_BA_7_1.3 END
+
+        // #W_BA_GODS_7_1.4 START
 
         var createItem = await wrapperResource.generateCreateItem(
             [boredApeTokenId[2], godsTokenId[0]],
@@ -4286,6 +4332,10 @@ describe("itemv2 ERC721DeckWrapper", () => {
             wrapper
         );
 
+        // #W_BA_GODS_7_1.4 END
+
+        // #UW_DBA_7_1.5 START
+
         var data = web3.eth.abi.encodeParameters(
             ["address", "uint256", "address", "bytes", "bool", "bool"],
             [
@@ -4314,6 +4364,10 @@ describe("itemv2 ERC721DeckWrapper", () => {
             "cannot unlock"
         );
 
+        // #UW_DBA_7_1.5 END
+
+        // #UW_DGODS_7_1.6 START
+
         var data = web3.eth.abi.encodeParameters(
             ["address", "uint256", "address", "bytes", "bool", "bool"],
             [godsTokenAddresss, godsTokenId[0], accounts[1], "0x", false, false]
@@ -4334,6 +4388,10 @@ describe("itemv2 ERC721DeckWrapper", () => {
                 ),
             "wrong erc721"
         );
+
+        // #UW_DGODS_7_1.6 END
+
+        // #UW_DBA_7_1.7 START
 
         var data = web3.eth.abi.encodeParameters(
             ["address", "uint256", "address", "bytes", "bool", "bool"],
@@ -4358,6 +4416,10 @@ describe("itemv2 ERC721DeckWrapper", () => {
             "Wrong ERC721"
         );
 
+        // #UW_DBA_7_1.7 END
+
+        // #UW_DGODS_7_1.8 START
+
         var data = web3.eth.abi.encodeParameters(
             ["address", "uint256", "address", "bytes", "bool", "bool"],
             [godsTokenAddresss, godsTokenId[0], accounts[1], "0x", false, false]
@@ -4374,7 +4436,15 @@ describe("itemv2 ERC721DeckWrapper", () => {
             "Wrong ERC721"
         );
 
+        // #UW_DGODS_7_1.8 END
+
+        // JumpToBlock START
+
         await blockchainConnection.fastForward(blockToSkip);
+
+        // JumpToBlock END
+
+        // #UW_DBA_7_1.9 START
 
         var data = web3.eth.abi.encodeParameters(
             ["address", "uint256", "address", "bytes", "bool", "bool"],
@@ -4404,6 +4474,10 @@ describe("itemv2 ERC721DeckWrapper", () => {
             "Wrong ERC721"
         );
 
+        // #UW_DBA_7_1.9 END
+
+        // #UW_DBA_7_2.1 START
+
         var data = web3.eth.abi.encodeParameters(
             ["address", "uint256", "address", "bytes", "bool", "bool"],
             [
@@ -4426,6 +4500,10 @@ describe("itemv2 ERC721DeckWrapper", () => {
                 ),
             "Wrong ERC721"
         );
+
+        // #UW_DBA_7_2.1 END
+
+        // #UW_DBA_7_2.2 START
 
         var data = web3.eth.abi.encodeParameters(
             ["address", "uint256", "address", "bytes", "bool", "bool"],
@@ -4455,6 +4533,10 @@ describe("itemv2 ERC721DeckWrapper", () => {
             "Wrong ERC721"
         );
 
+        // #UW_DBA_7_2.2 END
+
+        // #UW_DBA_7_2.3 START
+
         var data = web3.eth.abi.encodeParameters(
             ["address", "uint256", "address", "bytes", "bool", "bool"],
             [
@@ -4477,6 +4559,10 @@ describe("itemv2 ERC721DeckWrapper", () => {
                 ),
             "Wrong ERC721"
         );
+
+        // #UW_DBA_7_2.3 END
+
+        // #UW_DBA_7_2.4 START
 
         var data = web3.eth.abi.encodeParameters(
             ["address", "uint256", "address", "bytes", "bool", "bool"],
@@ -4521,6 +4607,10 @@ describe("itemv2 ERC721DeckWrapper", () => {
             boredApeItemIds[0],
             wrapper
         );
+
+        // #UW_DBA_7_2.4 END
+
+        // #UWB_DBA_DGODS_7_2.5 START
 
         var datas = [];
 
@@ -4617,5 +4707,7 @@ describe("itemv2 ERC721DeckWrapper", () => {
             itemIds[1],
             wrapper
         );
+
+        // #UWB_DBA_DGODS_7_2.5 END
     });
 });

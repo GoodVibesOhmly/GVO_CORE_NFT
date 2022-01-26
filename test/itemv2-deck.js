@@ -129,8 +129,8 @@ describe("itemv2 ERC721DeckWrapper", () => {
         /**
          * Label            ||   Operation      || Token         || From || Receiver address || amount    || Token Reference    || Lock
          * #W_BA_1_1.1           Wrap              Bored Ape        Acc1        Acc1               3          A,B, C               yes, yes, no
-         * #W_GODS_1_1.2         Wrap              Gods             Acc2        Acc3               1          D                    no
-         * #W_GODS_1_1.3         Wrap              Gods             Acc2        Acc2               1          E                    yes
+         * #W_GODS_1_1.2         Wrap              Gods             Acc2        Acc2               1          D                    no
+         * #W_GODS_1_1.3         Wrap              Gods             Acc2        Acc3               1          E                    yes
          *
          * #UWB_DBA_1_1.4        MF: Unwrap batch  DBA              Acc1        Acc3               1.51       A, B                 yes, yes
          * #UW_DBA_1_1.5         MF: Unwrap        DBA              Acc1        Acc3               0.51       A                    yes
@@ -1420,11 +1420,11 @@ describe("itemv2 ERC721DeckWrapper", () => {
          * #W_GODS_3_1.8          Wrap              GODS            Acc3        Acc3              1            A+                   no
          * #UW_DGODS_3_1.9        Unwrap            DGODS           Acc3        Acc3              0.6          A+                   no
          * #UW_DGODS_3_2.1        MF: Unwrap        DGODS           Acc3        Acc3              0.4          B                    yes
-         * #W_GODS_3_2.2          Wrap              GODS            Acc2        Acc2              1            A++                  no
-         * #UW_DBA_3_2.3          MF: Unwrap        DBA             Acc3        Acc3              0.6          C                    no
-         * #UW_DGODS_3_2.4        Unwrap            DGODS           Acc3        Acc3              0.51         B                    yes
+         * #W_GODS_3_2.2          Wrap              GODS            Acc2        Acc3              1            A++                  no
+         * #UW_DGODS_3_2.3        Unwrap            DGODS           Acc3        Acc3              0.51         B                    yes
+         * #UW_DBA_3_2.4          MF: Unwrap        DBA             Acc3        Acc3              0.6          C                    no
          * #BRN_DBA_3_2.5         Burn(Interop.)    DBA             Acc4        //                1.4          //                   //
-         * #UW_DBA_3_2.6          Unwrap            DBA             Acc3        Acc3              0.6          C                    no
+         * #UW_DBA_3_2.6          Unwrap            DBA             Acc4        Acc3              0.6          C                    no
          * #W_BA_3_2.7            Wrap              BORED APE       Acc4        Acc4              1            C+                   no
          * #UW_DBA_3_2.8          Unwrap            DBA             Acc4        Acc4              0.6          D                    yes
          * #W_BA_3_2.9            Wrap              BORED APE       Acc4        Acc5              1            D+                   no
@@ -2761,14 +2761,14 @@ describe("itemv2 ERC721DeckWrapper", () => {
         // #UW_DEP_5_1.4 START
     });
 
-    it("#5.1", async () => {
+    it("#5b", async () => {
         /**
          * Label            ||   Operation      || Token         || From || Receiver address || amount    || Token Reference    || Lock
-         * #W_EP_5_1.1           Wrap              Ether Pirates    Acc1        Acc1               1          A                    yes
+         * #W_DOO_5b_1.1         Wrap              Doodle          Acc1        Acc1               1          A                    yes
          *
-         * #UW_DEP_5_1.2         Unwrap            DEP              Acc1        Acc2               0.6        A                    yes
-         * #W_EP_5_1.3           Wrap              Ether Pirates    Acc2        Acc1               1          A+                   no
-         * #UW_DEP_5_1.4         Unwrap            DEP              Acc1        Acc2               0.7        A+                   no
+         * #UW_DDOO_5b_1.2       Unwrap            DDOO            Acc1        Acc2               0.6        A                    yes
+         * #W_DOO_5b_1.3         Wrap              Doodle          Acc2        Acc1               1          A+                   no
+         * #UW_DDOO_5b_1.4       Unwrap            DDOO            Acc1        Acc2               0.7        A+                   no
          */
 
         var tokenHolderDoodle = "0xc41a84d016b1391fa0f4048d37d3131988412360";

@@ -4267,33 +4267,42 @@ describe("itemv2 ERC721DeckWrapper", () => {
             ]
         );
 
-        await catchCall(wrapper.methods
-            .burn(accounts[2], boredApeItemIds[0], "1000000000000000000", data)
-            .send(
-                blockchainConnection.getSendingOptions({
-                    from: accounts[2],
-                })
-            ), "cannot unlock");
+        await catchCall(
+            wrapper.methods
+                .burn(
+                    accounts[2],
+                    boredApeItemIds[0],
+                    "1000000000000000000",
+                    data
+                )
+                .send(
+                    blockchainConnection.getSendingOptions({
+                        from: accounts[2],
+                    })
+                ),
+            "cannot unlock"
+        );
 
         var data = web3.eth.abi.encodeParameters(
             ["address", "uint256", "address", "bytes", "bool", "bool"],
-            [
-                boredApeTokenAddresss,
-                boredApeTokenId[0],
-                accounts[1],
-                "0x",
-                false,
-                false,
-            ]
+            [godsTokenAddresss, godsTokenId[0], accounts[1], "0x", false, false]
         );
 
-        await catchCall(wrapper.methods
-            .burn(accounts[2], boredApeItemIds[0], "1000000000000000000", data)
-            .send(
-                blockchainConnection.getSendingOptions({
-                    from: accounts[2],
-                })
-            ), "cannot unlock");
+        await catchCall(
+            wrapper.methods
+                .burn(
+                    accounts[1],
+                    boredApeItemIds[0],
+                    "1000000000000000000",
+                    data
+                )
+                .send(
+                    blockchainConnection.getSendingOptions({
+                        from: accounts[1],
+                    })
+                ),
+            "wrong erc721"
+        );
 
         var data = web3.eth.abi.encodeParameters(
             ["address", "uint256", "address", "bytes", "bool", "bool"],
@@ -4376,13 +4385,16 @@ describe("itemv2 ERC721DeckWrapper", () => {
             ]
         );
 
-        await catchCall(wrapper.methods
-            .burn(accounts[1], 0, "1000000000000000000", data)
-            .send(
-                blockchainConnection.getSendingOptions({
-                    from: accounts[1],
-                })
-            ), "Wrong ERC721");
+        await catchCall(
+            wrapper.methods
+                .burn(accounts[1], 0, "1000000000000000000", data)
+                .send(
+                    blockchainConnection.getSendingOptions({
+                        from: accounts[1],
+                    })
+                ),
+            "Wrong ERC721"
+        );
 
         var data = web3.eth.abi.encodeParameters(
             ["address", "uint256", "address", "bytes", "bool", "bool"],
@@ -4424,13 +4436,16 @@ describe("itemv2 ERC721DeckWrapper", () => {
             ]
         );
 
-        await catchCall(wrapper.methods
-            .burn(accounts[2], 0, "1000000000000000000", data)
-            .send(
-                blockchainConnection.getSendingOptions({
-                    from: accounts[2],
-                })
-            ), "Wrong ERC721");
+        await catchCall(
+            wrapper.methods
+                .burn(accounts[2], 0, "1000000000000000000", data)
+                .send(
+                    blockchainConnection.getSendingOptions({
+                        from: accounts[2],
+                    })
+                ),
+            "Wrong ERC721"
+        );
 
         var data = web3.eth.abi.encodeParameters(
             ["address", "uint256", "address", "bytes", "bool", "bool"],

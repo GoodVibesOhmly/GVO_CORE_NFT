@@ -2569,9 +2569,24 @@ describe("itemv2 ERC1155DeckWrapper", () => {
                 })
             );
 
+        await elite.methods
+            .setApprovalForAll(wrapper.options.address, accounts[2])
+            .send(
+                blockchainConnection.getSendingOptions({
+                    from: accounts[2],
+                })
+            );
+
         // #W_APE_2_1.1 START
 
         var amountToWrap = [3, 4];
+
+        await elite.methods
+            .safeTransferFrom(accounts[1], accounts[2], "0", 4, "0x")
+            .send(
+                blockchainConnection.getSendingOptions({ from: accounts[1] })
+            );
+
         var createItem = await wrapperResource.generateCreateItem(
             [eliteTokenId[0]],
             [accounts[1]],
@@ -2626,7 +2641,7 @@ describe("itemv2 ERC1155DeckWrapper", () => {
         var tx = await wrapper.methods
             .mintItems(createItem, lock)
             .send(
-                blockchainConnection.getSendingOptions({ from: accounts[1] })
+                blockchainConnection.getSendingOptions({ from: accounts[2] })
             );
 
         var logs = (await web3.eth.getTransactionReceipt(tx.transactionHash))

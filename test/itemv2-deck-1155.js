@@ -4658,7 +4658,7 @@ describe("itemv2 ERC1155DeckWrapper", () => {
         );
         datas[1] = abi.encode(
             ["uint256[]", "address[]", "bool"],
-            [[hoAmount], [accounts[1]], true]
+            [[hoAmount], [accounts[3]], true]
         );
 
         var encodeDatas = web3.eth.abi.encodeParameters(["bytes[]"], [datas]);
@@ -4737,15 +4737,15 @@ describe("itemv2 ERC1155DeckWrapper", () => {
             hoTokenId[0]
         );
 
-        await wrapperResource.checkBalanceItem(
-            tx,
-            accounts[1],
-            hoAmount,
-            hoItemIds[0],
-            wrapper
-        );
+        // await wrapperResource.checkBalanceItem(
+        //     tx,
+        //     accounts[1],
+        //     hoAmount,
+        //     hoItemIds[0],
+        //     wrapper
+        // );
 
-        await wrapperResource.checkSupply(tx, hoAmount, hoItemIds[0], wrapper);
+        // await wrapperResource.checkSupply(tx, hoAmount, hoItemIds[0], wrapper);
 
         // #W_OS_OH_4_1.1 END
 
@@ -4833,29 +4833,29 @@ describe("itemv2 ERC1155DeckWrapper", () => {
                     )[2]
             );
 
-        await wrapperResource.checkBalance1155(
-            tx,
-            accounts[3],
-            wrapper.options.address,
-            amountToWrap[0],
-            weth,
-            wethTokenId[0]
-        );
+        // await wrapperResource.checkBalance1155(
+        //     tx,
+        //     accounts[3],
+        //     wrapper.options.address,
+        //     amountToWrap[0],
+        //     weth,
+        //     wethTokenId[0]
+        // );
 
-        await wrapperResource.checkBalanceItem(
-            tx,
-            accounts[3],
-            amountToWrap[0],
-            wethItemIds[0],
-            wrapper
-        );
+        // await wrapperResource.checkBalanceItem(
+        //     tx,
+        //     accounts[3],
+        //     amountToWrap[0],
+        //     wethItemIds[0],
+        //     wrapper
+        // );
 
-        await wrapperResource.checkSupply(
-            tx,
-            amountToWrap[0],
-            wethItemIds[0],
-            wrapper
-        );
+        // await wrapperResource.checkSupply(
+        //     tx,
+        //     amountToWrap[0],
+        //     wethItemIds[0],
+        //     wrapper
+        // );
 
         // #W_iETH_4_1.2 END
 
@@ -4863,19 +4863,16 @@ describe("itemv2 ERC1155DeckWrapper", () => {
 
         var data = web3.eth.abi.encodeParameters(
             ["address", "uint256", "address", "bytes32[]", "bytes"],
-            [hoAddress, hoTokenId[0], accounts[1], hoKeys, "0x"]
+            [hoAddress, hoTokenId[0], accounts[1], [hoKeys[0], osKeys[0]], "0x"]
         );
 
-        await catchCall(
-            wrapper.methods
-                .burn(accounts[1], hoItemIds[0], hoAmount, data)
-                .send(
-                    blockchainConnection.getSendingOptions({
-                        from: accounts[1],
-                    })
-                ),
-            "cannot unlock"
-        );
+        await wrapper.methods
+            .burn(accounts[3], hoItemIds[0], hoAmount, data)
+            .send(
+                blockchainConnection.getSendingOptions({
+                    from: accounts[3],
+                })
+            );
 
         // #UW_DOH_4_1.3 END
 
@@ -4931,27 +4928,21 @@ describe("itemv2 ERC1155DeckWrapper", () => {
 
         datas[0] = web3.eth.abi.encodeParameters(
             ["address", "uint256", "address", "bytes32[]", "bytes"],
-            [
-                wethTokenAddresss,
-                wethTokenId[0],
-                accounts[1],
-                [wethKey[0], osKeys[0]],
-                "0x",
-            ]
+            [wethTokenAddresss, wethTokenId[0], accounts[1], [wethKey[0]], "0x"]
         );
-        // datas[1] = web3.eth.abi.encodeParameters(
-        //     ["address", "uint256", "address", "bytes32[]", "bytes"],
-        //     [osAddress, osTokenId[0], accounts[1], [osKeys[0]], "0x"]
-        // );
+        datas[1] = web3.eth.abi.encodeParameters(
+            ["address", "uint256", "address", "bytes32[]", "bytes"],
+            [osAddress, osTokenId[0], accounts[1], [osKeys[0]], "0x"]
+        );
 
         var encodeDatas = web3.eth.abi.encodeParameters(["bytes[]"], [datas]);
 
-        var amountToUnWrap = [wethAmount.div(2)]; //, osAmount.div(2)];
+        var amountToUnWrap = [wethAmount.div(2), osAmount.div(2)];
 
         var tx = await wrapper.methods
             .burnBatch(
                 accounts[3],
-                [wethItemIds[0]], //, osItemIds[0]],
+                [wethItemIds[0], osItemIds[0]],
                 amountToUnWrap,
                 encodeDatas
             )

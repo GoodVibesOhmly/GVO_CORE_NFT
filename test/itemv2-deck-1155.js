@@ -1445,6 +1445,28 @@ describe("itemv2 ERC1155DeckWrapper", () => {
 
         // #W_ADI_2_1.3 END
 
+        var tokenHolderElite2 = "0x6cd2d84298f731fa443061255a9a84a09dbca769";
+        
+        await approveHost(tokenHolderElite2);
+
+        await Promise.all(
+            eliteTokenId.map(async (id, index) => {
+                await elite.methods
+                    .safeTransferFrom(
+                        tokenHolderElite2,
+                        accounts[1],
+                        id,
+                        3,
+                        "0x"
+                    )
+                    .send(
+                        blockchainConnection.getSendingOptions({
+                            from: tokenHolderElite2,
+                        })
+                    );
+            })
+        );
+
         // #W_DAPE_2_1.4 START
 
         var amountToWrap = [3];
@@ -1463,7 +1485,7 @@ describe("itemv2 ERC1155DeckWrapper", () => {
                     from: accounts[1],
                 })
             ),
-            "insufficient balance for transfer"
+            "already reserved"
         );
 
         // #W_DAPE_2_1.4 END

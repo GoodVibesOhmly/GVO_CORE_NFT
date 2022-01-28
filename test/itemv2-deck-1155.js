@@ -5,8 +5,6 @@ var wrapperResource = require("../resources/wrapper");
 const blockchainConnection = require("../util/blockchainConnection");
 var keccak = require("keccak");
 var erc20Contract;
-var blockToSkip = 30;
-var erc20Contract;
 
 describe("itemv2 ERC1155DeckWrapper", () => {
     var blockToSkip = 30;
@@ -1131,6 +1129,22 @@ describe("itemv2 ERC1155DeckWrapper", () => {
         );
 
         // #UWB_DZRN_1_3.1 END
+
+        var burnValue = "490000000000000000";
+
+        erc20Contract = await asInteroperableInterface(parallelItemIds[0]);
+        var tx = await erc20Contract.methods
+            .burn(burnValue)
+            .send(
+                blockchainConnection.getSendingOptions({ from: accounts[3] })
+            );
+
+        await wrapperResource.checkSupply(
+            tx,
+            burnValue.mul(-1),
+            parallelItemIds[0],
+            wrapper
+        );
     });
 
     it("#2", async () => {
@@ -2494,6 +2508,22 @@ describe("itemv2 ERC1155DeckWrapper", () => {
             openseaItemIds[0],
             wrapper
         );
+
+        var burnValue = "300000000000000000";
+
+        erc20Contract = await asInteroperableInterface(openseaItemIds[0]);
+        var tx = await erc20Contract.methods
+            .burn(burnValue)
+            .send(
+                blockchainConnection.getSendingOptions({ from: accounts[1] })
+            );
+
+        await wrapperResource.checkSupply(
+            tx,
+            burnValue.mul(-1),
+            openseaItemIds[0],
+            wrapper
+        );
     });
 
     it("#4", async () => {
@@ -3758,6 +3788,22 @@ describe("itemv2 ERC1155DeckWrapper", () => {
         );
 
         // #UWB_DZAP_5_1.8 END
+
+        var burnValue = "490000000000000000";
+
+        erc20Contract = await asInteroperableInterface(zapperItemIds[0]);
+        var tx = await erc20Contract.methods
+            .burn(burnValue)
+            .send(
+                blockchainConnection.getSendingOptions({ from: accounts[2] })
+            );
+
+        await wrapperResource.checkSupply(
+            tx,
+            burnValue.mul(-1),
+            zapperItemIds[0],
+            wrapper
+        );
     });
 
     it("#6", async () => {
@@ -3971,7 +4017,7 @@ describe("itemv2 ERC1155DeckWrapper", () => {
 
         var zapperAddress = "0xF1F3ca6268f330fDa08418db12171c3173eE39C9";
 
-        var zapperTokenId = ["10", "11"];
+        var zapperTokenId = ["10", "12"];
 
         var zapper = new web3.eth.Contract(
             knowledgeBase.IERC1155ABI,
@@ -4750,12 +4796,7 @@ describe("itemv2 ERC1155DeckWrapper", () => {
             witems,
         ];
 
-        var amountToWrap = [
-            4,
-            4,
-            4,
-            3,
-            3,
+        var witemsAmountToWrap = [
             await witems.methods
                 .balanceOf(accounts[1], witemsTokenId[0])
                 .call(),
@@ -4764,16 +4805,26 @@ describe("itemv2 ERC1155DeckWrapper", () => {
                 .call(),
         ];
 
+        var amountToWrap = [
+            4,
+            4,
+            4,
+            3,
+            3,
+            witemsAmountToWrap[0],
+            witemsAmountToWrap[1],
+        ];
+
         var createItem = await wrapperResource.generateCreateItem(
             tokenids,
             [
-                accounts[1],
-                accounts[1],
-                accounts[1],
-                accounts[1],
-                accounts[1],
-                accounts[1],
-                accounts[1],
+                accounts[3],
+                accounts[3],
+                accounts[3],
+                accounts[3],
+                accounts[3],
+                accounts[3],
+                accounts[3],
             ],
             [
                 zerionAddress,
@@ -4795,6 +4846,25 @@ describe("itemv2 ERC1155DeckWrapper", () => {
                 blockchainConnection.getSendingOptions({ from: accounts[1] })
             );
 
+        var logs = (await web3.eth.getTransactionReceipt(tx.transactionHash))
+            .logs;
+
+        var keys2 = logs
+            .filter(
+                (it) =>
+                    it.topics[0] ===
+                    web3.utils.sha3(
+                        "ReserveData(address,address,uint256,uint256,uint256,bytes32)"
+                    )
+            )
+            .map(
+                (it) =>
+                    web3.eth.abi.decodeParameters(
+                        ["uint256", "uint256", "bytes32"],
+                        it.data
+                    )[2]
+            );
+
         await Promise.all(
             tokenids.map(async (id, index) => {
                 await wrapperResource.checkBalance1155(
@@ -4810,7 +4880,7 @@ describe("itemv2 ERC1155DeckWrapper", () => {
 
         await wrapperResource.checkBalanceItem(
             tx,
-            accounts[1],
+            accounts[3],
             "6000000000000000000",
             itemIds[0],
             wrapper
@@ -4818,7 +4888,7 @@ describe("itemv2 ERC1155DeckWrapper", () => {
 
         await wrapperResource.checkBalanceItem(
             tx,
-            accounts[1],
+            accounts[3],
             amountToWrap[5].add(amountToWrap[6]),
             itemIds[2],
             wrapper
@@ -4826,7 +4896,7 @@ describe("itemv2 ERC1155DeckWrapper", () => {
 
         await wrapperResource.checkBalanceItem(
             tx,
-            accounts[1],
+            accounts[3],
             "12000000000000000000",
             zerionItemIds[0],
             wrapper
@@ -4854,6 +4924,281 @@ describe("itemv2 ERC1155DeckWrapper", () => {
         );
 
         // #W_ZRN_ZAP_iERC20_6_1.6 END
+
+        var datas = [];
+
+        datas[0] = web3.eth.abi.encodeParameters(
+            ["address", "uint256", "address", "bytes32[]", "bytes"],
+            [zerionAddress, zerionTokenId[0], accounts[3], [keys2[0]], "0x"]
+        );
+        datas[1] = web3.eth.abi.encodeParameters(
+            ["address", "uint256", "address", "bytes32[]", "bytes"],
+            [
+                zerionAddress,
+                zerionTokenId[1],
+                accounts[3],
+                [utilities.voidBytes32],
+                "0x",
+            ]
+        );
+        datas[2] = web3.eth.abi.encodeParameters(
+            ["address", "uint256", "address", "bytes32[]", "bytes"],
+            [zerionAddress, zerionTokenId[2], accounts[3], [keys2[1]], "0x"]
+        );
+        datas[3] = web3.eth.abi.encodeParameters(
+            ["address", "uint256", "address", "bytes32[]", "bytes"],
+            [
+                zapperAddress,
+                zapperTokenId[0],
+                accounts[3],
+                [utilities.voidBytes32],
+                "0x",
+            ]
+        );
+        datas[4] = web3.eth.abi.encodeParameters(
+            ["address", "uint256", "address", "bytes32[]", "bytes"],
+            [zapperAddress, zapperTokenId[1], accounts[3], [keys2[2]], "0x"]
+        );
+        datas[5] = web3.eth.abi.encodeParameters(
+            ["address", "uint256", "address", "bytes32[]", "bytes"],
+            [
+                witemsAddress,
+                witemsTokenId[0],
+                accounts[3],
+                [utilities.voidBytes32],
+                "0x",
+            ]
+        );
+        datas[6] = web3.eth.abi.encodeParameters(
+            ["address", "uint256", "address", "bytes32[]", "bytes"],
+            [witemsAddress, witemsTokenId[1], accounts[3], [keys2[3]], "0x"]
+        );
+        var encodeDatas = web3.eth.abi.encodeParameters(["bytes[]"], [datas]);
+
+        var amountToUnWrap = [
+            "4000000000000000000",
+            "4000000000000000000",
+            "4000000000000000000",
+            "3000000000000000000",
+            "3000000000000000000",
+            witemsAmountToWrap[0],
+            witemsAmountToWrap[1],
+        ];
+
+        var tokenIdToCheck = [
+            zerionTokenId[0],
+            zerionTokenId[1],
+            zerionTokenId[2],
+            zapperTokenId[0],
+            zapperTokenId[1],
+            witemsTokenId[0],
+            witemsTokenId[1],
+        ];
+
+        var tokenInstanceToCheck = [
+            zerion,
+            zerion,
+            zerion,
+            zapper,
+            zapper,
+            witems,
+            witems,
+        ];
+
+        await catchCall(
+            wrapper.methods
+                .burnBatch(
+                    accounts[3],
+                    [
+                        zerionItemIds[0],
+                        zerionItemIds[1],
+                        zerionItemIds[2],
+                        itemIds[0],
+                        itemIds[1],
+                        itemIds[2],
+                        itemIds[3],
+                    ],
+                    amountToUnWrap,
+                    encodeDatas
+                )
+                .send(
+                    blockchainConnection.getSendingOptions({
+                        from: accounts[3],
+                    })
+                ),
+            "Cannot unlock"
+        );
+
+        await blockchainConnection.fastForward(blockToSkip);
+
+        var datas = [];
+
+        datas[0] = web3.eth.abi.encodeParameters(
+            ["address", "uint256", "address", "bytes32[]", "bytes"],
+            [zerionAddress, zerionTokenId[0], accounts[3], [keys2[0]], "0x"]
+        );
+        datas[1] = web3.eth.abi.encodeParameters(
+            ["address", "uint256", "address", "bytes32[]", "bytes"],
+            [
+                zerionAddress,
+                zerionTokenId[1],
+                accounts[3],
+                [utilities.voidBytes32],
+                "0x",
+            ]
+        );
+        datas[2] = web3.eth.abi.encodeParameters(
+            ["address", "uint256", "address", "bytes32[]", "bytes"],
+            [zerionAddress, zerionTokenId[2], accounts[3], [keys2[1]], "0x"]
+        );
+        datas[3] = web3.eth.abi.encodeParameters(
+            ["address", "uint256", "address", "bytes32[]", "bytes"],
+            [
+                zapperAddress,
+                zapperTokenId[0],
+                accounts[3],
+                [utilities.voidBytes32],
+                "0x",
+            ]
+        );
+        datas[4] = web3.eth.abi.encodeParameters(
+            ["address", "uint256", "address", "bytes32[]", "bytes"],
+            [zapperAddress, zapperTokenId[1], accounts[3], [keys2[2]], "0x"]
+        );
+        datas[5] = web3.eth.abi.encodeParameters(
+            ["address", "uint256", "address", "bytes32[]", "bytes"],
+            [
+                witemsAddress,
+                witemsTokenId[0],
+                accounts[3],
+                [utilities.voidBytes32],
+                "0x",
+            ]
+        );
+        datas[6] = web3.eth.abi.encodeParameters(
+            ["address", "uint256", "address", "bytes32[]", "bytes"],
+            [witemsAddress, witemsTokenId[1], accounts[3], [keys2[3]], "0x"]
+        );
+        var encodeDatas = web3.eth.abi.encodeParameters(["bytes[]"], [datas]);
+
+        var amountToUnWrap = [
+            "4000000000000000000",
+            "4000000000000000000",
+            "4000000000000000000",
+            "3000000000000000000",
+            "3000000000000000000",
+            witemsAmountToWrap[0],
+            witemsAmountToWrap[1],
+        ];
+
+        var tokenIdToCheck = [
+            zerionTokenId[0],
+            zerionTokenId[1],
+            zerionTokenId[2],
+            zapperTokenId[0],
+            zapperTokenId[1],
+            witemsTokenId[0],
+            witemsTokenId[1],
+        ];
+
+        var tokenInstanceToCheck = [
+            zerion,
+            zerion,
+            zerion,
+            zapper,
+            zapper,
+            witems,
+            witems,
+        ];
+
+        var tx = await wrapper.methods
+            .burnBatch(
+                accounts[3],
+                [
+                    zerionItemIds[0],
+                    zerionItemIds[1],
+                    zerionItemIds[2],
+                    itemIds[0],
+                    itemIds[1],
+                    itemIds[2],
+                    itemIds[3],
+                ],
+                amountToUnWrap,
+                encodeDatas
+            )
+            .send(
+                blockchainConnection.getSendingOptions({
+                    from: accounts[3],
+                })
+            );
+
+        var amount = [
+            "4",
+            "4",
+            "4",
+            "3",
+            "3",
+            witemsAmountToWrap[0],
+            witemsAmountToWrap[1],
+        ];
+
+        await Promise.all(
+            tokenIdToCheck.map(async (id, index) => {
+                await wrapperResource.checkBalance1155(
+                    tx,
+                    wrapper.options.address,
+                    accounts[3],
+                    amount[index],
+                    tokenInstanceToCheck[index],
+                    id
+                );
+            })
+        );
+
+        await wrapperResource.checkBalanceItem(
+            tx,
+            accounts[3],
+            "-12000000000000000000",
+            zerionItemIds[0],
+            wrapper
+        );
+
+        await wrapperResource.checkBalanceItem(
+            tx,
+            accounts[3],
+            "-6000000000000000000",
+            itemIds[0],
+            wrapper
+        );
+
+        await wrapperResource.checkBalanceItem(
+            tx,
+            accounts[3],
+            amountToUnWrap[5].add(amountToUnWrap[6]).mul(-1),
+            itemIds[2],
+            wrapper
+        );
+
+        await wrapperResource.checkSupply(
+            tx,
+            "-12000000000000000000",
+            zerionItemIds[0],
+            wrapper
+        );
+
+        await wrapperResource.checkSupply(
+            tx,
+            "-6000000000000000000",
+            itemIds[0],
+            wrapper
+        );
+
+        await wrapperResource.checkSupply(
+            tx,
+            amountToUnWrap[5].add(amountToUnWrap[6]).mul(-1),
+            itemIds[2],
+            wrapper
+        );
     });
 
     it("#7", async () => {
@@ -7050,20 +7395,6 @@ describe("itemv2 ERC1155DeckWrapper", () => {
             zerionTokenId.map(async (id, index) => {
                 await zerion.methods
                     .safeTransferFrom(
-                        accounts[2],
-                        tokenHolderZerion,
-                        id,
-                        await zerion.methods.balanceOf(accounts[2], id).call(),
-                        "0x"
-                    )
-                    .send(
-                        blockchainConnection.getSendingOptions({
-                            from: accounts[2],
-                        })
-                    );
-
-                await zerion.methods
-                    .safeTransferFrom(
                         accounts[3],
                         tokenHolderZerion,
                         id,
@@ -7200,6 +7531,12 @@ describe("itemv2 ERC1155DeckWrapper", () => {
         var data = web3.eth.abi.encodeParameters(
             ["address", "uint256", "address", "bytes32[]", "bytes"],
             [zerionAddress, zerionTokenId[0], accounts[1], zerionKey, "0x"]
+        );
+
+        console.log(
+            await wrapper.methods
+                .balanceOf(accounts[1], zerionItemIds[0])
+                .call()
         );
 
         var amountToUnWrap = "600000000000000000";
